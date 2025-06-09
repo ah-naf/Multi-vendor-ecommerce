@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 export const DataTable = ({ columns, data, onEdit, onDelete }) => {
   // ---- DESKTOP VIEW ----
@@ -45,14 +46,11 @@ export const DataTable = ({ columns, data, onEdit, onDelete }) => {
               {(onEdit || onDelete) && (
                 <TableCell>
                   {onEdit && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mr-2"
-                      onClick={() => onEdit(row)}
-                    >
-                      <Pencil className="mr-1 h-4 w-4" /> Edit
-                    </Button>
+                    <Link href={`/dashboard/products/edit/${row.id}`} passHref>
+                      <Button variant="ghost" size="sm" className="mr-2">
+                        <Pencil className="mr-1 h-4 w-4" /> Edit
+                      </Button>
+                    </Link>
                   )}
                   {onDelete && (
                     <Button
@@ -99,9 +97,11 @@ export const DataTable = ({ columns, data, onEdit, onDelete }) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(item)}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-                </DropdownMenuItem>
+                <Link href={`/dashboard/products/edit/${item.id}`} passHref>
+                  <DropdownMenuItem>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                  </DropdownMenuItem>
+                </Link>
               )}
               {onDelete && (
                 <DropdownMenuItem

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "prod_1",
+    "general": {
+      "title": "iPhone 15 Pro",
+      "description": "The latest and greatest from Apple, featuring the A17 Bionic chip and a stunning ProMotion display.",
+      "images": ["https://placehold.co/600x600/333333/ffffff?text=iPhone+15"],
+      "category": "Mobile Phones"
+    },
+    "specifications": {
+      "brand": "Apple",
+      "model": "iPhone 15 Pro",
+      "storage": "256GB",
+      "ram": "8GB",
+      "color": "Titanium Black",
+      "condition": "new",
+      "features": {
+        "5g": true,
+        "nfc": true,
+        "wirelessCharging": true,
+        "waterResistant": true
+      }
+    },
+    "pricing": {
+      "price": 1099,
+      "salePrice": 1050,
+      "enableNegotiation": false
+    },
+    "inventory": {
+      "quantity": 150,
+      "sku": "APL-15P-TB-256"
+    },
+    "additional": {
+      "tags": "apple, iphone, smartphone, 5g"
+    },
+    "seo": {
+      "title": "Buy iPhone 15 Pro - 256GB Titanium Black",
+      "description": "Get the best deal on the new Apple iPhone 15 Pro. Unlocked, 256GB storage, in Titanium Black."
+    }
+  },
+  {
+    "id": "prod_2",
+    "general": {
+      "title": "Samsung Galaxy S24 Ultra",
+      "description": "Experience the pinnacle of Android technology with the Galaxy S24 Ultra, featuring an amazing camera and S Pen.",
+      "images": ["https://placehold.co/600x600/4a4a4a/ffffff?text=Galaxy+S24"],
+      "category": "Mobile Phones"
+    },
+    "specifications": {
+      "brand": "Samsung",
+      "model": "Galaxy S24 Ultra",
+      "storage": "512GB",
+      "ram": "12GB",
+      "color": "Phantom Gray",
+      "condition": "new",
+      "features": {
+        "5g": true,
+        "nfc": true,
+        "wirelessCharging": true,
+        "waterResistant": true
+      }
+    },
+    "pricing": {
+      "price": 1199,
+      "salePrice": null,
+      "enableNegotiation": true
+    },
+    "inventory": {
+      "quantity": 85,
+      "sku": "SAM-S24U-PG-512"
+    },
+    "additional": {
+      "tags": "samsung, galaxy, android, smartphone, s-pen"
+    },
+    "seo": {
+      "title": "Samsung Galaxy S24 Ultra - 512GB",
+      "description": "Order the new Samsung Galaxy S24 Ultra. Unlocked, 512GB storage, and powerful performance."
+    }
+  },
+  {
+    "id": "prod_3",
+    "general": {
+      "title": "Dell XPS 15 Laptop",
+      "description": "A powerful and elegant laptop for professionals and creatives. Features a 4K OLED display.",
+      "images": ["https://placehold.co/600x600/5a5a5a/ffffff?text=XPS+15"],
+      "category": "Laptops"
+    },
+    "specifications": {
+      "brand": "Dell",
+      "model": "XPS 15 9530",
+      "storage": "1TB SSD",
+      "ram": "32GB",
+      "color": "Platinum Silver",
+      "condition": "new",
+      "features": {}
+    },
+    "pricing": {
+      "price": 2499,
+      "salePrice": null,
+      "enableNegotiation": false
+    },
+    "inventory": {
+      "quantity": 40,
+      "sku": "DEL-XPS15-I9-32-1T"
+    },
+    "additional": {
+      "tags": "dell, laptop, windows, programming, developer"
+    },
+    "seo": {
+      "title": "Dell XPS 15 Laptop with 4K OLED Display",
+      "description": "High-performance Dell XPS 15 with Intel Core i9, 32GB RAM, and 1TB SSD. Perfect for professionals."
+    }
+  }
+]

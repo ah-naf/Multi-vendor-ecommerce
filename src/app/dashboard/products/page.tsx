@@ -1,7 +1,7 @@
 // File Path: src/app/dashboard/products/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,99 +23,45 @@ import {
 } from "@/components/ui/dialog";
 import { Search, ChevronDown, PlusCircle, AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/DataTable";
+import Link from "next/link";
+import productsData from "@/data/products.json"; // Import the JSON data
 
-// --- MOCK DATA ---
-
-const initialProducts = [
-  {
-    id: 1,
-    name: "Premium Cotton T-Shirt",
-    sku: "TS-001",
-    price: 100,
-    stock: 200,
-
-
-    
-    status: "Active",
-    category: "Men's Clothing",
-    image: "https://placehold.co/128x128/e2e8f0/e2e8f0",
-  },
-  {
-    id: 2,
-    name: "Leather Wallet",
-    sku: "WL-002",
-    price: 50,
-    stock: 20,
-    status: "Active",
-    category: "Accessories",
-    image: "https://placehold.co/128x128/e2e8f0/e2e8f0",
-  },
-  {
-    id: 3,
-    name: "Wireless Earbuds",
-    sku: "EB-003",
-    price: 70,
-    stock: 12,
-    status: "Low Stock",
-    category: "Electronics",
-    image: "https://placehold.co/128x128/e2e8f0/e2e8f0",
-  },
-  {
-    id: 4,
-    name: "Handcrafted Ceramic Mug",
-    sku: "MG-004",
-    price: 60,
-    stock: 32,
-    status: "Active",
-    category: "Kitchen & Dining",
-    image: "https://placehold.co/128x128/e2e8f0/e2e8f0",
-  },
-  {
-    id: 5,
-    name: "Organic Face Cream",
-    sku: "FC-005",
-    price: 200,
-    stock: 0,
-    status: "Out of Stock",
-    category: "Skincare",
-    image: "https://placehold.co/128x128/e2e8f0/e2e8f0",
-  },
-  {
-    id: 6,
-    name: "Bamboo Cutting Board",
-    sku: "CB-006",
-    price: 20,
-    stock: 5,
-    status: "Low Stock",
-    category: "Kitchen & Dining",
-    image: "https://placehold.co/128x128/e2e8f0/e2e8f0",
-  },
-];
-
-const StatusBadge = ({ status }) => {
-  const variant =
-    {
-      Active: "default",
-      "Low Stock": "secondary",
-      "Out of Stock": "destructive",
-    }[status] || "default";
+const StatusBadge = ({ quantity }) => {
+  let status = "Active";
+  let variant: "default" | "secondary" | "destructive" = "default";
+  if (quantity === 0) {
+    status = "Out of Stock";
+    variant = "destructive";
+  } else if (quantity < 20) {
+    status = "Low Stock";
+    variant = "secondary";
+  }
   return <Badge variant={variant}>{status}</Badge>;
 };
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    // In a real app, this would be an API call.
+    // For now, we simulate it by loading the JSON file.
+    const mappedProducts = productsData.map((p) => ({
+      id: p.id,
+      name: p.general.title,
+      sku: p.inventory.sku,
+      price: p.pricing.price,
+      stock: p.inventory.quantity,
+      image: p.general.images[0],
+      status: p.inventory.quantity,
+    }));
+    setProducts(mappedProducts);
+  }, []);
 
   const handleDeleteClick = (product) => {
     setSelectedProduct(product);
     setIsDeleteDialogOpen(true);
-  };
-
-  const handleEditClick = (product) => {
-    // In a real app, this would open an edit form/modal
-    console.log("Editing product:", product);
-    alert(`Editing: ${product.name}`);
   };
 
   const confirmDelete = () => {
@@ -141,16 +87,12 @@ export default function ProductsPage() {
     },
     { header: "Name", accessor: "name" },
     { header: "SKU", accessor: "sku" },
-    {
-      header: "Price",
-      accessor: "price",
-      cell: (row) => `$${row.price.toFixed(2)}`,
-    },
+    { header: "Price", accessor: "price", cell: (row) => `$${row.price}` },
     { header: "Stock", accessor: "stock" },
     {
       header: "Status",
       accessor: "status",
-      cell: (row) => <StatusBadge status={row.status} />,
+      cell: (row) => <StatusBadge quantity={row.status} />,
     },
   ];
 
@@ -159,9 +101,11 @@ export default function ProductsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-bold">Products</h1>
-        <Button className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto">
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Product
-        </Button>
+        <Link href="/dashboard/products/add" passHref>
+          <Button className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Product
+          </Button>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -186,11 +130,6 @@ export default function ProductsPage() {
               <DropdownMenuCheckboxItem>
                 All Categories
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Electronics</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>
-                Men's Clothing
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Skincare</DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
@@ -206,9 +145,6 @@ export default function ProductsPage() {
               <DropdownMenuLabel>Filter by Stock</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem>All</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Active</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Low Stock</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Out of Stock</DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -218,8 +154,8 @@ export default function ProductsPage() {
       <DataTable
         columns={productColumns}
         data={products}
-        onEdit={handleEditClick}
         onDelete={handleDeleteClick}
+        onEdit={() => {}}
       />
 
       {/* Delete Confirmation Dialog */}
