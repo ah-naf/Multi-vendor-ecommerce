@@ -1,4 +1,4 @@
-// File Path: src/app/dashboard/components/Header.tsx
+// File Path: src/components/Header.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -47,35 +47,35 @@ export const Header = () => {
           <h1 className="text-2xl font-bold text-gray-800 mb-8">Logo</h1>
           <nav className="flex flex-col space-y-2">
             <a
-              href="#"
+              href="/dashboard"
               className="flex items-center p-3 rounded-lg font-semibold bg-red-100 text-red-600"
             >
               <Home className="mr-3 h-5 w-5" />
               Overview
             </a>
             <a
-              href="#"
+              href="/dashboard/products"
               className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100"
             >
               <Box className="mr-3 h-5 w-5" />
               Products
             </a>
             <a
-              href="#"
+              href="/dashboard/orders"
               className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100"
             >
               <ShoppingBag className="mr-3 h-5 w-5" />
               Orders
             </a>
             <a
-              href="#"
+              href="/dashboard/payments"
               className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100"
             >
               <CreditCard className="mr-3 h-5 w-5" />
               Payments
             </a>
             <a
-              href="#"
+              href="/dashboard/settings"
               className="flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-100 mt-auto"
             >
               <Settings className="mr-3 h-5 w-5" />
@@ -86,10 +86,10 @@ export const Header = () => {
       </Sheet>
 
       {/* This empty div helps to push the right-side icons to the end on mobile */}
-      <div className="md:hidden" />
+      <div className="flex-1 md:hidden" />
 
       {/* Right side icons */}
-      <div className="flex items-center ml-auto space-x-2 md:space-x-6">
+      <div className="flex items-center space-x-2 ml-auto md:space-x-6">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
