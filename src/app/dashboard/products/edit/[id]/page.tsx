@@ -1,41 +1,32 @@
-// src/app/dashboard/products/edit/[id]/page.tsx
 "use client";
 
-import { ProductForm } from "@/components/ProductForm";
-import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import productsData from "@/data/products.json"; // Import the JSON data
+import { useRouter } from "next/navigation";
+import productsData from "@/data/products.json";
+import { ProductForm } from "@/components/ProductForm";
 
-export default function AddOrEditProductPage({
+export default function EditProductPage({
   params,
 }: {
-  params: { id?: string };
+  params: { id: string };
 }) {
+  const { id } = params;
   const router = useRouter();
-  const pathname = usePathname();
-  const isEditMode = !!params.id;
-  const [productToEdit, setProductToEdit] = useState(null);
-  const [isLoading, setIsLoading] = useState(isEditMode);
+  const [productToEdit, setProductToEdit] = useState<any>(null);
 
   useEffect(() => {
-    if (isEditMode) {
-      // Find the product in our "database"
-      const product = productsData.find((p) => p.id === params.id);
-      setProductToEdit(product);
-      setIsLoading(false);
-    }
-  }, [isEditMode, params.id]);
-
-  const handleSave = (data) => {
-    if (isEditMode) {
-      console.log("UPDATING product:", params.id, data);
-      alert("Product updated! Check the console for data.");
+    const found = productsData.find((p) => p.id === id);
+    if (found) {
+      setProductToEdit(found);
     } else {
-      console.log("ADDING new product:", data);
-      alert("Product added! Check the console for data.");
+      // If invalid ID, go back to list
+      router.push("/dashboard/products");
     }
-    // In a real app, you would send this data to your API
-    // then invalidate the product list cache to show the new data.
+  }, [id]);
+
+  const handleSave = (updated: any) => {
+    // In a real app you'd POST/PATCH to your API here.
+    console.log("Updating product:", id, updated);
     router.push("/dashboard/products");
   };
 
@@ -43,15 +34,17 @@ export default function AddOrEditProductPage({
     router.push("/dashboard/products");
   };
 
-  if (isLoading) {
-    return <div>Loading product data...</div>;
+  if (!productToEdit) {
+    return (
+      <div className="p-8 text-center text-gray-600">Loading product data…</div>
+    );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto p-8 bg-white rounded-lg shadow">
       <ProductForm
         initialProduct={productToEdit}
-        isEditMode={isEditMode}
+        isEditMode={true}
         onSave={handleSave}
         onCancel={handleCancel}
       />

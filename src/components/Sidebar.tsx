@@ -6,9 +6,11 @@ import { Home, Box, ShoppingBag, CreditCard, Settings } from "lucide-react";
 import React from "react";
 
 // Reusable NavLink component for sidebar items
-const NavLink = ({ href, icon: Icon, children }) => {
+const NavLink = ({ href = "/", icon: Icon, children }) => {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const splittedPath = pathname.split("/");
+  const splittedHref = href.split("/");
+  const isActive = splittedPath.length > 2 && splittedPath[2] === splittedHref[2];
 
   return (
     <a

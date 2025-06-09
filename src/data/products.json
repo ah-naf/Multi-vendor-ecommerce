@@ -8,18 +8,39 @@
       "category": "Mobile Phones"
     },
     "specifications": {
-      "brand": "Apple",
-      "model": "iPhone 15 Pro",
-      "storage": "256GB",
-      "ram": "8GB",
-      "color": "Titanium Black",
-      "condition": "new",
-      "features": {
-        "5g": true,
-        "nfc": true,
-        "wirelessCharging": true,
-        "waterResistant": true
-      }
+      "customSpecs": [
+        { "id": "spec_1", "label": "Brand", "value": "Apple", "type": "text" },
+        {
+          "id": "spec_2",
+          "label": "Model",
+          "value": "iPhone 15 Pro",
+          "type": "text"
+        },
+        {
+          "id": "spec_3",
+          "label": "Storage (GB)",
+          "value": "256",
+          "type": "number"
+        },
+        {
+          "id": "spec_4",
+          "label": "Warranty End Date",
+          "value": "2025-12-31",
+          "type": "date"
+        },
+        {
+          "id": "spec_5",
+          "label": "Color",
+          "value": "Titanium Black",
+          "type": "text"
+        },
+        {
+          "id": "spec_6",
+          "label": "Condition Notes",
+          "value": "Brand new, sealed in box.",
+          "type": "textarea"
+        }
+      ]
     },
     "pricing": {
       "price": 1099,
@@ -47,18 +68,20 @@
       "category": "Mobile Phones"
     },
     "specifications": {
-      "brand": "Samsung",
-      "model": "Galaxy S24 Ultra",
-      "storage": "512GB",
-      "ram": "12GB",
-      "color": "Phantom Gray",
-      "condition": "new",
-      "features": {
-        "5g": true,
-        "nfc": true,
-        "wirelessCharging": true,
-        "waterResistant": true
-      }
+      "customSpecs": [
+        {
+          "id": "spec_1",
+          "label": "Brand",
+          "value": "Samsung",
+          "type": "text"
+        },
+        {
+          "id": "spec_2",
+          "label": "Model",
+          "value": "Galaxy S24 Ultra",
+          "type": "text"
+        }
+      ]
     },
     "pricing": {
       "price": 1199,
@@ -86,13 +109,26 @@
       "category": "Laptops"
     },
     "specifications": {
-      "brand": "Dell",
-      "model": "XPS 15 9530",
-      "storage": "1TB SSD",
-      "ram": "32GB",
-      "color": "Platinum Silver",
-      "condition": "new",
-      "features": {}
+      "customSpecs": [
+        {
+          "id": "spec_1",
+          "label": "Processor",
+          "value": "Intel Core i9",
+          "type": "text"
+        },
+        {
+          "id": "spec_2",
+          "label": "RAM (GB)",
+          "value": "32",
+          "type": "number"
+        },
+        {
+          "id": "spec_3",
+          "label": "Storage",
+          "value": "1TB SSD",
+          "type": "text"
+        }
+      ]
     },
     "pricing": {
       "price": 2499,
