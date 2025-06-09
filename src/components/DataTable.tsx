@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import {
   Table,
@@ -16,8 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2, Truck } from "lucide-react";
-import Link from "next/link";
+import { MoreHorizontal, Pencil, Truck, Trash2 } from "lucide-react";
 
 export interface Column<T> {
   header: string;
@@ -61,11 +59,9 @@ export function DataTable<T extends { id: string }>({
                 <TableCell key={col.accessor as string} className="font-medium">
                   {col.cell
                     ? col.cell(row, "desktop")
-                    : // @ts-ignore
-                      row[col.accessor]}
+                    : (row as any)[col.accessor]}
                 </TableCell>
               ))}
-
               {(onEdit || onDelete || onShip) && (
                 <TableCell>
                   {onEdit && (
@@ -78,7 +74,6 @@ export function DataTable<T extends { id: string }>({
                       <Pencil className="mr-1 h-4 w-4" /> View
                     </Button>
                   )}
-
                   {onShip && (
                     <Button
                       variant="destructive"
@@ -89,7 +84,6 @@ export function DataTable<T extends { id: string }>({
                       <Truck className="mr-1 h-4 w-4" /> Ship
                     </Button>
                   )}
-
                   {onDelete && (
                     <Button
                       variant="ghost"
@@ -116,7 +110,6 @@ export function DataTable<T extends { id: string }>({
           {columns.find((c) => c.accessor === "image")?.cell?.(item, "mobile")}
           <div>
             <p className="font-semibold">
-              {/* first column */}
               {(item as any)[columns[0].accessor]}
             </p>
             {columns.find((c) => c.accessor === "date") && (
@@ -138,11 +131,10 @@ export function DataTable<T extends { id: string }>({
             )}
           </div>
         </div>
-
-        {(onEdit || onShip || onDelete) && (
+        {(onEdit || onDelete || onShip) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="-mt-2 -mr-2">
+              <Button variant="ghost" size="icon">
                 <MoreHorizontal className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
