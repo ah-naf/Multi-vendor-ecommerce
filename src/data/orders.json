@@ -1,0 +1,86 @@
+[
+  {
+    "id": "Ord-01",
+    "date": "2025-05-15",
+    "buyer": {
+      "name": "Mike Turner",
+      "email": "example@email.com",
+      "shippingAddress": "62 Elm Tree Ave, Coventry, West Midlands, UK",
+      "paymentMethod": { "type": "Credit Card", "last4": "4242", "paid": true }
+    },
+    "product": {
+      "name": "Over The Head Wireless Headphone",
+      "image": "https://placehold.co/120x120?text=Headphone"
+    },
+    "quantity": 1,
+    "condition": "New",
+    "status": "Pending",
+    "timeline": [
+      { "label": "Order Placed", "date": "May 15, 2025", "completed": true },
+      {
+        "label": "Payment Confirmed",
+        "date": "May 15, 2025",
+        "completed": true
+      },
+      {
+        "label": "Processed",
+        "date": "Waiting for processing",
+        "completed": false
+      },
+      { "label": "Shipped", "date": "Not shipped yet", "completed": false },
+      {
+        "label": "Delivered",
+        "date": "Waiting for delivery",
+        "completed": false
+      }
+    ],
+    "paymentInfo": {
+      "subtotal": 99.99,
+      "shipping": 0.0,
+      "tax": 0.0,
+      "discount": 0.0,
+      "total": 99.99
+    },
+    "amount": 200.0
+  },
+  {
+    "id": "Ord-02",
+    "date": "2025-05-14",
+    "buyer": {
+      "name": "Mike Turner",
+      "email": "example@email.com",
+      "shippingAddress": "62 Elm Tree Ave, Coventry, West Midlands, UK",
+      "paymentMethod": { "type": "Credit Card", "last4": "4242", "paid": true }
+    },
+    "product": {
+      "name": "Wireless Earbuds X200",
+      "image": "https://placehold.co/120x120?text=Earbuds"
+    },
+    "quantity": 2,
+    "condition": "New",
+    "status": "Shipped",
+    "timeline": [
+      { "label": "Order Placed", "date": "May 14, 2025", "completed": true },
+      {
+        "label": "Payment Confirmed",
+        "date": "May 14, 2025",
+        "completed": true
+      },
+      { "label": "Processed", "date": "May 15, 2025", "completed": true },
+      { "label": "Shipped", "date": "May 16, 2025", "completed": true },
+      {
+        "label": "Delivered",
+        "date": "Waiting for delivery",
+        "completed": false
+      }
+    ],
+    "paymentInfo": {
+      "subtotal": 150.0,
+      "shipping": 10.0,
+      "tax": 5.0,
+      "discount": 0.0,
+      "total": 165.0
+    },
+    "amount": 165.0
+  }
+]

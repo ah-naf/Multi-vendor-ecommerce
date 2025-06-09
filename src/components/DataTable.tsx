@@ -1,4 +1,3 @@
-// File Path: src/components/DataTable.tsx
 "use client";
 
 import React from "react";
@@ -17,41 +16,80 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Truck } from "lucide-react";
 import Link from "next/link";
 
-export const DataTable = ({ columns, data, onEdit, onDelete }) => {
-  // ---- DESKTOP VIEW ----
+export interface Column<T> {
+  header: string;
+  accessor: keyof T | string;
+  cell?: (row: T, view?: "desktop" | "mobile") => React.ReactNode;
+  className?: string;
+}
+
+export interface DataTableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+  onEdit?: (row: T) => void;
+  onDelete?: (row: T) => void;
+  onShip?: (row: T) => void;
+}
+
+export function DataTable<T extends { id: string }>({
+  columns,
+  data,
+  onEdit,
+  onDelete,
+  onShip,
+}: DataTableProps<T>) {
   const DesktopTable = () => (
-    <div className="hidden md:block bg-white rounded-lg border">
+    <div className="hidden md:block bg-white rounded-lg border overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
             {columns.map((col) => (
-              <TableHead key={col.accessor} className={col.className}>
+              <TableHead key={col.accessor as string} className={col.className}>
                 {col.header}
               </TableHead>
             ))}
-            {(onEdit || onDelete) && <TableHead>Actions</TableHead>}
+            {(onEdit || onDelete || onShip) && <TableHead>Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((row) => (
             <TableRow key={row.id}>
               {columns.map((col) => (
-                <TableCell key={col.accessor} className="font-medium">
-                  {col.cell ? col.cell(row) : row[col.accessor]}
+                <TableCell key={col.accessor as string} className="font-medium">
+                  {col.cell
+                    ? col.cell(row, "desktop")
+                    : // @ts-ignore
+                      row[col.accessor]}
                 </TableCell>
               ))}
-              {(onEdit || onDelete) && (
+
+              {(onEdit || onDelete || onShip) && (
                 <TableCell>
                   {onEdit && (
-                    <Link href={`/dashboard/products/edit/${row.id}`} passHref>
-                      <Button variant="ghost" size="sm" className="mr-2">
-                        <Pencil className="mr-1 h-4 w-4" /> Edit
-                      </Button>
-                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mr-2"
+                      onClick={() => onEdit(row)}
+                    >
+                      <Pencil className="mr-1 h-4 w-4" /> View
+                    </Button>
                   )}
+
+                  {onShip && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="mr-2"
+                      onClick={() => onShip(row)}
+                    >
+                      <Truck className="mr-1 h-4 w-4" /> Ship
+                    </Button>
+                  )}
+
                   {onDelete && (
                     <Button
                       variant="ghost"
@@ -71,24 +109,37 @@ export const DataTable = ({ columns, data, onEdit, onDelete }) => {
     </div>
   );
 
-  // ---- MOBILE/TABLET VIEW ----
-  const MobileCard = ({ item }) => (
+  const MobileCard = ({ item }: { item: T }) => (
     <div className="bg-white p-4 rounded-lg border">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
-          {columns.find((c) => c.accessor === "image") &&
-            columns.find((c) => c.accessor === "image").cell(item, "mobile")}
+          {columns.find((c) => c.accessor === "image")?.cell?.(item, "mobile")}
           <div>
-            <p className="font-semibold">{item.name}</p>
-            <p className="text-sm text-gray-500">{item.sku}</p>
-            {columns.find((c) => c.accessor === "price") && (
+            <p className="font-semibold">
+              {/* first column */}
+              {(item as any)[columns[0].accessor]}
+            </p>
+            {columns.find((c) => c.accessor === "date") && (
+              <p className="text-sm text-gray-500">
+                {
+                  (item as any)[
+                    columns.find((c) => c.accessor === "date")!.accessor
+                  ]
+                }
+              </p>
+            )}
+            {columns.find((c) => c.accessor === "amount") && (
               <p className="text-sm font-bold mt-1">
-                {columns.find((c) => c.accessor === "price").cell(item)}
+                {columns.find((c) => c.accessor === "amount")!.cell!(
+                  item,
+                  "mobile"
+                )}
               </p>
             )}
           </div>
         </div>
-        {(onEdit || onDelete) && (
+
+        {(onEdit || onShip || onDelete) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="-mt-2 -mr-2">
@@ -97,11 +148,14 @@ export const DataTable = ({ columns, data, onEdit, onDelete }) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {onEdit && (
-                <Link href={`/dashboard/products/edit/${item.id}`} passHref>
-                  <DropdownMenuItem>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                  </DropdownMenuItem>
-                </Link>
+                <DropdownMenuItem onClick={() => onEdit(item)}>
+                  <Pencil className="mr-2 h-4 w-4" /> View
+                </DropdownMenuItem>
+              )}
+              {onShip && (
+                <DropdownMenuItem onClick={() => onShip(item)}>
+                  <Truck className="mr-2 h-4 w-4" /> Ship
+                </DropdownMenuItem>
               )}
               {onDelete && (
                 <DropdownMenuItem
@@ -113,15 +167,6 @@ export const DataTable = ({ columns, data, onEdit, onDelete }) => {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
-      </div>
-      <div className="flex items-center justify-between mt-4">
-        {columns.find((c) => c.accessor === "status") &&
-          columns.find((c) => c.accessor === "status").cell(item)}
-        {columns.find((c) => c.accessor === "stock") && (
-          <p className="text-sm text-gray-600">
-            Stock: <span className="font-bold">{item.stock}</span>
-          </p>
         )}
       </div>
     </div>
@@ -137,4 +182,4 @@ export const DataTable = ({ columns, data, onEdit, onDelete }) => {
       </div>
     </>
   );
-};
+}

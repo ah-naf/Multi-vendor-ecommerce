@@ -31,28 +31,9 @@ export default function DashboardLayout({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
                 placeholder="Search by product, brand, or keyword"
-                className="pl-10"
+                className="pl-10 h-12 bg-white"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center justify-between space-x-2 w-full md:w-auto flex-shrink-0"
-                >
-                  <span>Categories</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Electronics</DropdownMenuItem>
-                <DropdownMenuItem>Clothing</DropdownMenuItem>
-                <DropdownMenuItem>Books</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button className="bg-red-500 hover:bg-red-600 text-white w-full md:w-auto flex-shrink-0">
-              Search
-            </Button>
           </div>
         </div>
 

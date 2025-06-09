@@ -10,7 +10,9 @@ const NavLink = ({ href = "/", icon: Icon, children }) => {
   const pathname = usePathname();
   const splittedPath = pathname.split("/");
   const splittedHref = href.split("/");
-  const isActive = splittedPath.length > 2 && splittedPath[2] === splittedHref[2];
+  const isActive =
+    (pathname === "/dashboard" && href == "/dashboard") ||
+    (splittedPath.length > 2 && splittedPath[2] === splittedHref[2]);
 
   return (
     <a

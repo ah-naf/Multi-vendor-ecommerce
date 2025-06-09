@@ -25,6 +25,7 @@ import { Search, ChevronDown, PlusCircle, AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/DataTable";
 import Link from "next/link";
 import productsData from "@/data/products.json"; // Import the JSON data
+import { useRouter } from "next/navigation";
 
 const StatusBadge = ({ quantity }) => {
   let status = "Active";
@@ -43,6 +44,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     // In a real app, this would be an API call.
@@ -80,7 +82,7 @@ export default function ProductsPage() {
           src={row.image}
           alt={row.name}
           className={`${
-            view === "mobile" ? "h-16 w-16" : "h-12 w-12"
+            view === "mobile" ? "h-16 w-16" : "h-16 w-16"
           } object-cover rounded-md bg-gray-100`}
         />
       ),
@@ -112,14 +114,17 @@ export default function ProductsPage() {
       <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input placeholder="Search by name or SKU" className="pl-10" />
+          <Input
+            placeholder="Search by name or SKU"
+            className="pl-10 bg-white h-12"
+          />
         </div>
         <div className="flex gap-4 w-full md:w-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full md:w-40 justify-between"
+                className="w-full md:w-40 justify-between h-12"
               >
                 Category <ChevronDown className="h-4 w-4" />
               </Button>
@@ -136,7 +141,7 @@ export default function ProductsPage() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full md:w-40 justify-between"
+                className="w-full md:w-40 justify-between h-12"
               >
                 Stock Status <ChevronDown className="h-4 w-4" />
               </Button>
@@ -155,7 +160,9 @@ export default function ProductsPage() {
         columns={productColumns}
         data={products}
         onDelete={handleDeleteClick}
-        onEdit={() => {}}
+        onEdit={() => {
+          router.push("/dashboard/products/edit/prod_1");
+        }}
       />
 
       {/* Delete Confirmation Dialog */}
