@@ -2,7 +2,16 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Home, Box, ShoppingBag, CreditCard, Settings } from "lucide-react";
+import {
+  Home,
+  Box,
+  ShoppingBag,
+  CreditCard,
+  Settings,
+  Truck,
+  Heart,
+  User,
+} from "lucide-react";
 import React from "react";
 
 // Reusable NavLink component for sidebar items
@@ -11,7 +20,8 @@ const NavLink = ({ href = "/", icon: Icon, children }) => {
   const splittedPath = pathname.split("/");
   const splittedHref = href.split("/");
   const isActive =
-    (pathname === "/dashboard" && href == "/dashboard") ||
+    (pathname === "/dashboard-customer" && href == "/dashboard-customer") ||
+    (pathname === "/dashboard-seller" && href == "/dashboard-seller") ||
     (splittedPath.length > 2 && splittedPath[2] === splittedHref[2]);
 
   return (
@@ -28,7 +38,7 @@ const NavLink = ({ href = "/", icon: Icon, children }) => {
 };
 
 // Main Sidebar Component
-export const Sidebar = () => (
+export const Sidebar = ({ isCustomer = false }) => (
   <aside className="hidden md:flex md:w-20 lg:w-64 bg-white border-r border-gray-200 p-4 flex-col justify-between flex-shrink-0">
     <div>
       <div className="mb-8 px-2 lg:px-4 h-8">
@@ -40,24 +50,38 @@ export const Sidebar = () => (
         </h1>
       </div>
       <nav className="flex flex-col space-y-2">
-        <NavLink href="/dashboard" icon={Home}>
-          Overview
-        </NavLink>
-        <NavLink href="/dashboard/products" icon={Box}>
-          Products
-        </NavLink>
-        <NavLink href="/dashboard/orders" icon={ShoppingBag}>
-          Orders
-        </NavLink>
-        <NavLink href="/dashboard/payments" icon={CreditCard}>
-          Payments
-        </NavLink>
+        {!isCustomer ? (
+          <>
+            <NavLink href="/dashboard-seller" icon={Home}>
+              Overview
+            </NavLink>
+            <NavLink href="/dashboard-seller/products" icon={Box}>
+              Products
+            </NavLink>
+            <NavLink href="/dashboard-seller/orders" icon={ShoppingBag}>
+              Orders
+            </NavLink>
+            <NavLink href="/dashboard-seller/payments" icon={CreditCard}>
+              Payments
+            </NavLink>
+          </>
+        ) : (
+          <>
+            <NavLink href="/dashboard-customer" icon={Home}>
+              Overview
+            </NavLink>
+            <NavLink href="/dashboard-customer/my-order" icon={Truck}>
+              My Order
+            </NavLink>
+            <NavLink href="/dashboard-customer/wishlist" icon={Heart}>
+              Wishlist
+            </NavLink>
+            <NavLink href="/dashboard-customer/profile" icon={User}>
+              Profile
+            </NavLink>
+          </>
+        )}
       </nav>
-    </div>
-    <div>
-      <NavLink href="/dashboard/settings" icon={Settings}>
-        Settings
-      </NavLink>
     </div>
   </aside>
 );

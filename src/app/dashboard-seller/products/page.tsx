@@ -21,11 +21,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, ChevronDown, PlusCircle, AlertTriangle } from "lucide-react";
-import { DataTable } from "@/components/DataTable";
+import {
+  Search,
+  ChevronDown,
+  PlusCircle,
+  AlertTriangle,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import { Action, DataTable } from "@/components/DataTable";
 import Link from "next/link";
 import productsData from "@/data/products.json"; // Import the JSON data
 import { useRouter } from "next/navigation";
+
+type Product = {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  stock: number;
+  image: string;
+  status: number;
+};
 
 const StatusBadge = ({ quantity }) => {
   let status = "Active";
@@ -98,6 +115,24 @@ export default function ProductsPage() {
     },
   ];
 
+  const getProductActions = (row: Product): Action<Product>[] => {
+    return [
+      {
+        label: "Edit",
+        icon: <Pencil className="mr-1 h-4 w-4" />,
+        onClick: () => router.push(`/dashboard/products/edit/${row.id}`), // Correct dynamic URL
+        variant: "outline",
+      },
+      {
+        label: "Delete",
+        icon: <Trash2 className="mr-1 h-4 w-4" />,
+        onClick: () => handleDeleteClick(row),
+        variant: "destructive",
+        // className: "text-red-600",
+      },
+    ];
+  };
+
   return (
     <>
       {/* Page Header */}
@@ -159,10 +194,7 @@ export default function ProductsPage() {
       <DataTable
         columns={productColumns}
         data={products}
-        onDelete={handleDeleteClick}
-        onEdit={() => {
-          router.push("/dashboard/products/edit/prod_1");
-        }}
+        getActions={getProductActions}
       />
 
       {/* Delete Confirmation Dialog */}

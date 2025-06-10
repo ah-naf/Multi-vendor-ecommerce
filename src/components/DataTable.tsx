@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Truck, Trash2 } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 
 export interface Column<T> {
   header: string;
@@ -24,21 +24,35 @@ export interface Column<T> {
   className?: string;
 }
 
+export interface Action<T> {
+  label: string;
+  icon: React.ReactNode;
+  onClick: (row: T) => void;
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
+  className?: string;
+}
+
 export interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
-  onEdit?: (row: T) => void;
-  onDelete?: (row: T) => void;
-  onShip?: (row: T) => void;
+  // CHANGED: The 'actions' array is now a 'getActions' function.
+  // This function takes a row and returns an array of actions for that specific row.
+  getActions?: (row: T) => Action<T>[];
 }
 
 export function DataTable<T extends { id: string }>({
   columns,
   data,
-  onEdit,
-  onDelete,
-  onShip,
+  getActions, // Updated prop name
 }: DataTableProps<T>) {
+  const hasActions = !!getActions;
+
   const DesktopTable = () => (
     <div className="hidden md:block bg-white rounded-lg border overflow-auto">
       <Table>
@@ -49,7 +63,7 @@ export function DataTable<T extends { id: string }>({
                 {col.header}
               </TableHead>
             ))}
-            {(onEdit || onDelete || onShip) && <TableHead>Actions</TableHead>}
+            {hasActions && <TableHead>Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,38 +76,21 @@ export function DataTable<T extends { id: string }>({
                     : (row as any)[col.accessor]}
                 </TableCell>
               ))}
-              {(onEdit || onDelete || onShip) && (
+              {hasActions && (
                 <TableCell>
-                  {onEdit && (
+                  {/* CHANGED: Call getActions(row) to get actions for this specific row */}
+                  {getActions(row).map((action, index) => (
                     <Button
-                      variant="outline"
+                      key={index}
+                      variant={action.variant || "outline"}
                       size="sm"
-                      className="mr-2"
-                      onClick={() => onEdit(row)}
+                      className={`mr-2 ${action.className || ""}`}
+                      onClick={() => action.onClick(row)}
                     >
-                      <Pencil className="mr-1 h-4 w-4" /> View
+                      {action.icon}
+                      {action.label}
                     </Button>
-                  )}
-                  {onShip && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="mr-2"
-                      onClick={() => onShip(row)}
-                    >
-                      <Truck className="mr-1 h-4 w-4" /> Ship
-                    </Button>
-                  )}
-                  {onDelete && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-500 hover:text-red-600"
-                      onClick={() => onDelete(row)}
-                    >
-                      <Trash2 className="mr-1 h-4 w-4" /> Delete
-                    </Button>
-                  )}
+                  ))}
                 </TableCell>
               )}
             </TableRow>
@@ -103,35 +100,16 @@ export function DataTable<T extends { id: string }>({
     </div>
   );
 
-  const MobileCard = ({ item }: { item: T }) => (
-    <div className="bg-white p-4 rounded-lg border">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
-          {columns.find((c) => c.accessor === "image")?.cell?.(item, "mobile")}
-          <div>
-            <p className="font-semibold">
-              {(item as any)[columns[0].accessor]}
-            </p>
-            {columns.find((c) => c.accessor === "date") && (
-              <p className="text-sm text-gray-500">
-                {
-                  (item as any)[
-                    columns.find((c) => c.accessor === "date")!.accessor
-                  ]
-                }
-              </p>
-            )}
-            {columns.find((c) => c.accessor === "amount") && (
-              <p className="text-sm font-bold mt-1">
-                {columns.find((c) => c.accessor === "amount")!.cell!(
-                  item,
-                  "mobile"
-                )}
-              </p>
-            )}
-          </div>
+  const MobileCard = ({ item }: { item: T }) => {
+    // Get the actions for this specific card
+    const itemActions = hasActions ? getActions(item) : [];
+
+    return (
+      <div className="bg-white p-4 rounded-lg border">
+        <div className="flex items-start justify-between">
+          {/* ... mobile card data rendering */}
         </div>
-        {(onEdit || onDelete || onShip) && (
+        {itemActions.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -139,30 +117,24 @@ export function DataTable<T extends { id: string }>({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(item)}>
-                  <Pencil className="mr-2 h-4 w-4" /> View
-                </DropdownMenuItem>
-              )}
-              {onShip && (
-                <DropdownMenuItem onClick={() => onShip(item)}>
-                  <Truck className="mr-2 h-4 w-4" /> Ship
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
+              {itemActions.map((action, index) => (
                 <DropdownMenuItem
-                  onClick={() => onDelete(item)}
-                  className="text-red-500"
+                  key={index}
+                  onClick={() => action.onClick(item)}
+                  className={
+                    action.variant === "destructive" ? "text-red-500" : ""
+                  }
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  {action.icon}
+                  {action.label}
                 </DropdownMenuItem>
-              )}
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>

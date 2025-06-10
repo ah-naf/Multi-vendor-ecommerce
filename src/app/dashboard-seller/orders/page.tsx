@@ -2,12 +2,12 @@
 
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataTable, Column } from "@/components/DataTable";
+import { DataTable, Column, Action } from "@/components/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import ordersData from "@/data/orders.json";
 import { ShipOrderDialog } from "@/components/orders/ShipOrderDialog";
-import { Search } from "lucide-react";
+import { Pencil, Search, Truck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 type Order = (typeof ordersData)[number];
@@ -72,6 +72,30 @@ export default function OrdersPage() {
     []
   );
 
+  const getOrderActions = (row: Order): Action<Order>[] => {
+    const actions: Action<Order>[] = [];
+
+    // All orders can be viewed
+    actions.push({
+      label: "View",
+      icon: <Pencil className="mr-1 h-4 w-4" />,
+      onClick: () => router.push(`/dashboard/orders/${row.id}`),
+      variant: "outline",
+    });
+
+    // Only "Pending" orders can be shipped
+    if (row.status === "Pending") {
+      actions.push({
+        label: "Ship",
+        icon: <Truck className="mr-1 h-4 w-4" />,
+        onClick: () => setShipOrder(row),
+        variant: "default",
+      });
+    }
+
+    return actions;
+  };
+
   return (
     <div className="w-full">
       <h1 className="text-2xl font-bold mb-4">Orders</h1>
@@ -79,7 +103,10 @@ export default function OrdersPage() {
       <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input placeholder="Search by order id or customer name" className="pl-10 bg-white h-12" />
+          <Input
+            placeholder="Search by order id or customer name"
+            className="pl-10 bg-white h-12"
+          />
         </div>
       </div>
 
@@ -95,8 +122,7 @@ export default function OrdersPage() {
       <DataTable<Order>
         columns={columns}
         data={filtered}
-        onEdit={(row) => router.push(`/dashboard/orders/${row.id}`)}
-        onShip={(row) => setShipOrder(row)}
+        getActions={getOrderActions}
       />
 
       {/* Controlled Ship Dialog */}
