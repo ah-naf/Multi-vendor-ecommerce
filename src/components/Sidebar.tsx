@@ -42,7 +42,10 @@ const NavLink = ({ href = "/", icon: Icon, children }) => {
 export const Sidebar = ({ isCustomer = false }) => (
   <aside className="hidden md:flex md:w-20 lg:w-64 bg-white border-r border-gray-200 p-4 flex-col justify-between flex-shrink-0">
     <div>
-      <div className="mb-8 px-2 lg:px-4 h-8">
+      <div
+        className="mb-8 px-2 lg:px-4 h-8 cursor-pointer"
+        onClick={() => (window.location.href = "/")}
+      >
         <h1 className="text-2xl font-bold text-gray-800 lg:inline-block md:hidden hidden">
           Logo
         </h1>
