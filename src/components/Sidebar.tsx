@@ -50,12 +50,17 @@ export const Sidebar = ({ isCustomer = false }) => (
           L
         </h1>
       </div>
-      <nav className="flex flex-col space-y-2">
-        {!isCustomer ? (
+      <div>
+        {!isCustomer && (
+          <NavLink href="/dashboard-seller" icon={Home}>
+            Seller Overview
+          </NavLink>
+        )}
+        <NavLink href="/dashboard-customer" icon={Home}>
+          Customer Overview
+        </NavLink>
+        {!isCustomer && (
           <>
-            <NavLink href="/dashboard-seller" icon={Home}>
-              Overview
-            </NavLink>
             <NavLink href="/dashboard-seller/products" icon={Box}>
               Products
             </NavLink>
@@ -66,26 +71,21 @@ export const Sidebar = ({ isCustomer = false }) => (
               Payments
             </NavLink>
           </>
-        ) : (
-          <>
-            <NavLink href="/dashboard-customer" icon={Home}>
-              Overview
-            </NavLink>
-            <NavLink href="/dashboard-customer/my-order" icon={Truck}>
-              My Order
-            </NavLink>
-            <NavLink href="/dashboard-customer/wishlist" icon={Heart}>
-              Wishlist
-            </NavLink>
-            <NavLink href="/dashboard-customer/cart" icon={ShoppingCart}>
-              Cart
-            </NavLink>
-            <NavLink href="/dashboard-customer/profile" icon={User}>
-              Profile
-            </NavLink>
-          </>
         )}
-      </nav>
+
+        <NavLink href="/dashboard-customer/my-order" icon={Truck}>
+          My Order
+        </NavLink>
+        <NavLink href="/dashboard-customer/wishlist" icon={Heart}>
+          Wishlist
+        </NavLink>
+        <NavLink href="/dashboard-customer/cart" icon={ShoppingCart}>
+          Cart
+        </NavLink>
+        <NavLink href="/dashboard-customer/profile" icon={User}>
+          Profile
+        </NavLink>
+      </div>
     </div>
   </aside>
 );
