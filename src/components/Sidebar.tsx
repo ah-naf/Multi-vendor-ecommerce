@@ -11,6 +11,7 @@ import {
   Truck,
   Heart,
   User,
+  ShoppingCart,
 } from "lucide-react";
 import React from "react";
 
@@ -75,6 +76,9 @@ export const Sidebar = ({ isCustomer = false }) => (
             </NavLink>
             <NavLink href="/dashboard-customer/wishlist" icon={Heart}>
               Wishlist
+            </NavLink>
+            <NavLink href="/dashboard-customer/cart" icon={ShoppingCart}>
+              Cart
             </NavLink>
             <NavLink href="/dashboard-customer/profile" icon={User}>
               Profile

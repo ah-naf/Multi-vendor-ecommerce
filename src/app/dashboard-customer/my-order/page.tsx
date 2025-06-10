@@ -93,7 +93,7 @@ export default function MyOrdersPage() {
       label: "View",
       icon: <Pencil className="mr-2 h-4 w-4" />,
       onClick: (row) => alert(`Cancelling order: ${row.id}`),
-      variant: "outline",
+      className: "bg-gray-200 text-gray-800 hover:bg-gray-300",
     });
 
     switch (order.status) {
@@ -102,7 +102,7 @@ export default function MyOrdersPage() {
           label: "Cancel",
           icon: <XCircle className="mr-2 h-4 w-4" />,
           onClick: (row) => alert(`Cancelling order: ${row.id}`),
-          variant: "outline",
+          className: "bg-red-600 text-white hover:bg-red-700 hover:text-white",
         });
         break;
 
@@ -111,13 +111,15 @@ export default function MyOrdersPage() {
           label: "Track",
           icon: <PackageCheck className="mr-2 h-4 w-4" />,
           onClick: (row) => alert(`Tracking order: ${row.id}`),
-          variant: "outline",
+          className:
+            "bg-blue-600 text-white hover:bg-blue-500 hover:text-white",
         });
         actions.push({
           label: "Buy Again",
           icon: <RefreshCw className="mr-2 h-4 w-4" />,
           onClick: (row) => alert(`Buying ${row.id} again`),
-          variant: "outline",
+          className:
+            "bg-green-600 text-white hover:bg-green-500 hover:text-white",
         });
         break;
 
@@ -127,7 +129,8 @@ export default function MyOrdersPage() {
           label: "Buy Again",
           icon: <RefreshCw className="mr-2 h-4 w-4" />,
           onClick: (row) => alert(`Buying ${row.id} again`),
-          variant: "outline",
+          className:
+            "bg-green-600 text-white hover:bg-green-500 hover:text-white",
         });
         break;
 
@@ -136,10 +139,6 @@ export default function MyOrdersPage() {
         break;
     }
     return actions;
-  };
-
-  const handleEdit = (row: Order) => {
-    alert(`Viewing details for order: ${row.id}`);
   };
 
   const filteredData = orders.filter((order) => {
