@@ -1,88 +1,99 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { toast } from 'sonner';
-import { WishlistItem } from '@/types'; // Import WishlistItem from types
+import { WishlistItem } from '@/types';
+import { useAuth } from './AuthContext'; // To check authentication status
+import {
+  fetchWishlistApi,
+  addToWishlistApi,
+  removeFromWishlistApi,
+} from '@/services/userProfileService';
 
-// 1. WishlistItem Type is now imported from @/types
-// export interface WishlistItem {
-//   id: string;        // Product's unique ID (custom 'id' field)
-//   _id?: string;       // MongoDB ID, if available and needed
-//   name: string;
-//   price: number;     // Current price or default price
-//   image?: string;    // Primary image URL
-//   category?: string;
-//   // Add any other fields you want to store/display in the wishlist
-// }
-
-// 2. Define WishlistContext State and Functions
 interface WishlistContextType {
   wishlistItems: WishlistItem[];
-  addToWishlist: (item: WishlistItem) => void;
-  removeFromWishlist: (itemId: string) => void;
-  isWishlisted: (itemId: string) => boolean;
+  addToWishlist: (item: Omit<WishlistItem, 'addedAt'>) => Promise<void>;
+  removeFromWishlist: (productId: string) => Promise<void>;
+  isWishlisted: (productId: string) => boolean;
   getWishlistTotalItems: () => number;
+  isLoading: boolean;
 }
 
-// Create WishlistContext
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
-// WishlistProvider Component
 interface WishlistProviderProps {
   children: ReactNode;
 }
 
 export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { user, token } = useAuth(); // Get user and token from AuthContext
 
-  // 3. Load wishlist from localStorage on initial load
-  useEffect(() => {
-    const storedWishlist = localStorage.getItem('wishlistItems');
-    if (storedWishlist) {
+  const loadWishlist = useCallback(async () => {
+    if (user && token) {
+      setIsLoading(true);
       try {
-        const parsedWishlist = JSON.parse(storedWishlist);
-        if (Array.isArray(parsedWishlist)) { // Basic validation
-          setWishlistItems(parsedWishlist);
-        } else {
-          localStorage.removeItem('wishlistItems'); // Clear invalid data
-        }
-      } catch (error) {
-        console.error("Failed to parse wishlist items from localStorage:", error);
-        localStorage.removeItem('wishlistItems'); // Clear corrupted data
+        const backendWishlistItems = await fetchWishlistApi();
+        setWishlistItems(backendWishlistItems);
+      } catch (error: any) {
+        console.error("Failed to fetch wishlist:", error);
+        toast.error(error.message || "Failed to load wishlist items.");
+        setWishlistItems([]);
+      } finally {
+        setIsLoading(false);
       }
+    } else {
+      setWishlistItems([]);
     }
-  }, []);
+  }, [user, token]);
 
-  // 4. Save wishlist to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('wishlistItems', JSON.stringify(wishlistItems));
-  }, [wishlistItems]);
+    loadWishlist();
+  }, [loadWishlist]);
 
-  const addToWishlist = (itemToAdd: WishlistItem) => {
-    setWishlistItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === itemToAdd.id);
-      if (existingItem) {
+  const addToWishlist = async (itemToAdd: Omit<WishlistItem, 'addedAt'>) => {
+    if (!user) {
+      toast.error("Please log in to add items to your wishlist.");
+      return;
+    }
+    // Check if item already exists locally to prevent redundant API calls if backend also checks
+    if (wishlistItems.some(item => item.productId === itemToAdd.productId)) {
         toast.info(`${itemToAdd.name} is already in your wishlist.`);
-        return prevItems; // Prevent duplicates
-      } else {
-        toast.success(`${itemToAdd.name} added to wishlist!`);
-        return [...prevItems, itemToAdd];
-      }
-    });
+        return;
+    }
+    setIsLoading(true);
+    try {
+      // itemToAdd directly matches what addToWishlistApi expects (productId, name, price, image, attributes)
+      const updatedWishlist = await addToWishlistApi(itemToAdd);
+      setWishlistItems(updatedWishlist);
+      toast.success(`${itemToAdd.name} added to wishlist!`);
+    } catch (error: any) {
+      console.error("Failed to add to wishlist:", error);
+      toast.error(error.message || "Failed to add item to wishlist.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const removeFromWishlist = (itemId: string) => {
-    setWishlistItems(prevItems => {
-      const itemToRemove = prevItems.find(item => item.id === itemId);
-      if (itemToRemove) {
-        toast.info(`${itemToRemove.name} removed from wishlist.`);
-      }
-      return prevItems.filter(item => item.id !== itemId);
-    });
+  const removeFromWishlist = async (productId: string) => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const updatedWishlist = await removeFromWishlistApi(productId);
+      setWishlistItems(updatedWishlist);
+      const itemRemoved = wishlistItems.find(item => item.productId === productId);
+      toast.info(`${itemRemoved ? itemRemoved.name : 'Item'} removed from wishlist.`);
+    } catch (error: any) {
+      console.error("Failed to remove from wishlist:", error);
+      toast.error(error.message || "Failed to remove item from wishlist.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const isWishlisted = (itemId: string): boolean => {
-    return wishlistItems.some(item => item.id === itemId);
+  const isWishlisted = (productId: string): boolean => {
+    return wishlistItems.some(item => item.productId === productId);
   };
 
   const getWishlistTotalItems = (): number => {
@@ -95,6 +106,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
     removeFromWishlist,
     isWishlisted,
     getWishlistTotalItems,
+    isLoading,
   };
 
   return (
@@ -104,7 +116,6 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
   );
 };
 
-// useWishlist Hook
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (context === undefined) {

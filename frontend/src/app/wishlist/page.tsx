@@ -11,27 +11,39 @@ import { HeartCrack, XCircle, ShoppingCart } from 'lucide-react'; // Added Shopp
 import { useCart } from '@/context/CartContext'; // Added useCart
 
 export default function WishlistPage() {
-  const { wishlistItems, removeFromWishlist, getWishlistTotalItems } = useWishlist();
-  const { addToCart, cartItems } = useCart(); // For "Move to Cart"
+  const { wishlistItems, removeFromWishlist, getWishlistTotalItems, isLoading: isWishlistLoading } = useWishlist();
+  const { addToCart, cartItems, isLoading: isCartLoading } = useCart(); // For "Move to Cart"
 
   const totalItems = getWishlistTotalItems();
 
-  const handleMoveToCart = (wishlistItem: any) => { // Use 'any' or a more specific type for wishlistItem
+  const handleMoveToCart = async (wishlistItem: WishlistItem) => {
+    // Data needed by CartContext's addToCart: { productId: string, name: string, price: number, image?: string, attributes?: string }
     const itemForCart = {
-      id: wishlistItem.id,
+      productId: wishlistItem.productId,
       name: wishlistItem.name,
       price: wishlistItem.price,
       image: wishlistItem.image,
-      // quantity: 1, // Default quantity when moving to cart
+      attributes: wishlistItem.attributes, // Ensure WishlistItem includes attributes if used by CartItem
     };
 
-    const itemInCart = cartItems.find(item => item.id === wishlistItem.id);
-    // Assuming maxQty isn't readily available on wishlist item, basic add. Advanced check would need product details.
-    // For simplicity, we add 1. If you want to check against stock, you'd need to fetch product details here or ensure WishlistItem has stock info.
+    // Check if item is already in cart by productId and attributes (if applicable)
+    // For simplicity, this example just checks productId. A more robust check might include attributes.
+    const itemInCart = cartItems.find(cartItem => cartItem.productId === wishlistItem.productId);
 
-    addToCart(itemForCart, 1); // Add 1 quantity by default
-    removeFromWishlist(wishlistItem.id); // Remove from wishlist after adding to cart
-    toast.success(`${wishlistItem.name} moved to cart!`);
+    if (itemInCart) {
+        toast.info(`${wishlistItem.name} is already in your cart. You can update quantity there.`);
+        // Optionally, could remove from wishlist here if that's the desired UX
+        // await removeFromWishlist(wishlistItem.productId);
+        return;
+    }
+
+    try {
+      await addToCart(itemForCart, 1); // Add 1 quantity by default
+      await removeFromWishlist(wishlistItem.productId); // Remove from wishlist after adding to cart
+      toast.success(`${wishlistItem.name} moved to cart!`);
+    } catch (error: any) {
+      toast.error(`Failed to move ${wishlistItem.name} to cart: ${error.message}`);
+    }
   };
 
 
@@ -60,8 +72,8 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {wishlistItems.map(item => (
-              <div key={item.id || item._id} className="bg-white rounded-xl shadow-lg overflow-hidden group transition-all duration-300 ease-in-out hover:shadow-2xl">
-                <Link href={`/products/${item.id}`} passHref>
+              <div key={item.productId} className="bg-white rounded-xl shadow-lg overflow-hidden group transition-all duration-300 ease-in-out hover:shadow-2xl">
+                <Link href={`/products/${item.productId}`} passHref>
                   <div className="relative w-full h-60 bg-gray-100">
                     <Image
                       src={item.image || '/placeholder-image.svg'}
@@ -73,9 +85,10 @@ export default function WishlistPage() {
                   </div>
                 </Link>
                 <div className="p-5">
-                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider">{item.category || 'N/A'}</p>
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider">{item.attributes || 'N/A'}</p>
+                  {/* Assuming attributes might be more relevant here than category, or category isn't on WishlistItem type */}
                   <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate" title={item.name}>
-                    <Link href={`/products/${item.id}`} passHref className="hover:text-red-600 transition-colors">
+                    <Link href={`/products/${item.productId}`} passHref className="hover:text-red-600 transition-colors">
                       {item.name}
                     </Link>
                   </h3>
@@ -86,13 +99,15 @@ export default function WishlistPage() {
                       variant="outline"
                       className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center gap-2"
                       onClick={() => handleMoveToCart(item)}
+                      disabled={isCartLoading || isWishlistLoading}
                     >
                       <ShoppingCart className="h-5 w-5" /> Move to Cart
                     </Button>
                     <Button
                       variant="ghost"
                       className="w-full text-gray-500 hover:text-red-600 hover:bg-red-50 flex items-center justify-center gap-2"
-                      onClick={() => removeFromWishlist(item.id)}
+                      onClick={() => removeFromWishlist(item.productId)}
+                      disabled={isWishlistLoading}
                     >
                       <XCircle className="h-5 w-5" /> Remove
                     </Button>

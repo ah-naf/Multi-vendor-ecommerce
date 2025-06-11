@@ -52,6 +52,14 @@ app.use("/api/seller", sellerRoutes);
 const customerRoutes = require("./routes/customerRoutes");
 app.use("/api/customer", customerRoutes);
 
+// Cart Routes
+const cartRoutes = require('./routes/cartRoutes');
+app.use('/api/cart', cartRoutes);
+
+// Wishlist Routes
+const wishlistRoutes = require('./routes/wishlistRoutes');
+app.use('/api/wishlist', wishlistRoutes);
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -41,21 +41,32 @@ export interface Product {
   updatedAt?: string; // Timestamps
 }
 
-// Cart Item Type
+// Cart Item Type - based on backend/models/User.js CartItemSchema
 export interface CartItem {
-  id: string; // Product's unique ID
+  productId: string; // References Product._id or Product.id depending on backend setup
   name: string;
+  attributes?: string; // Optional attributes like size, color
   price: number;
   quantity: number;
   image?: string;
+  addedAt?: string | Date; // ISO string or Date object
 }
 
-// Wishlist Item Type
+// Wishlist Item Type - based on backend/models/User.js WishlistItemSchema
 export interface WishlistItem {
-  id: string;        // Product's unique ID (custom 'id' field)
-  _id?: string;       // MongoDB ID, if available and needed
+  productId: string; // References Product._id or Product.id
   name: string;
-  price: number;     // Current price or default price
-  image?: string;    // Primary image URL
+  attributes?: string; // Optional attributes like size, color
+  price: number;
+  image?: string;
+  addedAt?: string | Date; // ISO string or Date object
+}
+
+// Simplified Product Summary for listings or quick views
+export interface ProductSummary {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
   category?: string;
 }

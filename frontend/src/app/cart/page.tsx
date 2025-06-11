@@ -19,24 +19,24 @@ export default function CartPage() {
     getTotalItems
   } = useCart();
 
-  const handleQuantityChange = (itemId: string, currentQuantity: number, change: number) => {
+  const handleQuantityChange = (productId: string, currentQuantity: number, change: number) => {
     const newQuantity = currentQuantity + change;
     if (newQuantity <= 0) {
       // Confirmation before removing item when quantity becomes 0 or less
       if (window.confirm("Do you want to remove this item from the cart?")) {
-        removeFromCart(itemId);
+        removeFromCart(productId);
       }
     } else {
       // Check against available stock if that info is part of CartItem, otherwise just update
       // For now, we don't have max stock per item in CartItem, so we just update
-      updateQuantity(itemId, newQuantity);
+      updateQuantity(productId, newQuantity);
       toast.success("Quantity updated.");
     }
   };
 
-  const handleRemoveItem = (itemId: string, itemName: string) => {
+  const handleRemoveItem = (productId: string, itemName: string) => {
     if (window.confirm(`Are you sure you want to remove ${itemName} from the cart?`)) {
-      removeFromCart(itemId);
+      removeFromCart(productId);
     }
   };
 
@@ -81,7 +81,7 @@ export default function CartPage() {
 
               <div className="space-y-6">
                 {cartItems.map(item => (
-                  <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
+                  <div key={item.productId} className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
                     <div className="relative w-24 h-24 rounded-md overflow-hidden bg-gray-100">
                       <Image
                         src={item.image || '/placeholder-image.svg'}
@@ -108,7 +108,7 @@ export default function CartPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleQuantityChange(item.id, item.quantity, 1)}
+                        onClick={() => handleQuantityChange(item.productId, item.quantity, 1)}
                         className="text-green-500 hover:text-green-700"
                       >
                         <PlusCircle className="h-6 w-6" />
@@ -117,7 +117,7 @@ export default function CartPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveItem(item.id, item.name)}
+                      onClick={() => handleRemoveItem(item.productId, item.name)}
                       className="text-gray-400 hover:text-red-600"
                     >
                       <Trash2 className="h-5 w-5" />
