@@ -1,62 +1,44 @@
-// File Path: src/app/dashboard/products/add/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { ProductForm } from "../../../../components/ProductForm";
-import productsData from "../../../../data/products.json";
+import React from "react";
+// Assuming ProductForm is in frontend/src/components/ProductForm.tsx
+import ProductForm from "../../../../../components/ProductForm";
 import { useRouter } from "next/navigation";
+// Assuming productService is in frontend/src/services/productService.ts
+import { createProduct } from "../../../../../services/productService";
 
-export default function AddOrEditProductPage({
-  params,
-}: {
-  params: { id?: string };
-}) {
-  const isEditMode = !!params.id;
-  const [productToEdit, setProductToEdit] = useState(null);
-  const [isLoading, setIsLoading] = useState(isEditMode);
+const AddProductPage = () => {
   const router = useRouter();
 
-  useEffect(() => {
-    if (isEditMode) {
-      // Find the product in our "database"
-      const product = productsData.find((p) => p.id === params.id);
-      setProductToEdit(product);
-      setIsLoading(false);
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      // Optional: Log FormData entries for debugging
+      // for (let [key, value] of formData.entries()) {
+      //   console.log(`FormData ${key}: ${value instanceof File ? value.name : value}`);
+      // }
+
+      const newProduct = await createProduct(formData);
+      console.log("Product created successfully:", newProduct);
+      // TODO: Add success toast/notification here
+      router.push("/dashboard-seller/products"); // Navigate to product list on success
+    } catch (error) {
+      console.error("Failed to create product:", error);
+      // TODO: Add error toast/notification here
+      // Consider displaying error.message to the user in the form
     }
-  }, [isEditMode, params.id]);
-
-  const handleSave = (data) => {
-    if (isEditMode) {
-      console.log("UPDATING product:", params.id, data);
-      alert("Product updated! Check the console for data.");
-    } else {
-      console.log("ADDING new product:", data);
-      alert("Product added! Check the console for data.");
-    }
-    // In a real app, you would use the Next.js router to navigate.
-    // router.push('/dashboard/products');
-    console.log("Redirecting to /dashboard/products ...");
   };
-
-  const handleCancel = () => {
-    // In a real app, you would use the Next.js router to navigate.
-    // router.push('/dashboard/products');
-    console.log("Cancelling and redirecting to /dashboard/products ...");
-    router.push("/dashboard/products");
-  };
-
-  if (isEditMode && isLoading) {
-    return <div className="p-8">Loading product data...</div>;
-  }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <ProductForm
-        initialProduct={productToEdit}
-        isEditMode={isEditMode}
-        onSave={handleSave}
-        onCancel={handleCancel}
-      />
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">Add New Product</h1>
+        <ProductForm
+          onSubmit={handleSubmit}
+          mode="create" // Explicitly set mode for clarity in ProductForm
+        />
+      </div>
     </div>
   );
-}
+};
+
+export default AddProductPage;

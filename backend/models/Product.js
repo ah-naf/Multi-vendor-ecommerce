@@ -42,9 +42,9 @@ const ProductSchema = new Schema(
       description: { type: String, required: true },
     },
     seller: {
-      name: { type: String, required: true },
-      email: { type: String, required: true },
-      phone: { type: String, required: true },
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
   },
   {

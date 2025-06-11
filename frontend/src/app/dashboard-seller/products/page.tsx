@@ -31,20 +31,32 @@ import {
 } from "lucide-react";
 import { Action, DataTable } from "@/components/DataTable";
 import Link from "next/link";
-import productsData from "@/data/products.json"; // Import the JSON data
+// import productsData from "@/data/products.json"; // Removed static data import
+import { getSellerProducts, deleteProduct } from "../../../../services/productService"; // Adjusted path
 import { useRouter } from "next/navigation";
 
-type Product = {
-  id: string;
-  name: string;
-  sku: string;
-  price: number;
-  stock: number;
-  image: string;
-  status: number;
-};
+// Define Product type based on backend schema
+interface Product {
+  id: string; // This is the custom string ID from our schema
+  general: {
+    title: string;
+    images: string[];
+    category?: string; // Optional as it's not used in current table
+    description?: string; // Optional
+  };
+  inventory: {
+    sku: string;
+    quantity: number;
+  };
+  pricing: {
+    price: number;
+  };
+  // Add other fields if needed by the table or actions
+}
 
-const StatusBadge = ({ quantity }) => {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+const StatusBadge = ({ quantity }: { quantity: number }) => {
   let status = "Active";
   let variant: "default" | "secondary" | "destructive" = "default";
   if (quantity === 0) {
@@ -64,54 +76,75 @@ export default function ProductsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // In a real app, this would be an API call.
-    // For now, we simulate it by loading the JSON file.
-    const mappedProducts = productsData.map((p) => ({
-      id: p.id,
-      name: p.general.title,
-      sku: p.inventory.sku,
-      price: p.pricing.price,
-      stock: p.inventory.quantity,
-      image: p.general.images[0],
-      status: p.inventory.quantity,
-    }));
-    setProducts(mappedProducts);
+    const fetchProducts = async () => {
+      try {
+        const data = await getSellerProducts();
+        // Transform data to fit the DataTable structure if needed
+        // Assuming the data from getSellerProducts matches the new Product interface
+        setProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+        // Handle error (e.g., show a toast message)
+      }
+    };
+    fetchProducts();
   }, []);
 
-  const handleDeleteClick = (product) => {
+  const handleDeleteClick = (product: Product) => {
     setSelectedProduct(product);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    setProducts(products.filter((p) => p.id !== selectedProduct.id));
-    setIsDeleteDialogOpen(false);
-    setSelectedProduct(null);
+  const confirmDelete = async () => {
+    if (!selectedProduct) return;
+    try {
+      await deleteProduct(selectedProduct.id);
+      setProducts(products.filter((p) => p.id !== selectedProduct.id));
+      setIsDeleteDialogOpen(false);
+      setSelectedProduct(null);
+      // Add success toast/notification here
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      // Add error toast/notification here
+      setIsDeleteDialogOpen(false); // Optionally close dialog on error too
+    }
   };
 
+  // Define columns for DataTable, mapping to the new Product structure
   const productColumns = [
     {
       header: "Image",
-      accessor: "image",
+      accessorKey: "general.images", // Adjusted accessor
       className: "w-[80px]",
-      cell: (row, view) => (
-        <img
-          src={row.image}
-          alt={row.name}
-          className={`${
-            view === "mobile" ? "h-16 w-16" : "h-16 w-16"
-          } object-cover rounded-md bg-gray-100`}
-        />
-      ),
+      cell: ({ row }) => {
+        const product = row.original as Product;
+        const imageUrl = product.general.images && product.general.images.length > 0
+          ? `${API_BASE_URL}${product.general.images[0]}`
+          : "/placeholder-image.png"; // Fallback image
+        return (
+          <img
+            src={imageUrl}
+            alt={product.general.title}
+            className="h-16 w-16 object-cover rounded-md bg-gray-100"
+          />
+        );
+      },
     },
-    { header: "Name", accessor: "name" },
-    { header: "SKU", accessor: "sku" },
-    { header: "Price", accessor: "price", cell: (row) => `$${row.price}` },
-    { header: "Stock", accessor: "stock" },
+    { header: "Name", accessorKey: "general.title" }, // Adjusted accessor
+    { header: "SKU", accessorKey: "inventory.sku" }, // Adjusted accessor
+    { header: "Price", accessorKey: "pricing.price", cell: ({ row }) => {
+        const product = row.original as Product;
+        return `$${product.pricing.price}`;
+      }
+    },
+    { header: "Stock", accessorKey: "inventory.quantity" }, // Adjusted accessor
     {
       header: "Status",
-      accessor: "status",
-      cell: (row) => <StatusBadge quantity={row.status} />,
+      accessorKey: "inventory.quantity", // Status is derived from quantity
+      cell: ({ row }) => {
+        const product = row.original as Product;
+        return <StatusBadge quantity={product.inventory.quantity} />;
+      }
     },
   ];
 
@@ -120,7 +153,7 @@ export default function ProductsPage() {
       {
         label: "Edit",
         icon: <Pencil className="mr-1 h-4 w-4" />,
-        onClick: () => router.push(`/dashboard/products/edit/${row.id}`), // Correct dynamic URL
+        onClick: () => router.push(`/dashboard-seller/products/edit/${row.id}`), // Corrected path
         variant: "outline",
       },
       {
@@ -138,7 +171,7 @@ export default function ProductsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-bold">Products</h1>
-        <Link href="/dashboard/products/add" passHref>
+        <Link href="/dashboard-seller/products/add" passHref> {/* Corrected path */}
           <Button className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto">
             <PlusCircle className="mr-2 h-4 w-4" /> Add Product
           </Button>
@@ -210,7 +243,7 @@ export default function ProductsPage() {
             <DialogDescription className="text-center px-4">
               Are you sure you want to delete this product? This action cannot
               be undone.
-              <p className="font-semibold mt-2">{selectedProduct?.name}</p>
+              <p className="font-semibold mt-2">{selectedProduct?.general?.title}</p> {/* Adjusted field */}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-center sm:space-x-2 gap-2 mt-4">

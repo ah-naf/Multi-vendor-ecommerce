@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require("path"); // Added for serving static files
 
 // Initialize Express app
 const app = express();
@@ -15,6 +16,9 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+
+// Serve static files for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 const MONGO_URI = "mongodb://localhost:27017/ecomm_auth_db";
