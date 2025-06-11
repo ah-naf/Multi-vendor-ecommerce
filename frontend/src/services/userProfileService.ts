@@ -126,6 +126,23 @@ export const addToWishlistApi = async (
   return response.json(); // Assuming backend returns the updated wishlist
 };
 
+export const clearWishlistApi = async (): Promise<void> => {
+  const token = getAuthToken();
+  const response = await fetch(`${API_BASE_URL}/wishlist/clear`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to clear wishlist");
+  }
+  // No specific content expected on successful clear, so no need to return response.json()
+  // If the backend does return the (now empty) wishlist, you could return response.json()
+};
+
 export const removeFromWishlistApi = async (
   productId: string
 ): Promise<WishlistItem[]> => {

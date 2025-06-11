@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react"; // Added useState
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
@@ -9,6 +9,16 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { MinusCircle, PlusCircle, Trash2, XCircle } from "lucide-react";
 import { getBackendBaseUrl } from "@/services/productService";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"; // Added Dialog components
 
 export default function CartPage() {
   const {
@@ -20,6 +30,14 @@ export default function CartPage() {
     getTotalItems,
   } = useCart();
 
+  const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<{id: string, name: string} | null>(null);
+
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [showQuantityRemoveDialog, setShowQuantityRemoveDialog] = useState(false);
+  const [itemForQuantityRemoval, setItemForQuantityRemoval] = useState<string | null>(null);
+
+
   const handleQuantityChange = (
     productId: string,
     currentQuantity: number,
@@ -27,32 +45,46 @@ export default function CartPage() {
   ) => {
     const newQuantity = currentQuantity + change;
     if (newQuantity <= 0) {
-      // Confirmation before removing item when quantity becomes 0 or less
-      if (window.confirm("Do you want to remove this item from the cart?")) {
-        removeFromCart(productId);
-      }
+      setItemForQuantityRemoval(productId);
+      setShowQuantityRemoveDialog(true);
     } else {
-      // Check against available stock if that info is part of CartItem, otherwise just update
-      // For now, we don't have max stock per item in CartItem, so we just update
       updateQuantity(productId, newQuantity);
       toast.success("Quantity updated.");
     }
   };
 
-  const handleRemoveItem = (productId: string, itemName: string) => {
-    if (
-      window.confirm(
-        `Are you sure you want to remove ${itemName} from the cart?`
-      )
-    ) {
-      removeFromCart(productId);
+  const confirmRemoveFromQuantity = () => {
+    if (itemForQuantityRemoval) {
+      removeFromCart(itemForQuantityRemoval);
+      toast.info("Item removed from cart.");
     }
+    setShowQuantityRemoveDialog(false);
+    setItemForQuantityRemoval(null);
+  };
+
+
+  const handleRemoveItem = (productId: string, itemName: string) => {
+    setItemToRemove({ id: productId, name: itemName });
+    setShowRemoveItemDialog(true);
+  };
+
+  const confirmRemoveItem = () => {
+    if (itemToRemove) {
+      removeFromCart(itemToRemove.id);
+      toast.info(`${itemToRemove.name} removed from cart.`);
+    }
+    setShowRemoveItemDialog(false);
+    setItemToRemove(null);
   };
 
   const handleClearCart = () => {
-    if (window.confirm("Are you sure you want to clear the entire cart?")) {
-      clearCart();
-    }
+    setShowClearCartDialog(true);
+  };
+
+  const confirmClearCart = () => {
+    clearCart();
+    toast.info("Cart cleared.");
+    setShowClearCartDialog(false);
   };
 
   const totalItems = getTotalItems();
@@ -87,13 +119,30 @@ export default function CartPage() {
                 <h2 className="text-xl font-semibold text-gray-800">
                   {totalItems} item{totalItems > 1 ? "s" : ""} in your cart
                 </h2>
-                <Button
-                  variant="outline"
-                  onClick={handleClearCart}
-                  className="text-sm text-red-500 hover:text-red-700 border-red-300 hover:border-red-500"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Clear Cart
-                </Button>
+                <Dialog open={showClearCartDialog} onOpenChange={setShowClearCartDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      // onClick={handleClearCart} // DialogTrigger handles open
+                      className="text-sm text-red-500 hover:text-red-700 border-red-300 hover:border-red-500"
+                      disabled={cartItems.length === 0}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Clear Cart
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Clear Entire Cart?</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to remove all items from your shopping cart? This action cannot be undone.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowClearCartDialog(false)}>Cancel</Button>
+                      <Button variant="destructive" onClick={confirmClearCart}>Yes, Clear Cart</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               <div className="space-y-6">
@@ -150,20 +199,49 @@ export default function CartPage() {
                         <PlusCircle className="h-6 w-6" />
                       </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        handleRemoveItem(item.productId, item.name)
-                      }
-                      className="text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
+                    <Dialog open={showRemoveItemDialog && itemToRemove?.id === item.productId} onOpenChange={(isOpen) => { if(!isOpen) setItemToRemove(null); setShowRemoveItemDialog(isOpen);}}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveItem(item.productId, item.name)}
+                          className="text-gray-400 hover:text-red-600"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Remove {itemToRemove?.name}?</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to remove this item from your cart?
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => {setItemToRemove(null); setShowRemoveItemDialog(false);}}>Cancel</Button>
+                          <Button variant="destructive" onClick={confirmRemoveItem}>Remove Item</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 ))}
               </div>
             </div>
+
+            <Dialog open={showQuantityRemoveDialog} onOpenChange={setShowQuantityRemoveDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Remove Item?</DialogTitle>
+                  <DialogDescription>
+                    Reducing quantity to zero will remove this item from the cart. Do you want to proceed?
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => {setItemForQuantityRemoval(null); setShowQuantityRemoveDialog(false)}}>Cancel</Button>
+                  <Button variant="destructive" onClick={confirmRemoveFromQuantity}>Yes, Remove</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             {/* Order Summary Section */}
             <div className="lg:col-span-1">

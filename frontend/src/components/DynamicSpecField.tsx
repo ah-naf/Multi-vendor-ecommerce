@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { useState } from "react";
+import { toast } from "sonner"; // Added toast
 
 // --- Dynamic Spec Field ---
 export const DynamicSpecField = ({ spec, onUpdate, onRemove }) => {
@@ -71,7 +72,7 @@ export const AddSpecDialog = ({ onAdd }) => {
 
   const handleAdd = () => {
     if (!label.trim()) {
-      alert("Please enter a field label.");
+      toast.error("Please enter a field label."); // Replaced alert with toast
       return;
     }
     onAdd({

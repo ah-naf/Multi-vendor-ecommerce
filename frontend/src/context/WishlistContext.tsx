@@ -15,12 +15,14 @@ import {
   fetchWishlistApi,
   addToWishlistApi,
   removeFromWishlistApi,
+  clearWishlistApi, // Import for the new API call
 } from "@/services/userProfileService";
 
 interface WishlistContextType {
   wishlistItems: WishlistItem[];
   addToWishlist: (item: Omit<WishlistItem, "addedAt">) => Promise<void>;
   removeFromWishlist: (productId: string) => Promise<void>;
+  clearWishlist?: () => Promise<void>; // Optional for now, will be implemented
   isWishlisted: (productId: string) => boolean;
   getWishlistTotalItems: () => number;
   isLoading: boolean;
@@ -115,10 +117,29 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({
     return wishlistItems.length;
   };
 
+  const clearWishlist = async () => {
+    if (!user) {
+      toast.error("Please log in to clear your wishlist.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await clearWishlistApi(); // Call the new API service function
+      setWishlistItems([]); // Clear items from local state
+      toast.success("Wishlist cleared successfully!");
+    } catch (error: any) {
+      console.error("Failed to clear wishlist:", error);
+      toast.error(error.message || "Failed to clear wishlist.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const contextValue = {
     wishlistItems,
     addToWishlist,
     removeFromWishlist,
+    clearWishlist, // Add to context
     isWishlisted,
     getWishlistTotalItems,
     isLoading,

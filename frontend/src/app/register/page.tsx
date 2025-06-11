@@ -22,6 +22,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { toast } from "sonner"; // Added toast
 
 export default function RegisterPage() {
   const { register, loading, error } = useAuth();
@@ -45,7 +46,7 @@ export default function RegisterPage() {
         password,
         roles: [role], // API expects roles as an array
       });
-      alert("Registration successful! Please login."); // Simple success message
+      toast.success("Registration successful! Please login."); // Replaced alert with toast
       router.push("/login");
     } catch (err) {
       // Error is already set in AuthContext, can add specific logging here if needed

@@ -4,7 +4,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 const { getAllProducts, getProductById } = require('../controllers/productController');
 
 // GET /dashboard - Protected and Customer-authorized route
-router.get('/dashboard', protect, authorize(['customer']), (req, res) => {
+router.get('/dashboard', protect, authorize(['customer', 'seller']), (req, res) => {
   res.json({
     message: 'Welcome to Customer Dashboard',
     data: {

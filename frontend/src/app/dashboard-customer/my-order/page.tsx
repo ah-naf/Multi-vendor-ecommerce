@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react"; // Added useState
 import { DataTable, Column, Action } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,17 @@ import {
   RefreshCw,
   Pencil,
 } from "lucide-react";
+import { toast } from "sonner"; // Added toast
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"; // Added Dialog components
 
 // --- MOCK DATA & TYPE DEFINITION ---
 interface Order {
@@ -63,6 +74,24 @@ const StatusBadge = ({ status }: { status: Order["status"] }) => {
 // --- MY ORDERS PAGE COMPONENT ---
 export default function MyOrdersPage() {
   const [statusFilter, setStatusFilter] = React.useState("all");
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+
+  const handleCancelOrderClick = (order: Order) => {
+    setOrderToCancel(order);
+    setShowCancelDialog(true);
+  };
+
+  const confirmCancelOrder = () => {
+    if (orderToCancel) {
+      // Here you would typically call an API to cancel the order
+      // For now, we'll just mock it with a toast message
+      toast.success(`Order ${orderToCancel.id} has been requested for cancellation.`);
+      // You might want to update the local state of orders or re-fetch
+    }
+    setShowCancelDialog(false);
+    setOrderToCancel(null);
+  };
 
   const columns: Column<Order>[] = [
     {
@@ -92,7 +121,7 @@ export default function MyOrdersPage() {
     actions.push({
       label: "View",
       icon: <Pencil className="mr-2 h-4 w-4" />,
-      onClick: (row) => alert(`Cancelling order: ${row.id}`),
+      onClick: (row) => toast.info(`Viewing details for order: ${row.id}`), // Changed to toast.info
       className: "bg-gray-200 text-gray-800 hover:bg-gray-300",
     });
 
@@ -101,7 +130,7 @@ export default function MyOrdersPage() {
         actions.push({
           label: "Cancel",
           icon: <XCircle className="mr-2 h-4 w-4" />,
-          onClick: (row) => alert(`Cancelling order: ${row.id}`),
+          onClick: (row) => handleCancelOrderClick(row), // Changed to open dialog
           className: "bg-red-600 text-white hover:bg-red-700 hover:text-white",
         });
         break;
@@ -110,14 +139,14 @@ export default function MyOrdersPage() {
         actions.push({
           label: "Track",
           icon: <PackageCheck className="mr-2 h-4 w-4" />,
-          onClick: (row) => alert(`Tracking order: ${row.id}`),
+          onClick: (row) => toast.info(`Tracking order: ${row.id}`), // Changed to toast.info
           className:
             "bg-blue-600 text-white hover:bg-blue-500 hover:text-white",
         });
         actions.push({
           label: "Buy Again",
           icon: <RefreshCw className="mr-2 h-4 w-4" />,
-          onClick: (row) => alert(`Buying ${row.id} again`),
+          onClick: (row) => toast.info(`Adding items from order ${row.id} to cart.`), // Changed to toast.info
           className:
             "bg-green-600 text-white hover:bg-green-500 hover:text-white",
         });
@@ -128,7 +157,7 @@ export default function MyOrdersPage() {
         actions.push({
           label: "Buy Again",
           icon: <RefreshCw className="mr-2 h-4 w-4" />,
-          onClick: (row) => alert(`Buying ${row.id} again`),
+          onClick: (row) => toast.info(`Adding items from order ${row.id} to cart.`), // Changed to toast.info
           className:
             "bg-green-600 text-white hover:bg-green-500 hover:text-white",
         });
@@ -196,6 +225,22 @@ export default function MyOrdersPage() {
         data={filteredData}
         getActions={getActionsForOrder}
       />
+
+      {/* Cancel Order Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Order: {orderToCancel?.id}?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to request cancellation for this order? This action might not be reversible depending on the order status.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>Keep Order</Button>
+            <Button variant="destructive" onClick={confirmCancelOrder} className="bg-red-600 hover:bg-red-700">Confirm Cancellation</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

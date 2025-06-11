@@ -79,7 +79,7 @@ export const Sidebar = ({ isCustomer = false }) => (
         <NavLink href="/dashboard-customer/my-order" icon={Truck}>
           My Order
         </NavLink>
-        <NavLink href="/dashboard-customer/wishlist" icon={Heart}>
+        <NavLink href="/wishlist" icon={Heart}>
           Wishlist
         </NavLink>
         <NavLink href="/dashboard-customer/cart" icon={ShoppingCart}>
