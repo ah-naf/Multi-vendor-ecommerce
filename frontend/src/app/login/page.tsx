@@ -35,13 +35,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      if (user.roles.includes('seller')) {
-        router.push('/dashboard-seller');
-      } else if (user.roles.includes('customer')) {
-        router.push('/dashboard-customer');
-      } else {
-        router.push('/');
-      }
+      router.push("/");
     }
   }, [user, router]);
 
@@ -52,7 +46,9 @@ export default function LoginPage() {
           <CardTitle>Login</CardTitle>
           <CardDescription>Enter your email and password.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}> {/* Form starts here */}
+        <form onSubmit={handleSubmit}>
+          {" "}
+          {/* Form starts here */}
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -78,7 +74,7 @@ export default function LoginPage() {
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
           </CardContent>
-          <CardFooter className="flex flex-col gap-2">
+          <CardFooter className="flex flex-col mt-4 gap-2">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
@@ -89,7 +85,8 @@ export default function LoginPage() {
               </Link>
             </p>
           </CardFooter>
-        </form> {/* Form ends here, encompassing Content and Footer */}
+        </form>{" "}
+        {/* Form ends here, encompassing Content and Footer */}
       </Card>
     </div>
   );

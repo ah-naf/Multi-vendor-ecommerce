@@ -141,7 +141,7 @@ export default function RegisterPage() {
             </div>
             {error && <p className="mt-4 text-sm text-center text-red-600">{error}</p>}
           </CardContent>
-          <CardFooter className="flex flex-col gap-2">
+          <CardFooter className="flex flex-col mt-4 gap-2">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Registering..." : "Register"}
             </Button>

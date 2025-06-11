@@ -76,14 +76,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading) {
-      if (user) {
-        // User is logged in, redirect based on role
-        if (user.role === "seller") {
-          router.push("/dashboard-seller");
-        } else {
-          router.push("/dashboard-customer"); // Default to customer dashboard
-        }
-      } else {
+      if (!user) {
         // No user, redirect to login
         router.push("/login");
       }
