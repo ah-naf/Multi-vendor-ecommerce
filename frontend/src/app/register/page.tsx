@@ -60,7 +60,7 @@ export default function RegisterPage() {
           <CardTitle>Create Account</CardTitle>
           <CardDescription>Join as a customer or seller.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}> {/* Form starts here */}
           <CardContent>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* First Name */}
@@ -148,10 +148,11 @@ export default function RegisterPage() {
             <p className="text-sm text-center text-gray-500">
               Already have an account?{" "}
               <Link href="/login" className="text-red-500 hover:underline">
-              Login
-            </Link>
-          </p>
-        </CardFooter>
+                Login
+              </Link>
+            </p>
+          </CardFooter>
+        </form> {/* Form ends here, encompassing Content and Footer */}
       </Card>
     </div>
   );

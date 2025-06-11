@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react"; // Added useEffect
+import { useRouter } from "next/navigation"; // Added useRouter
+import { useAuth } from "@/context/AuthContext"; // Added useAuth
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,7 +71,49 @@ const products = [
 
 // --- MAIN HOMEPAGE COMPONENT ---
 export default function HomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        // User is logged in, redirect based on role
+        if (user.role === "seller") {
+          router.push("/dashboard-seller");
+        } else {
+          router.push("/dashboard-customer"); // Default to customer dashboard
+        }
+      } else {
+        // No user, redirect to login
+        router.push("/login");
+      }
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    // Show loading indicator or null while redirecting
+    // Or a more sophisticated full-page loader
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  // This part will ideally not be reached if redirection logic is correct
+  // and user is always redirected. However, it's a fallback.
+  // Or, you might want to show this page briefly if user is logged in
+  // and then redirect. For now, we assume immediate redirection.
+  // If the user is logged in and role-based redirect hasn't happened yet,
+  // this content might flash briefly.
+  // To prevent flashing, ensure the redirect logic in useEffect is robust
+  // and the loading state correctly covers the period before redirection.
+
   return (
+    // The actual homepage content, which will be shown only if not loading and user exists
+    // (though current logic redirects away if user exists)
+    // This might be shown if there's a delay in redirection or if you decide to show
+    // the homepage to logged-in users before they navigate to their dashboard.
     <div className="bg-gray-50 min-h-screen">
       <Header />
 

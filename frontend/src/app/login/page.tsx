@@ -52,7 +52,7 @@ export default function LoginPage() {
           <CardTitle>Login</CardTitle>
           <CardDescription>Enter your email and password.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}> {/* Form starts here */}
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -85,10 +85,11 @@ export default function LoginPage() {
             <p className="text-sm text-center text-gray-500">
               Don’t have an account?{" "}
               <Link href="/register" className="text-red-500 hover:underline">
-              Register
-            </Link>
-          </p>
-        </CardFooter>
+                Register
+              </Link>
+            </p>
+          </CardFooter>
+        </form> {/* Form ends here, encompassing Content and Footer */}
       </Card>
     </div>
   );

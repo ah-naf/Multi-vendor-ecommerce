@@ -2,6 +2,7 @@
 import React from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import PrivateRoute from "@/components/auth/PrivateRoute"; // Import PrivateRoute
 
 export default function DashboardLayout({
   children,
@@ -9,15 +10,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen w-full bg-gray-50 font-sans">
-      <Sidebar />
+    <PrivateRoute>
+      <div className="flex h-screen w-full bg-gray-50 font-sans">
+        <Sidebar />
 
-      <div className="flex-1 flex flex-col h-screen">
-        <Header />
+        <div className="flex-1 flex flex-col h-screen">
+          <Header />
 
-        {/* Main Page Content */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">{children}</main>
+          {/* Main Page Content */}
+          <main className="flex-1 p-4 md:p-8 overflow-y-auto">{children}</main>
+        </div>
       </div>
-    </div>
+    </PrivateRoute>
   );
 }

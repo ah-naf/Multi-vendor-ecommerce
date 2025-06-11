@@ -30,15 +30,18 @@ import {
 } from "lucide-react";
 import React from "react";
 import Link from "next/link"; // <-- Import Link for navigation
+import { useAuth } from "@/context/AuthContext"; // <-- Import useAuth
 
 // NOTE: In a real app, user data would be passed as a prop or from a context/store.
-const user = {
-  name: "Alex Johnson", // Updated user name
-  initials: "AJ",
-  avatar: "https://github.com/shadcn.png", // Using a placeholder avatar
-};
+// const user = { // <-- Remove hardcoded user
+//   name: "Alex Johnson", // Updated user name
+//   initials: "AJ",
+//   avatar: "https://github.com/shadcn.png", // Using a placeholder avatar
+// };
 
 export const Header = () => {
+  const { user: authUser, logout } = useAuth(); // <-- Get auth data
+
   return (
     <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between flex-shrink-0">
       {/* Mobile Menu Trigger (for a different context, e.g., seller dashboard) */}
@@ -135,37 +138,55 @@ export const Header = () => {
         </Button>
 
         {/* --- UPDATED: Profile Dropdown Menu --- */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center space-x-2 cursor-pointer">
-            <Avatar>
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback>{user.initials}</AvatarFallback>
-            </Avatar>
-            <span className="hidden lg:inline font-semibold">{user.name}</span>
-            <ChevronDown className="h-4 w-4 hidden lg:inline" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <Link href="/dashboard-customer" passHref>
-              <DropdownMenuItem>
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Dashboard
+        {authUser ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center space-x-2 cursor-pointer">
+              <Avatar>
+                <AvatarImage src={authUser.avatar || "https://github.com/shadcn.png"} />
+                <AvatarFallback>
+                  {authUser.initials || (authUser.firstName && authUser.lastName ? `${authUser.firstName[0]}${authUser.lastName[0]}` : '')}
+                </AvatarFallback>
+              </Avatar>
+              <span className="hidden lg:inline font-semibold">
+                {authUser.name || (authUser.firstName && authUser.lastName ? `${authUser.firstName} ${authUser.lastName}` : 'User')}
+              </span>
+              <ChevronDown className="h-4 w-4 hidden lg:inline" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <Link href="/dashboard-customer" passHref>
+                <DropdownMenuItem>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/dashboard-customer/profile" passHref>
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={logout}
+                className="text-red-500 focus:text-red-600 focus:bg-red-50"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
               </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <Link href="/login" passHref>
+              <Button variant="outline">Login</Button>
             </Link>
-            <Link href="/dashboard-customer/profile" passHref>
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
+            <Link href="/register" passHref>
+              <Button>Register</Button>
             </Link>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-500 focus:text-red-600 focus:bg-red-50">
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </div>
+        )}
       </div>
     </header>
   );
