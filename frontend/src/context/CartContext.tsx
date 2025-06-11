@@ -39,7 +39,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsLoading(true);
       try {
         const backendCartItems = await fetchCartApi();
-        setCartItems(backendCartItems);
+        setCartItems([...backendCartItems]); // Ensure new array reference
       } catch (error: any) {
         console.error("Failed to fetch cart:", error);
         toast.error(error.message || "Failed to load cart items.");
@@ -78,7 +78,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       };
 
       const updatedCart = await addToCartApi(itemToSend);
-      setCartItems(updatedCart);
+      setCartItems([...updatedCart]); // Ensure new array reference
       toast.success("Item added to cart!");
     } catch (error: any) {
       console.error("Failed to add to cart:", error);
@@ -93,7 +93,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const updatedCart = await removeFromCartApi(productId);
-      setCartItems(updatedCart);
+      setCartItems([...updatedCart]); // Ensure new array reference
       toast.info("Item removed from cart.");
     } catch (error: any) {
       console.error("Failed to remove from cart:", error);
@@ -112,7 +112,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const updatedCart = await updateCartQuantityApi(productId, quantity);
-      setCartItems(updatedCart);
+      setCartItems([...updatedCart]); // Ensure new array reference
       // toast.info("Cart updated."); // Can be noisy, consider removing
     } catch (error: any) {
       console.error("Failed to update quantity:", error);

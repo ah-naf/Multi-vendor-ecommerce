@@ -20,18 +20,23 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone?: string; // Optional as per previous User model
   roles: string[];
+  avatar?: string; // Optional
+  initials?: string; // Optional
+  name?: string; // Optional, often derived
 }
 
 export interface AuthContextType {
   user: User | null;
-  loading: boolean;
+  token: string | null; // Added token state
+  isAuthenticated: boolean;
+  isLoading: boolean;
   error: string | null;
   login: (credentials: any) => Promise<void>;
   register: (userData: any) => Promise<void>;
   logout: () => Promise<void>;
-  fetchUser: () => Promise<void>; // Added fetchUser to the type
+  // fetchUser is internal, no need to expose if loadUserOnMount handles it
 }
 
 // Create AuthContext
@@ -44,97 +49,138 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true); // Start with loading true
+  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUser = async () => {
-    setLoading(true);
-    setError(null);
+  // Function to fetch user profile using a token
+  const fetchUserProfile = async (currentToken: string) => {
+    setIsLoading(true);
     try {
-      const response = await axios.get("/api/users/profile");
+      // Temporarily set header for this call if not using global axios default yet
+      const response = await axios.get("/api/users/profile", {
+        headers: { Authorization: `Bearer ${currentToken}` },
+      });
       setUser(response.data);
-    } catch (err: any) {
+      setIsAuthenticated(true);
+      setError(null);
+    } catch (err) {
       setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("jwtToken"); // Token is invalid or expired
+      delete axios.defaults.headers.common["Authorization"];
+      setToken(null);
       if (axios.isAxiosError(err) && err.response?.status !== 401) {
-        // Don't set error for 401s during initial fetch, as it just means user is not logged in
-        setError(err.response?.data?.message || "Failed to fetch user");
+        setError(err.response?.data?.message || "Failed to fetch user profile.");
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    const loadUserOnMount = async () => {
+      setIsLoading(true);
+      const storedToken = localStorage.getItem("jwtToken");
+      if (storedToken) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
+        setToken(storedToken);
+        await fetchUserProfile(storedToken);
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+        setToken(null);
+      }
+      setIsLoading(false);
+    };
+    loadUserOnMount();
+  }, []);
+
   const login = async (credentials: any) => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     try {
       const response = await axios.post("/api/auth/login", credentials);
-      setUser(response.data);
+      // Assuming backend returns { token: "...", user: { ... } }
+      const { token: newAuthToken, user: userData } = response.data;
+
+      localStorage.setItem("jwtToken", newAuthToken);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${newAuthToken}`;
+
+      setUser(userData);
+      setToken(newAuthToken);
+      setIsAuthenticated(true);
+
     } catch (err: any) {
       setUser(null);
+      setToken(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("jwtToken");
+      delete axios.defaults.headers.common["Authorization"];
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || "Login failed");
       } else {
         setError("An unexpected error occurred during login.");
       }
-      throw err; // Re-throw to allow components to handle it
+      throw err;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const register = async (userData: any) => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     try {
+      // Assuming registration does not auto-login.
+      // If it does, this logic needs to mirror login success (set token, user, etc.)
       await axios.post("/api/auth/register", userData);
-      // Optionally, log the user in directly or fetch user data after registration
-      // For now, let's assume registration doesn't auto-login, user needs to login separately
-      // Or, call fetchUser() if backend auto-logins or if you want to confirm registration by fetching profile
+      // Potentially: toast.success("Registration successful! Please login.");
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || "Registration failed");
       } else {
         setError("An unexpected error occurred during registration.");
       }
-      throw err; // Re-throw
+      throw err;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     try {
-      await axios.post("/api/auth/logout");
-      setUser(null);
+      await axios.post("/api/auth/logout"); // Backend logout
     } catch (err: any) {
+      // Log error but proceed with client-side logout anyway
+      console.error("Logout API call failed:", err);
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Logout failed");
+        setError(err.response?.data?.message || "Logout failed on server, logged out locally.");
       } else {
-        setError("An unexpected error occurred during logout.");
+        setError("An unexpected error occurred during server logout, logged out locally.");
       }
-      // Even if logout API call fails, client-side state should reflect logout
-      setUser(null);
-      // throw err; // Optionally re-throw if components need to react to failed logout API call
     } finally {
-      setLoading(false);
+      localStorage.removeItem("jwtToken");
+      delete axios.defaults.headers.common["Authorization"];
+      setUser(null);
+      setToken(null);
+      setIsAuthenticated(false);
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
   const contextValue = {
     user,
-    loading,
+    token,
+    isAuthenticated,
+    isLoading,
     error,
     login,
     register,
     logout,
-    fetchUser, // Ensure fetchUser is part of the context value
   };
 
   return (

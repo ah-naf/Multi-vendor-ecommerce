@@ -2,17 +2,12 @@ import { CartItem, WishlistItem } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// Helper function to get token (assuming it's stored in localStorage or a cookie)
-// You might need to adjust this based on how you store your auth token
+// Helper function to get token from localStorage
 const getAuthToken = (): string | null => {
-  // Example: Try to get it from localStorage
-  const token = localStorage.getItem('jwt_token');
-  // If not in localStorage, you might be storing it in a cookie that httpOnly,
-  // in which case the browser handles sending it automatically.
-  // For this example, we'll assume it might be accessible via localStorage for client-side fetches.
-  // If your token is in an HttpOnly cookie, these explicit Authorization headers are not needed,
-  // as the browser will attach the cookie automatically.
-  return token;
+  if (typeof window !== 'undefined') { // Ensure localStorage is available
+    return localStorage.getItem('jwtToken');
+  }
+  return null;
 };
 
 // Cart API Functions

@@ -3,35 +3,55 @@ export const getApiBaseUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 };
 
+// Helper function to get token from localStorage
+const getAuthToken = (): string | null => {
+  if (typeof window !== 'undefined') { // Ensure localStorage is available
+    return localStorage.getItem('jwtToken');
+  }
+  return null;
+};
+
 // Helper for making API requests
 const apiRequest = async (url: string, options: RequestInit = {}) => {
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    ...(options.body instanceof FormData
+      ? {} // Content-Type is set by browser for FormData
+      : { "Content-Type": "application/json" }),
+    ...options.headers,
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(url, {
     ...options,
-    // Credentials 'include' is important for sending cookies (auth token)
-    credentials: "include",
-    headers: {
-      // For FormData, 'Content-Type' is set automatically by the browser.
-      // For JSON, we'd set 'Content-Type': 'application/json'.
-      ...(options.body instanceof FormData
-        ? {}
-        : { "Content-Type": "application/json" }),
-      ...options.headers,
-    },
+    headers,
+    // credentials: "include", // Kept if cookies are also used, otherwise can be removed for pure token auth
   });
+
   if (!response.ok) {
     const errorData = await response
       .json()
-      .catch(() => ({ message: "An unknown error occurred" }));
+      .catch(() => ({ message: "An unknown error occurred or non-JSON error response" }));
     throw new Error(
       errorData.message || `HTTP error! status: ${response.status}`
     );
   }
-  // If response is empty or not JSON, handle appropriately
+
   const contentType = response.headers.get("content-type");
   if (contentType && contentType.indexOf("application/json") !== -1) {
     return response.json();
   }
-  return response.text().then((text) => (text ? { message: text } : {})); // Return success message as object
+  // Handle non-JSON responses, e.g., for DELETE operations that might return 204 No Content or simple text
+  return response.text().then(text => {
+    try {
+      return text ? JSON.parse(text) : {}; // Try to parse if text is JSON-like
+    } catch (e) {
+      return { message: text || "Success" }; // Return as message if not parseable or empty
+    }
+  });
 };
 
 // Get all products for the authenticated seller
