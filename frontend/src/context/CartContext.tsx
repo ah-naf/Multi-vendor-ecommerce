@@ -66,7 +66,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   useEffect(() => {
     loadCart();
-  }, [loadCart]);
+  }, [user, token]);
 
   const addToCart = async (
     newItemData: Omit<CartItem, "quantity" | "addedAt">,

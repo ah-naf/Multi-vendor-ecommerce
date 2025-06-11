@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Product } from "@/types"; // Import Product type
 import { useWishlist } from "@/context/WishlistContext"; // Import useWishlist
 import { getApiBaseUrl } from "@/services/productService";
+import { useCart } from "@/context/CartContext";
 
 // --- MAIN HOMEPAGE COMPONENT ---
 export default function HomePage() {
@@ -63,6 +64,46 @@ export default function HomePage() {
       fetchProducts();
     }
   }, [user]); // Re-fetch if user changes (e.g., logs out and logs in as different user)
+
+  const { addToCart, cartItems, isLoading: isCartLoading } = useCart();
+
+  const handleMoveToCart = async (product: Product) => {
+    // Using Product type now
+    const itemForCart = {
+      productId: product.id,
+      name: product.general.title,
+      price: product.pricing.price,
+      image:
+        product.general.images && product.general.images.length > 0
+          ? product.general.images[0]
+          : undefined,
+      // Assuming CartItem might expect a simplified category or specific attributes.
+      // For now, let's pass general category. Adjust if CartContext's addToCart needs more/less.
+      category: product.general.category,
+      // attributes: product.attributes, // If you have a structured way to pass attributes
+    };
+
+    const itemInCart = cartItems.find(
+      (cartItem) => cartItem.productId === product.id
+    );
+
+    if (itemInCart) {
+      toast.info(
+        `${product.general.title} is already in your cart. You can update quantity there.`
+      );
+      return;
+    }
+
+    try {
+      await addToCart(itemForCart, 1);
+      await removeFromWishlist(product.id); // product.id is the productId
+      toast.success(`${product.general.title} moved to cart!`);
+    } catch (error: any) {
+      toast.error(
+        `Failed to move ${product.general.title} to cart: ${error.message}`
+      );
+    }
+  };
 
   if (authLoading || (!user && !authLoading)) {
     // Show loading if auth is loading or if user is not yet determined (and not loading)
@@ -211,9 +252,7 @@ export default function HomePage() {
                       </Button>
                       <Button
                         className="flex-grow bg-red-500 text-white hover:bg-red-500/90"
-                        onClick={() =>
-                          toast.info(`${product.general.title} added to cart!`)
-                        }
+                        onClick={() => handleMoveToCart(product)}
                       >
                         <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
                       </Button>

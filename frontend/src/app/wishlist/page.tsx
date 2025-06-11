@@ -26,8 +26,6 @@ export default function WishlistPage() {
   >([]);
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
 
-  const totalItems = getWishlistTotalItems();
-
   useEffect(() => {
     const fetchProductDetails = async () => {
       if (wishlistItems.length === 0) {
@@ -176,9 +174,7 @@ export default function WishlistPage() {
                     <Image
                       src={
                         product.general.images?.[0]
-                          ? `${getBackendBaseUrl()}${
-                              product.general.images[0]
-                            }`
+                          ? `${getBackendBaseUrl()}${product.general.images[0]}`
                           : "/placeholder-image.svg"
                       }
                       alt={product.general.title}
@@ -226,7 +222,9 @@ export default function WishlistPage() {
                       variant="outline"
                       className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center gap-2"
                       onClick={() => handleMoveToCart(product)}
-                      disabled={isCartLoading || isWishlistLoading || isFetchingDetails}
+                      disabled={
+                        isCartLoading || isWishlistLoading || isFetchingDetails
+                      }
                     >
                       <ShoppingCart className="h-5 w-5" /> Move to Cart
                     </Button>
