@@ -132,7 +132,7 @@ export const Header = () => {
             )}
           </Button>
         </Link>
-        <Link href="/cart" passHref>
+        <Link href="/dashboard-customer/cart" passHref>
           {" "}
           {/* Updated cart link */}
           <Button variant="ghost" size="icon" className="relative">

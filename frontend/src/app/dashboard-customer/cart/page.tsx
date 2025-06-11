@@ -1,248 +1,177 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, Plus, Minus } from "lucide-react";
-import Image from "next/image";
-
-// --- MOCK DATA & TYPES ---
-// In a real app, this data would come from a global state/context or an API call.
-const initialCartItems = [
-  {
-    id: 1,
-    name: "Wireless Noise-Cancelling Headphones",
-    attributes: "Black | Premium Edition",
-    price: 249.99,
-    quantity: 1,
-    image: "/placeholder-image.svg",
-  },
-  {
-    id: 2,
-    name: "Smart Fitness Watch",
-    attributes: "Graphite | Large",
-    price: 199.5,
-    quantity: 1,
-    image: "/placeholder-image.svg",
-  },
-  {
-    id: 3,
-    name: "Ultra-Thin Laptop",
-    attributes: "13-inch | 16GB RAM",
-    price: 1299.0,
-    quantity: 1,
-    image: "/placeholder-image.svg",
-  },
-  {
-    id: 4,
-    name: "Portable Bluetooth Speaker",
-    attributes: "Ocean Blue",
-    price: 79.99,
-    quantity: 2,
-    image: "/placeholder-image.svg",
-  },
-];
-
-type CartItemType = (typeof initialCartItems)[number] & { selected?: boolean };
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useCart } from '@/context/CartContext';
+import { Button } from '@/components/ui/button';
+// import { Header } from '@/components/Header'; // Assuming you want the main header -- REMOVED
+import { toast } from 'sonner';
+import { MinusCircle, PlusCircle, Trash2, XCircle } from 'lucide-react';
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItemType[]>(
-    initialCartItems.map((item) => ({ ...item, selected: true }))
-  );
+  const {
+    cartItems,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getCartTotal,
+    getTotalItems
+  } = useCart();
 
-  // --- HANDLER FUNCTIONS ---
-  const handleQuantityChange = (id: number, newQuantity: number) => {
-    if (newQuantity < 1) return; // Quantity cannot be less than 1
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
+  const handleQuantityChange = (productId: string, currentQuantity: number, change: number) => {
+    const newQuantity = currentQuantity + change;
+    if (newQuantity <= 0) {
+      // Confirmation before removing item when quantity becomes 0 or less
+      if (window.confirm("Do you want to remove this item from the cart?")) {
+        removeFromCart(productId);
+      }
+    } else {
+      // Check against available stock if that info is part of CartItem, otherwise just update
+      // For now, we don't have max stock per item in CartItem, so we just update
+      updateQuantity(productId, newQuantity);
+      toast.success("Quantity updated.");
+    }
   };
 
-  const handleItemSelect = (id: number) => {
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === id ? { ...item, selected: !item.selected } : item
-      )
-    );
+  const handleRemoveItem = (productId: string, itemName: string) => {
+    if (window.confirm(`Are you sure you want to remove ${itemName} from the cart?`)) {
+      removeFromCart(productId);
+    }
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    setCartItems(cartItems.map((item) => ({ ...item, selected: checked })));
+  const handleClearCart = () => {
+    if (window.confirm("Are you sure you want to clear the entire cart?")) {
+      clearCart();
+    }
   };
 
-  const handleDeleteItem = (id: number) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-  };
-
-  const handleDeleteSelected = () => {
-    setCartItems(cartItems.filter((item) => !item.selected));
-  };
-
-  // --- MEMOIZED CALCULATIONS ---
-  const { subtotal, tax, total, isAllSelected, selectedItemCount } =
-    useMemo(() => {
-      const selectedItems = cartItems.filter((item) => item.selected);
-      const sub = selectedItems.reduce(
-        (acc, item) => acc + item.price * item.quantity,
-        0
-      );
-      const taxAmount = sub * 0.1; // Example 10% tax
-      const tot = sub + taxAmount; // Assuming free shipping for now
-
-      return {
-        subtotal: sub,
-        tax: taxAmount,
-        total: tot,
-        isAllSelected:
-          cartItems.length > 0 && selectedItems.length === cartItems.length,
-        selectedItemCount: selectedItems.length,
-      };
-    }, [cartItems]);
+  const totalItems = getTotalItems();
+  const cartTotal = getCartTotal();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Shopping Cart</h1>
-      <p className="text-gray-500 mb-8">
-        You have {cartItems.length} items in your cart.
-      </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* <Header /> -- REMOVED */}
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Shopping Cart</h1>
 
-      {cartItems.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-xl text-gray-500">Your cart is empty.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12">
-          {/* Cart Items Section */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between border-b pb-4 mb-4">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="select-all"
-                  checked={isAllSelected}
-                  onCheckedChange={handleSelectAll}
-                />
-                <label htmlFor="select-all" className="font-semibold">
-                  Select All ({selectedItemCount} items)
-                </label>
-              </div>
-              <Button
-                variant="ghost"
-                className="text-red-500 hover:text-red-600"
-                onClick={handleDeleteSelected}
-              >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete
+        {cartItems.length === 0 ? (
+          <div className="text-center py-12">
+            <XCircle className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <p className="text-xl text-gray-700 mb-2">Your cart is empty.</p>
+            <p className="text-gray-500 mb-6">Looks like you haven't added anything to your cart yet.</p>
+            <Link href="/" passHref>
+              <Button className="bg-red-500 hover:bg-red-600 text-white">
+                Start Shopping
               </Button>
-            </div>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items Section */}
+            <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {totalItems} item{totalItems > 1 ? 's' : ''} in your cart
+                </h2>
+                <Button variant="outline" onClick={handleClearCart} className="text-sm text-red-500 hover:text-red-700 border-red-300 hover:border-red-500">
+                  <Trash2 className="mr-2 h-4 w-4" /> Clear Cart
+                </Button>
+              </div>
 
-            <div className="space-y-6">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b pb-6"
-                >
-                  <div className="flex items-center gap-4 flex-grow">
-                    <Checkbox
-                      checked={item.selected}
-                      onCheckedChange={() => handleItemSelect(item.id)}
-                    />
-                    <div className="w-24 h-24 bg-gray-100 rounded-md flex-shrink-0">
-                      {/* In a real app, use Next/Image */}
-                      <img
-                        src={item.image}
+              <div className="space-y-6">
+                {cartItems.map(item => (
+                  <div key={item.productId} className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
+                    <div className="relative w-24 h-24 rounded-md overflow-hidden bg-gray-100">
+                      <Image
+                        src={item.image || '/placeholder-image.svg'}
                         alt={item.name}
-                        className="w-full h-full object-cover rounded-md"
+                        layout="fill"
+                        objectFit="cover"
                       />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{item.name}</h3>
-                      <p className="text-sm text-gray-500">{item.attributes}</p>
-                      <p className="text-lg font-bold text-gray-800 mt-2">
-                        ${item.price.toFixed(2)}
-                      </p>
+                    <div className="flex-grow">
+                      <h3 className="font-semibold text-lg text-gray-800">{item.name}</h3>
+                      <p className="text-sm text-gray-500">Price: ${item.price.toFixed(2)}</p>
+                       <p className="text-sm text-gray-500">Item Total: ${(item.price * item.quantity).toFixed(2)}</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4 self-end sm:self-center">
-                    <div className="flex items-center border rounded-md">
+                    <div className="flex items-center gap-3">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() =>
-                          handleQuantityChange(item.id, item.quantity - 1)
-                        }
+                        onClick={() => handleQuantityChange(item.id, item.quantity, -1)}
+                        className="text-red-500 hover:text-red-700"
                       >
-                        <Minus className="h-4 w-4" />
+                        <MinusCircle className="h-6 w-6" />
                       </Button>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        readOnly
-                        className="w-12 text-center border-0 h-9 focus-visible:ring-0"
-                      />
+                      <span className="text-lg font-medium w-8 text-center">{item.quantity}</span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() =>
-                          handleQuantityChange(item.id, item.quantity + 1)
-                        }
+                        onClick={() => handleQuantityChange(item.productId, item.quantity, 1)}
+                        className="text-green-500 hover:text-green-700"
                       >
-                        <Plus className="h-4 w-4" />
+                        <PlusCircle className="h-6 w-6" />
                       </Button>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDeleteItem(item.id)}
+                      onClick={() => handleRemoveItem(item.productId, item.name)}
+                      className="text-gray-400 hover:text-red-600"
                     >
-                      <Trash2 className="h-5 w-5 text-gray-400 hover:text-red-500" />
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Order Summary Section */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24">
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
+            {/* Order Summary Section */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-6 pb-4 border-b">Order Summary</h2>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Subtotal ({totalItems} items)</span>
+                    <span className="font-semibold">${cartTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Shipping</span>
+                    <span className="font-semibold">FREE</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Estimated Tax</span>
+                    <span className="font-semibold">$0.00</span> {/* Placeholder */}
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span className="font-semibold">Free</span>
+
+                <div className="flex justify-between text-xl font-bold text-gray-900 pt-4 border-t">
+                  <span>Order Total</span>
+                  <span>${cartTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Tax (10%)</span>
-                  <span className="font-semibold">${tax.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <Input placeholder="Enter a promo code" />
-                  <Button variant="outline">Apply</Button>
-                </div>
-                <div className="border-t pt-4 flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
+
                 <Button
-                  className="w-full h-12 text-lg bg-red-500 hover:bg-red-500 disabled:bg-gray-800"
-                  disabled={selectedItemCount === 0}
+                  className="w-full mt-8 bg-red-500 hover:bg-red-600 text-white py-3 text-lg"
+                  onClick={() => {
+                    toast.info("Checkout process not implemented yet.");
+                    console.log("Proceed to Checkout", cartItems);
+                  }}
                 >
                   Proceed to Checkout
                 </Button>
-              </CardContent>
-            </Card>
+
+                <Link href="/" passHref>
+                  <Button variant="link" className="w-full mt-4 text-red-500 hover:text-red-700">
+                    Continue Shopping
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 }
