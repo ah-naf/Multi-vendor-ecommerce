@@ -9,7 +9,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading: loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -17,10 +17,6 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
       router.push("/login");
     }
   }, [user, loading, router]);
-
-  if (loading) {
-    return <div>Loading...</div>; // Or a more sophisticated loading spinner
-  }
 
   if (!user) {
     return null; // Or a redirect might have already been initiated

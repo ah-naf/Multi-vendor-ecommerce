@@ -120,7 +120,7 @@ export const Header = () => {
         </Button>
 
         {/* --- ADDED: Wishlist and Cart Icons --- */}
-        <Link href="/wishlist" passHref>
+        <Link href="/dashboard-customer/wishlist" passHref>
           {" "}
           {/* Updated wishlist link */}
           <Button variant="ghost" size="icon" className="relative">
