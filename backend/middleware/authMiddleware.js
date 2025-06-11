@@ -1,18 +1,23 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 // In a real app, use an environment variable!
-const JWT_SECRET = 'yourjwtsecretkey';
+const JWT_SECRET = "yourjwtsecretkey";
 
 const protect = async (req, res, next) => {
   let token;
 
   if (req.cookies && req.cookies.jwt_token) {
     token = req.cookies.jwt_token;
+  } else if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer ")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
   }
 
   if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });
+    return res.status(401).json({ message: "Not authorized, no token" });
   }
 
   try {
@@ -20,34 +25,45 @@ const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     // Get user from the token
-    req.user = await User.findById(decoded.userId).select('-password');
+    req.user = await User.findById(decoded.userId).select("-password");
 
     if (!req.user) {
-        return res.status(401).json({ message: 'Not authorized, user not found' });
+      return res
+        .status(401)
+        .json({ message: "Not authorized, user not found" });
     }
 
     next();
   } catch (error) {
-    console.error('Token verification error:', error);
-    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-        return res.status(401).json({ message: 'Not authorized, token failed' });
+    console.error("Token verification error:", error);
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
+      return res.status(401).json({ message: "Not authorized, token failed" });
     }
-    res.status(500).json({ message: 'Server error during token authentication' });
+    res
+      .status(500)
+      .json({ message: "Server error during token authentication" });
   }
 };
 
 const authorize = (allowedRoles) => {
   return (req, res, next) => {
     if (!req.user || !req.user.roles || !Array.isArray(req.user.roles)) {
-      return res.status(403).json({ message: 'User role not authorized, user data missing' });
+      return res
+        .status(403)
+        .json({ message: "User role not authorized, user data missing" });
     }
 
-    const hasRequiredRole = allowedRoles.some(role => req.user.roles.includes(role));
+    const hasRequiredRole = allowedRoles.some((role) =>
+      req.user.roles.includes(role)
+    );
 
     if (hasRequiredRole) {
       next();
     } else {
-      res.status(403).json({ message: 'User role not authorized' });
+      res.status(403).json({ message: "User role not authorized" });
     }
   };
 };

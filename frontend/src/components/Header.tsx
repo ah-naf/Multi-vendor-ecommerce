@@ -34,13 +34,6 @@ import { useAuth } from "@/context/AuthContext"; // <-- Import useAuth
 import { useCart } from "@/context/CartContext"; // <-- Import useCart
 import { useWishlist } from "@/context/WishlistContext"; // <-- Import useWishlist
 
-// NOTE: In a real app, user data would be passed as a prop or from a context/store.
-// const user = { // <-- Remove hardcoded user
-//   name: "Alex Johnson", // Updated user name
-//   initials: "AJ",
-//   avatar: "https://github.com/shadcn.png", // Using a placeholder avatar
-// };
-
 export const Header = () => {
   const { user: authUser, logout } = useAuth(); // <-- Get auth data
   const { getTotalItems: getTotalCartItems } = useCart(); // <-- Get cart data
@@ -127,7 +120,9 @@ export const Header = () => {
         </Button>
 
         {/* --- ADDED: Wishlist and Cart Icons --- */}
-        <Link href="/wishlist" passHref> {/* Updated wishlist link */}
+        <Link href="/wishlist" passHref>
+          {" "}
+          {/* Updated wishlist link */}
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-6 w-6 text-gray-600" />
             {totalWishlistItems > 0 && (
@@ -137,7 +132,9 @@ export const Header = () => {
             )}
           </Button>
         </Link>
-        <Link href="/cart" passHref> {/* Updated cart link */}
+        <Link href="/cart" passHref>
+          {" "}
+          {/* Updated cart link */}
           <Button variant="ghost" size="icon" className="relative">
             <ShoppingCart className="h-6 w-6 text-gray-600" />
             {totalCartItems > 0 && (
@@ -158,13 +155,21 @@ export const Header = () => {
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center space-x-2 cursor-pointer">
               <Avatar>
-                <AvatarImage src={authUser.avatar || "https://github.com/shadcn.png"} />
+                <AvatarImage
+                  src={authUser.avatar || "https://github.com/shadcn.png"}
+                />
                 <AvatarFallback>
-                  {authUser.initials || (authUser.firstName && authUser.lastName ? `${authUser.firstName[0]}${authUser.lastName[0]}` : '')}
+                  {authUser.initials ||
+                    (authUser.firstName && authUser.lastName
+                      ? `${authUser.firstName[0]}${authUser.lastName[0]}`
+                      : "")}
                 </AvatarFallback>
               </Avatar>
               <span className="hidden lg:inline font-semibold">
-                {authUser.name || (authUser.firstName && authUser.lastName ? `${authUser.firstName} ${authUser.lastName}` : 'User')}
+                {authUser.name ||
+                  (authUser.firstName && authUser.lastName
+                    ? `${authUser.firstName} ${authUser.lastName}`
+                    : "User")}
               </span>
               <ChevronDown className="h-4 w-4 hidden lg:inline" />
             </DropdownMenuTrigger>

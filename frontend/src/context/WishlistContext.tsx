@@ -1,31 +1,42 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { toast } from 'sonner';
-import { WishlistItem } from '@/types';
-import { useAuth } from './AuthContext'; // To check authentication status
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from "react";
+import { toast } from "sonner";
+import { WishlistItem } from "@/types";
+import { useAuth } from "./AuthContext"; // To check authentication status
 import {
   fetchWishlistApi,
   addToWishlistApi,
   removeFromWishlistApi,
-} from '@/services/userProfileService';
+} from "@/services/userProfileService";
 
 interface WishlistContextType {
   wishlistItems: WishlistItem[];
-  addToWishlist: (item: Omit<WishlistItem, 'addedAt'>) => Promise<void>;
+  addToWishlist: (item: Omit<WishlistItem, "addedAt">) => Promise<void>;
   removeFromWishlist: (productId: string) => Promise<void>;
   isWishlisted: (productId: string) => boolean;
   getWishlistTotalItems: () => number;
   isLoading: boolean;
 }
 
-const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+const WishlistContext = createContext<WishlistContextType | undefined>(
+  undefined
+);
 
 interface WishlistProviderProps {
   children: ReactNode;
 }
 
-export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) => {
+export const WishlistProvider: React.FC<WishlistProviderProps> = ({
+  children,
+}) => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { user, token } = useAuth(); // Get user and token from AuthContext
@@ -50,17 +61,17 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
 
   useEffect(() => {
     loadWishlist();
-  }, [loadWishlist]);
+  }, [user, token]);
 
-  const addToWishlist = async (itemToAdd: Omit<WishlistItem, 'addedAt'>) => {
+  const addToWishlist = async (itemToAdd: Omit<WishlistItem, "addedAt">) => {
     if (!user) {
       toast.error("Please log in to add items to your wishlist.");
       return;
     }
     // Check if item already exists locally to prevent redundant API calls if backend also checks
-    if (wishlistItems.some(item => item.productId === itemToAdd.productId)) {
-        toast.info(`${itemToAdd.name} is already in your wishlist.`);
-        return;
+    if (wishlistItems.some((item) => item.productId === itemToAdd.productId)) {
+      toast.info(`${itemToAdd.name} is already in your wishlist.`);
+      return;
     }
     setIsLoading(true);
     try {
@@ -82,8 +93,12 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
     try {
       const updatedWishlist = await removeFromWishlistApi(productId);
       setWishlistItems(updatedWishlist);
-      const itemRemoved = wishlistItems.find(item => item.productId === productId);
-      toast.info(`${itemRemoved ? itemRemoved.name : 'Item'} removed from wishlist.`);
+      const itemRemoved = wishlistItems.find(
+        (item) => item.productId === productId
+      );
+      toast.info(
+        `${itemRemoved ? itemRemoved.name : "Item"} removed from wishlist.`
+      );
     } catch (error: any) {
       console.error("Failed to remove from wishlist:", error);
       toast.error(error.message || "Failed to remove item from wishlist.");
@@ -93,7 +108,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
   };
 
   const isWishlisted = (productId: string): boolean => {
-    return wishlistItems.some(item => item.productId === productId);
+    return wishlistItems.some((item) => item.productId === productId);
   };
 
   const getWishlistTotalItems = (): number => {
@@ -119,7 +134,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (context === undefined) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
+    throw new Error("useWishlist must be used within a WishlistProvider");
   }
   return context;
 };

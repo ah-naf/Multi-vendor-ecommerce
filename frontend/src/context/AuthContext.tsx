@@ -55,74 +55,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   // Function to fetch user profile using a token
-  const fetchUserProfile = async (currentToken: string) => {
-    setIsLoading(true);
+  const fetchUserProfile = async (jwt: string) => {
     try {
-      // Temporarily set header for this call if not using global axios default yet
-      const response = await axios.get("/api/users/profile", {
-        headers: { Authorization: `Bearer ${currentToken}` },
+      const { data } = await axios.get("/api/users/profile", {
+        headers: { Authorization: `Bearer ${jwt}` },
       });
-      setUser(response.data);
+      setUser(data);
       setIsAuthenticated(true);
       setError(null);
-    } catch (err) {
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem("jwtToken"); // Token is invalid or expired
+    } catch (err: any) {
+      // on 401 we simply force logout; on other errors, show them
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        // token expired or invalid → clear it
+      } else {
+        setError(
+          axios.isAxiosError(err)
+            ? err.response?.data?.message || "Failed to fetch profile"
+            : "Unknown error"
+        );
+      }
+      localStorage.removeItem("jwtToken");
       delete axios.defaults.headers.common["Authorization"];
       setToken(null);
-      if (axios.isAxiosError(err) && err.response?.status !== 401) {
-        setError(err.response?.data?.message || "Failed to fetch user profile.");
-      }
-    } finally {
-      setIsLoading(false);
+      setUser(null);
+      setIsAuthenticated(false);
     }
   };
 
   useEffect(() => {
-    const loadUserOnMount = async () => {
-      setIsLoading(true);
-      const storedToken = localStorage.getItem("jwtToken");
-      if (storedToken) {
-        axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
-        setToken(storedToken);
-        await fetchUserProfile(storedToken);
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-        setToken(null);
+    const initAuth = async () => {
+      const saved = localStorage.getItem("jwtToken");
+      if (saved) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${saved}`;
+        setToken(saved);
+        await fetchUserProfile(saved);
       }
+      // whether we had a token or not, the check is done
       setIsLoading(false);
     };
-    loadUserOnMount();
+    initAuth();
   }, []);
 
   const login = async (credentials: any) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.post("/api/auth/login", credentials);
-      // Assuming backend returns { token: "...", user: { ... } }
-      const { token: newAuthToken, user: userData } = response.data;
+      const { data } = await axios.post("/api/auth/login", credentials);
+      const { token: jwt, user: me } = data;
 
-      localStorage.setItem("jwtToken", newAuthToken);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${newAuthToken}`;
-
-      setUser(userData);
-      setToken(newAuthToken);
+      localStorage.setItem("jwtToken", jwt);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${jwt}`;
+      setToken(jwt);
+      setUser(me);
       setIsAuthenticated(true);
-
+      window.location.href = "/";
     } catch (err: any) {
-      setUser(null);
-      setToken(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem("jwtToken");
-      delete axios.defaults.headers.common["Authorization"];
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Login failed");
-      } else {
-        setError("An unexpected error occurred during login.");
-      }
+      setError(
+        axios.isAxiosError(err)
+          ? err.response?.data?.message || "Login failed"
+          : "Unexpected login error"
+      );
       throw err;
     } finally {
       setIsLoading(false);
@@ -158,9 +150,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Log error but proceed with client-side logout anyway
       console.error("Logout API call failed:", err);
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Logout failed on server, logged out locally.");
+        setError(
+          err.response?.data?.message ||
+            "Logout failed on server, logged out locally."
+        );
       } else {
-        setError("An unexpected error occurred during server logout, logged out locally.");
+        setError(
+          "An unexpected error occurred during server logout, logged out locally."
+        );
       }
     } finally {
       localStorage.removeItem("jwtToken");

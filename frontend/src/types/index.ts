@@ -10,7 +10,7 @@ export interface CustomSpec {
 
 export interface Product {
   _id?: string; // MongoDB default ID, optional on frontend if not always sent/used
-  id: string;    // Custom, unique string ID (as defined in schema)
+  id: string; // Custom, unique string ID (as defined in schema)
   general: {
     title: string;
     description: string;
@@ -60,6 +60,7 @@ export interface WishlistItem {
   price: number;
   image?: string;
   addedAt?: string | Date; // ISO string or Date object
+  category: string;
 }
 
 // Simplified Product Summary for listings or quick views

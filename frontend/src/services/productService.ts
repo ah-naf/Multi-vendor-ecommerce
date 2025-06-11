@@ -3,10 +3,15 @@ export const getApiBaseUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 };
 
+export const getBackendBaseUrl = () => {
+  return process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+};
+
 // Helper function to get token from localStorage
 const getAuthToken = (): string | null => {
-  if (typeof window !== 'undefined') { // Ensure localStorage is available
-    return localStorage.getItem('jwtToken');
+  if (typeof window !== "undefined") {
+    // Ensure localStorage is available
+    return localStorage.getItem("jwtToken");
   }
   return null;
 };
@@ -34,7 +39,9 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
   if (!response.ok) {
     const errorData = await response
       .json()
-      .catch(() => ({ message: "An unknown error occurred or non-JSON error response" }));
+      .catch(() => ({
+        message: "An unknown error occurred or non-JSON error response",
+      }));
     throw new Error(
       errorData.message || `HTTP error! status: ${response.status}`
     );
@@ -45,7 +52,7 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
     return response.json();
   }
   // Handle non-JSON responses, e.g., for DELETE operations that might return 204 No Content or simple text
-  return response.text().then(text => {
+  return response.text().then((text) => {
     try {
       return text ? JSON.parse(text) : {}; // Try to parse if text is JSON-like
     } catch (e) {

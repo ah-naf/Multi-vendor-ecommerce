@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
-  const { login, loading, error, user } = useAuth(); // Use AuthContext
+  const { login, isLoading, error, user } = useAuth(); // Use AuthContext
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -75,8 +75,8 @@ export default function LoginPage() {
             {error && <p className="text-sm text-red-600">{error}</p>}
           </CardContent>
           <CardFooter className="flex flex-col mt-4 gap-2">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
             <p className="text-sm text-center text-gray-500">
               Don’t have an account?{" "}

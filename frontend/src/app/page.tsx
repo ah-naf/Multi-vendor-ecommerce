@@ -15,7 +15,7 @@ import { getApiBaseUrl } from "@/services/productService";
 
 // --- MAIN HOMEPAGE COMPONENT ---
 export default function HomePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
@@ -118,8 +118,7 @@ export default function HomePage() {
                   removeFromWishlist(product.id);
                 } else {
                   addToWishlist({
-                    id: product.id,
-                    _id: product._id,
+                    productId: product.id,
                     name: product.general.title,
                     price: product.pricing.price,
                     image:

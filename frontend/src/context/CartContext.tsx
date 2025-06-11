@@ -1,19 +1,29 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { toast } from 'sonner';
-import { CartItem } from '@/types';
-import { useAuth } from './AuthContext'; // To check authentication status
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from "react";
+import { toast } from "sonner";
+import { CartItem } from "@/types";
+import { useAuth } from "./AuthContext"; // To check authentication status
 import {
   fetchCartApi,
   addToCartApi,
   removeFromCartApi,
   updateCartQuantityApi,
-} from '@/services/userProfileService';
+} from "@/services/userProfileService";
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity' | 'productId'> & { productId: string }, quantity?: number) => Promise<void>;
+  addToCart: (
+    item: Omit<CartItem, "quantity" | "productId"> & { productId: string },
+    quantity?: number
+  ) => Promise<void>;
   removeFromCart: (productId: string) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -58,7 +68,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     loadCart();
   }, [loadCart]);
 
-  const addToCart = async (newItemData: Omit<CartItem, 'quantity' | 'addedAt'>, quantityToAdd: number = 1) => {
+  const addToCart = async (
+    newItemData: Omit<CartItem, "quantity" | "addedAt">,
+    quantityToAdd: number = 1
+  ) => {
     if (!user) {
       toast.error("Please log in to add items to your cart.");
       return;
@@ -68,7 +81,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       // Construct the item to send to the API
       // The backend `addToCart` expects productId, quantity, name, price, image, attributes
       // `newItemData` should provide productId, name, price, image, attributes
-      const itemToSend: Omit<CartItem, 'addedAt'> = {
+      const itemToSend: Omit<CartItem, "addedAt"> = {
         productId: newItemData.productId,
         name: newItemData.name,
         price: newItemData.price,
@@ -142,7 +155,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const getCartTotal = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    return cartItems.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
   };
 
   const getTotalItems = () => {
@@ -161,16 +177,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   return (
-    <CartContext.Provider value={contextValue}>
-      {children}
-    </CartContext.Provider>
+    <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>
   );
 };
 
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 };
