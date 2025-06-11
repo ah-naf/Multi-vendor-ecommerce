@@ -32,8 +32,8 @@ import {
 import { Action, DataTable } from "@/components/DataTable";
 import Link from "next/link";
 // import productsData from "@/data/products.json"; // Removed static data import
-import { getSellerProducts, deleteProduct } from "../../../../services/productService"; // Adjusted path
 import { useRouter } from "next/navigation";
+import { deleteProduct, getSellerProducts } from "@/services/productService";
 
 // Define Product type based on backend schema
 interface Product {
@@ -50,11 +50,11 @@ interface Product {
   };
   pricing: {
     price: number;
+    salePrice: number;
   };
-  // Add other fields if needed by the table or actions
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const StatusBadge = ({ quantity }: { quantity: number }) => {
   let status = "Active";
@@ -72,7 +72,7 @@ const StatusBadge = ({ quantity }: { quantity: number }) => {
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -82,9 +82,9 @@ export default function ProductsPage() {
         // Transform data to fit the DataTable structure if needed
         // Assuming the data from getSellerProducts matches the new Product interface
         setProducts(data);
+        console.log(data);
       } catch (error) {
         console.error("Failed to fetch products:", error);
-        // Handle error (e.g., show a toast message)
       }
     };
     fetchProducts();
@@ -99,7 +99,7 @@ export default function ProductsPage() {
     if (!selectedProduct) return;
     try {
       await deleteProduct(selectedProduct.id);
-      setProducts(products.filter((p) => p.id !== selectedProduct.id));
+      setProducts(products.filter((p: Product) => p.id !== selectedProduct.id));
       setIsDeleteDialogOpen(false);
       setSelectedProduct(null);
       // Add success toast/notification here
@@ -113,14 +113,18 @@ export default function ProductsPage() {
   // Define columns for DataTable, mapping to the new Product structure
   const productColumns = [
     {
+      header: "ID",
+      className: "w-[60px] text-sm font-mono",
+      cell: (product: Product) => product.id,
+    },
+    {
       header: "Image",
-      accessorKey: "general.images", // Adjusted accessor
       className: "w-[80px]",
-      cell: ({ row }) => {
-        const product = row.original as Product;
-        const imageUrl = product.general.images && product.general.images.length > 0
-          ? `${API_BASE_URL}${product.general.images[0]}`
-          : "/placeholder-image.png"; // Fallback image
+      cell: (product: Product) => {
+        const imageUrl =
+          product.general.images?.length > 0
+            ? `${API_BASE_URL}${product.general.images[0]}`
+            : "/placeholder-image.png";
         return (
           <img
             src={imageUrl}
@@ -130,21 +134,31 @@ export default function ProductsPage() {
         );
       },
     },
-    { header: "Name", accessorKey: "general.title" }, // Adjusted accessor
-    { header: "SKU", accessorKey: "inventory.sku" }, // Adjusted accessor
-    { header: "Price", accessorKey: "pricing.price", cell: ({ row }) => {
-        const product = row.original as Product;
-        return `$${product.pricing.price}`;
-      }
+    {
+      header: "Name",
+      cell: (product: Product) => product.general.title,
     },
-    { header: "Stock", accessorKey: "inventory.quantity" }, // Adjusted accessor
+    {
+      header: "SKU",
+      cell: (product: Product) => product.inventory.sku,
+    },
+    {
+      header: "Price",
+      cell: (product: Product) => `$${product.pricing.price}`,
+    },
+    {
+      header: "Sale Price",
+      cell: (product: Product) => `$${product.pricing.salePrice}`,
+    },
+    {
+      header: "Stock",
+      cell: (product: Product) => product.inventory.quantity,
+    },
     {
       header: "Status",
-      accessorKey: "inventory.quantity", // Status is derived from quantity
-      cell: ({ row }) => {
-        const product = row.original as Product;
-        return <StatusBadge quantity={product.inventory.quantity} />;
-      }
+      cell: (product: Product) => (
+        <StatusBadge quantity={product.inventory.quantity} />
+      ),
     },
   ];
 
@@ -171,7 +185,9 @@ export default function ProductsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-bold">Products</h1>
-        <Link href="/dashboard-seller/products/add" passHref> {/* Corrected path */}
+        <Link href="/dashboard-seller/products/add" passHref>
+          {" "}
+          {/* Corrected path */}
           <Button className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto">
             <PlusCircle className="mr-2 h-4 w-4" /> Add Product
           </Button>
@@ -243,7 +259,10 @@ export default function ProductsPage() {
             <DialogDescription className="text-center px-4">
               Are you sure you want to delete this product? This action cannot
               be undone.
-              <p className="font-semibold mt-2">{selectedProduct?.general?.title}</p> {/* Adjusted field */}
+              <p className="font-semibold mt-2">
+                {selectedProduct?.general?.title}
+              </p>{" "}
+              {/* Adjusted field */}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-center sm:space-x-2 gap-2 mt-4">

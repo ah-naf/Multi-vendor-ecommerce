@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-// Assuming ProductForm is in frontend/src/components/ProductForm.tsx
-import ProductForm from "../../../../../components/ProductForm";
 import { useRouter } from "next/navigation";
+import { createProduct } from "@/services/productService";
+import { ProductForm } from "@/components/ProductForm";
 // Assuming productService is in frontend/src/services/productService.ts
-import { createProduct } from "../../../../../services/productService";
 
 const AddProductPage = () => {
   const router = useRouter();

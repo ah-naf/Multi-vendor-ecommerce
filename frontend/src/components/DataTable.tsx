@@ -15,11 +15,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { Inbox, MoreHorizontal } from "lucide-react";
 
 export interface Column<T> {
   header: string;
-  accessor: keyof T | string;
   cell?: (row: T, view?: "desktop" | "mobile") => React.ReactNode;
   className?: string;
 }
@@ -41,8 +40,6 @@ export interface Action<T> {
 export interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
-  // CHANGED: The 'actions' array is now a 'getActions' function.
-  // This function takes a row and returns an array of actions for that specific row.
   getActions?: (row: T) => Action<T>[];
 }
 
@@ -53,13 +50,22 @@ export function DataTable<T extends { id: string }>({
 }: DataTableProps<T>) {
   const hasActions = !!getActions;
 
+  if (data.length === 0) {
+    return (
+      <div className="w-full py-20 flex flex-col items-center justify-center text-gray-400">
+        <Inbox className="h-16 w-16 mb-4" />
+        <p className="text-lg">No data to display</p>
+      </div>
+    );
+  }
+
   const DesktopTable = () => (
     <div className="hidden md:block bg-white rounded-lg border overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            {columns.map((col) => (
-              <TableHead key={col.accessor as string} className={col.className}>
+            {columns.map((col, ind) => (
+              <TableHead key={ind} className={col.className}>
                 {col.header}
               </TableHead>
             ))}
@@ -69,11 +75,9 @@ export function DataTable<T extends { id: string }>({
         <TableBody>
           {data.map((row) => (
             <TableRow key={row.id}>
-              {columns.map((col) => (
-                <TableCell key={col.accessor as string} className="font-medium">
-                  {col.cell
-                    ? col.cell(row, "desktop")
-                    : (row as any)[col.accessor]}
+              {columns.map((col, ind) => (
+                <TableCell key={ind} className="font-medium">
+                  {col.cell ? col.cell(row, "desktop") : ""}
                 </TableCell>
               ))}
               {hasActions && (
