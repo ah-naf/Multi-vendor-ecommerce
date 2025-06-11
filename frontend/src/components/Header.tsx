@@ -31,6 +31,8 @@ import {
 import React from "react";
 import Link from "next/link"; // <-- Import Link for navigation
 import { useAuth } from "@/context/AuthContext"; // <-- Import useAuth
+import { useCart } from "@/context/CartContext"; // <-- Import useCart
+import { useWishlist } from "@/context/WishlistContext"; // <-- Import useWishlist
 
 // NOTE: In a real app, user data would be passed as a prop or from a context/store.
 // const user = { // <-- Remove hardcoded user
@@ -41,6 +43,10 @@ import { useAuth } from "@/context/AuthContext"; // <-- Import useAuth
 
 export const Header = () => {
   const { user: authUser, logout } = useAuth(); // <-- Get auth data
+  const { getTotalItems: getTotalCartItems } = useCart(); // <-- Get cart data
+  const { getWishlistTotalItems } = useWishlist(); // <-- Get wishlist data
+  const totalCartItems = getTotalCartItems();
+  const totalWishlistItems = getWishlistTotalItems();
 
   return (
     <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between flex-shrink-0">
@@ -121,14 +127,24 @@ export const Header = () => {
         </Button>
 
         {/* --- ADDED: Wishlist and Cart Icons --- */}
-        <Link href="/dashboard-customer/wishlist" passHref>
-          <Button variant="ghost" size="icon">
+        <Link href="/wishlist" passHref> {/* Updated wishlist link */}
+          <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-6 w-6 text-gray-600" />
+            {totalWishlistItems > 0 && (
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                {totalWishlistItems}
+              </span>
+            )}
           </Button>
         </Link>
-        <Link href="/dashboard-customer/cart" passHref>
-          <Button variant="ghost" size="icon">
+        <Link href="/cart" passHref> {/* Updated cart link */}
+          <Button variant="ghost" size="icon" className="relative">
             <ShoppingCart className="h-6 w-6 text-gray-600" />
+            {totalCartItems > 0 && (
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                {totalCartItems}
+              </span>
+            )}
           </Button>
         </Link>
 

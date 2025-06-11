@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getSellerProductById, updateProduct } from "@/services/productService";
 import { Product } from "@/types";
 import { ProductForm } from "@/components/ProductForm";
+import { toast } from "sonner"; // Import toast
 
 const EditProductPage = () => {
   const router = useRouter();
@@ -24,31 +26,40 @@ const EditProductPage = () => {
           setProduct(data);
           setError(null);
         } catch (err) {
-          console.error("Failed to fetch product:", err);
-          setError(err.message || "Failed to load product data.");
+          const fetchError = err instanceof Error ? err.message : "Failed to load product data.";
+          console.error("Failed to fetch product:", fetchError);
+          setError(fetchError);
+          toast.error(`Error fetching product: ${fetchError}`);
         } finally {
           setLoading(false);
         }
       };
       fetchProduct();
     } else {
-      setError("Invalid product ID.");
+      const idError = "Invalid product ID.";
+      setError(idError);
+      toast.error(idError);
       setLoading(false);
     }
-  }, [id, router]);
+  }, [id]); // Removed router from dependencies as it's not directly used for re-fetching logic here
 
   const handleSubmit = async (formData: FormData) => {
     if (!id || typeof id !== "string") {
-      setError("Product ID is missing, cannot update.");
+      const idMissingError = "Product ID is missing, cannot update.";
+      setError(idMissingError);
+      toast.error(idMissingError);
       return;
     }
     try {
       const updatedProduct = await updateProduct(id, formData);
+      toast.success("Product updated successfully!");
       console.log("Product updated successfully:", updatedProduct);
       router.push("/dashboard-seller/products"); // Navigate to product list on success
-    } catch (error) {
-      console.error("Failed to update product:", error);
-      setError(error.message || "Failed to update product.");
+    } catch (err) {
+      const updateError = err instanceof Error ? err.message : "An unknown error occurred.";
+      console.error("Failed to update product:", updateError);
+      setError(updateError);
+      toast.error(`Failed to update product: ${updateError}`);
     }
   };
 

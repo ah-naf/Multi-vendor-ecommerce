@@ -40,3 +40,22 @@ export interface Product {
   createdAt?: string; // Timestamps
   updatedAt?: string; // Timestamps
 }
+
+// Cart Item Type
+export interface CartItem {
+  id: string; // Product's unique ID
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+// Wishlist Item Type
+export interface WishlistItem {
+  id: string;        // Product's unique ID (custom 'id' field)
+  _id?: string;       // MongoDB ID, if available and needed
+  name: string;
+  price: number;     // Current price or default price
+  image?: string;    // Primary image URL
+  category?: string;
+}

@@ -1,46 +1,74 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useCart } from "@/context/CartContext"; // Import useCart
 
 interface AddToCartProps {
   productId: string;
-  maxQty: number;
+  productTitle: string;
+  currentPrice: number;
+  productImage: string;
+  maxQty: number; // Max quantity available from inventory
+  selectedQuantity: number; // Quantity selected by the user on the product page
 }
 
-export function AddToCart({ productId, maxQty }: AddToCartProps) {
-  const qtyRef = useRef<HTMLInputElement>(null);
+export function AddToCart({
+  productId,
+  productTitle,
+  currentPrice,
+  productImage,
+  maxQty,
+  selectedQuantity,
+}: AddToCartProps) {
+  const { addToCart, cartItems } = useCart();
 
   const handleAddToCart = () => {
-    const raw = qtyRef.current?.value ?? "1";
-    let qty = parseInt(raw, 10) || 1;
-    qty = Math.max(1, Math.min(maxQty, qty));
-    // TODO: replace with your real cart API call
-    console.log(`Adding ${qty}× ${productId} to cart`);
+    if (maxQty === 0) {
+      toast.error("This product is out of stock.");
+      return;
+    }
+
+    if (selectedQuantity <= 0) {
+      toast.error("Please select a valid quantity.");
+      return;
+    }
+
+    if (selectedQuantity > maxQty) {
+      toast.error(`Only ${maxQty} items available in stock.`);
+      return;
+    }
+
+    // Check current quantity in cart for this item
+    const itemInCart = cartItems.find(item => item.id === productId);
+    const currentQuantityInCart = itemInCart ? itemInCart.quantity : 0;
+
+    if (currentQuantityInCart + selectedQuantity > maxQty) {
+      toast.error(`Cannot add ${selectedQuantity} item(s). You already have ${currentQuantityInCart} in cart, and only ${maxQty} are in stock.`);
+      return;
+    }
+
+    addToCart(
+      {
+        id: productId,
+        name: productTitle,
+        price: currentPrice,
+        image: productImage,
+        // quantity is handled by addToCart logic (it adds selectedQuantity)
+      },
+      selectedQuantity
+    );
+    toast.success(`${selectedQuantity} ${productTitle}(s) added to cart!`);
   };
 
   return (
-    <div className="mt-6">
-      <div className="flex items-center space-x-4 mb-4">
-        <label htmlFor="quantity" className="font-medium text-gray-700">
-          Quantity
-        </label>
-        <input
-          id="quantity"
-          ref={qtyRef}
-          type="number"
-          defaultValue={1}
-          min={1}
-          max={maxQty}
-          className="w-16 border border-gray-300 rounded-md px-2 py-1"
-        />
-      </div>
-      <Button
-        onClick={handleAddToCart}
-        className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 w-full md:w-auto"
-      >
-        Add to Cart
-      </Button>
-    </div>
+    <Button
+      onClick={handleAddToCart}
+      className="bg-red-500 hover:bg-red-500/90 text-white px-8 py-3 h-12 w-full rounded-xl text-base font-semibold flex items-center justify-center gap-2 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-70"
+      disabled={maxQty === 0} // Disable if out of stock
+    >
+      {maxQty === 0 ? "Out of Stock" : "Add to Cart"}
+    </Button>
   );
 }

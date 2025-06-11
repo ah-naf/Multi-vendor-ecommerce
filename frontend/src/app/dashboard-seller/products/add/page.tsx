@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { createProduct } from "@/services/productService";
 import { ProductForm } from "@/components/ProductForm";
+import { toast } from "sonner"; // Import toast
 // Assuming productService is in frontend/src/services/productService.ts
 
 const AddProductPage = () => {
@@ -17,12 +19,13 @@ const AddProductPage = () => {
       // }
 
       const newProduct = await createProduct(formData);
+      toast.success("Product added successfully!");
       console.log("Product created successfully:", newProduct);
-      // TODO: Add success toast/notification here
       router.push("/dashboard-seller/products"); // Navigate to product list on success
-    } catch (error) {
-      console.error("Failed to create product:", error);
-      // TODO: Add error toast/notification here
+    } catch (err) {
+      const createError = err instanceof Error ? err.message : "An unknown error occurred.";
+      console.error("Failed to create product:", createError);
+      toast.error(`Failed to add product: ${createError}`);
       // Consider displaying error.message to the user in the form
     }
   };

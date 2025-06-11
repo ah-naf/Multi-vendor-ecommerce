@@ -34,6 +34,7 @@ import Link from "next/link";
 // import productsData from "@/data/products.json"; // Removed static data import
 import { useRouter } from "next/navigation";
 import { deleteProduct, getSellerProducts } from "@/services/productService";
+import { toast } from "sonner"; // Import toast
 
 // Define Product type based on backend schema
 interface Product {
@@ -70,23 +71,31 @@ const StatusBadge = ({ quantity }: { quantity: number }) => {
 };
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]); // Ensure Product type is used
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const router = useRouter();
 
+  const fetchProducts = async () => { // Moved to its own function to be callable for refetch
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getSellerProducts();
+      setProducts(data);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+      setError(`Failed to fetch products: ${errorMessage}`);
+      toast.error("Failed to fetch products.");
+      setProducts([]); // Clear products on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getSellerProducts();
-        // Transform data to fit the DataTable structure if needed
-        // Assuming the data from getSellerProducts matches the new Product interface
-        setProducts(data);
-        console.log(data);
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      }
-    };
     fetchProducts();
   }, []);
 
@@ -99,13 +108,14 @@ export default function ProductsPage() {
     if (!selectedProduct) return;
     try {
       await deleteProduct(selectedProduct.id);
-      setProducts(products.filter((p: Product) => p.id !== selectedProduct.id));
+      // setProducts(products.filter((p: Product) => p.id !== selectedProduct.id)); // Optimistic update
+      toast.success("Product deleted successfully.");
+      fetchProducts(); // Refetch products to ensure UI is consistent with backend
       setIsDeleteDialogOpen(false);
       setSelectedProduct(null);
-      // Add success toast/notification here
     } catch (error) {
       console.error("Failed to delete product:", error);
-      // Add error toast/notification here
+      toast.error("Failed to delete product.");
       setIsDeleteDialogOpen(false); // Optionally close dialog on error too
     }
   };
@@ -162,7 +172,7 @@ export default function ProductsPage() {
     },
   ];
 
-  const getProductActions = (row: Product): Action<Product>[] => {
+  const getProductActions = (row: Product): Action<Product>[] => { // Ensure row is typed as Product
     return [
       {
         label: "Edit",
@@ -240,11 +250,16 @@ export default function ProductsPage() {
       </div>
 
       {/* Reusable Data Table */}
-      <DataTable
-        columns={productColumns}
-        data={products}
-        getActions={getProductActions}
-      />
+      {/* Reusable Data Table */}
+      {loading && <p>Loading products...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+      {!loading && !error && (
+        <DataTable
+          columns={productColumns}
+          data={products}
+          getActions={getProductActions}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

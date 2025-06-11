@@ -255,4 +255,35 @@ module.exports = {
   getSellerProducts,
   getSellerProductById, // Export new function
   upload,
+  getAllProducts, // Export new function
+  getProductById, // Export new function
+};
+
+// @desc    Get all products
+// @route   GET /api/customer/products
+// @access  Public
+const getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.find({});
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching all products:', error);
+    res.status(500).json({ message: 'Error fetching products', error: error.message });
+  }
+};
+
+// @desc    Get a single product by ID
+// @route   GET /api/customer/products/:id
+// @access  Public
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findOne({ id: req.params.id }).populate('seller', 'firstName lastName email phone');
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error('Error fetching product by ID:', error);
+    res.status(500).json({ message: 'Error fetching product', error: error.message });
+  }
 };
