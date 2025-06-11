@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "../context/AuthContext"; // Added import
 import { CartProvider } from "../context/CartContext"; // Import CartProvider
 import { WishlistProvider } from "../context/WishlistContext"; // Import WishlistProvider
-import { Toaster } from "~/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

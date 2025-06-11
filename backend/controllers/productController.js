@@ -1,25 +1,35 @@
-const Product = require('../models/Product'); // Assuming the Product model path
-const multer = require('multer');
-const path = require('path');
+const Product = require("../models/Product"); // Assuming the Product model path
+const multer = require("multer");
+const path = require("path");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/product_images/');
+    cb(null, "uploads/product_images/");
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    cb(
+      null,
+      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+    );
   },
 });
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png/;
   const mimetype = allowedTypes.test(file.mimetype);
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
   if (mimetype && extname) {
     return cb(null, true);
   }
-  cb(new Error('Error: File upload only supports the following filetypes - ' + allowedTypes));
+  cb(
+    new Error(
+      "Error: File upload only supports the following filetypes - " +
+        allowedTypes
+    )
+  );
 };
 
 const upload = multer({
@@ -36,21 +46,14 @@ const createProduct = async (req, res) => {
     // productDataString is expected to be a JSON string from FormData
     const productDataString = req.body.productData;
     if (!productDataString) {
-      return res.status(400).json({ message: 'Product data is missing.' });
+      return res.status(400).json({ message: "Product data is missing." });
     }
-    const {
-      id,
-      general,
-      specifications,
-      pricing,
-      inventory,
-      additional,
-      seo,
-    } = JSON.parse(productDataString); // Parse the JSON string
+    const { id, general, specifications, pricing, inventory, additional, seo } =
+      JSON.parse(productDataString); // Parse the JSON string
 
     const imagePaths = [];
     if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
+      req.files.forEach((file) => {
         imagePaths.push(`/uploads/product_images/${file.filename}`);
       });
     } else if (general && general.images && Array.isArray(general.images)) {
@@ -73,28 +76,47 @@ const createProduct = async (req, res) => {
     };
 
     // Basic validation to ensure required fields are present
-    if (!id || !productData.general?.title || !productData.general?.category || !productData.pricing?.price || !productData.inventory?.quantity || !productData.inventory?.sku || !productData.seo?.title || !productData.seo?.description) {
-      return res.status(400).json({ message: 'Missing required product fields.' });
+    if (
+      !id ||
+      !productData.general?.title ||
+      !productData.general?.category ||
+      !productData.pricing?.price ||
+      !productData.inventory?.quantity ||
+      !productData.inventory?.sku ||
+      !productData.seo?.title ||
+      !productData.seo?.description
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Missing required product fields." });
     }
-    if (imagePaths.length === 0 && (!general || !general.images || general.images.length === 0)) {
-        productData.general.images = []; // Ensure images is an empty array if none provided/uploaded
+    if (
+      imagePaths.length === 0 &&
+      (!general || !general.images || general.images.length === 0)
+    ) {
+      productData.general.images = []; // Ensure images is an empty array if none provided/uploaded
     }
-
 
     const product = new Product(productData);
     const createdProduct = await product.save();
     res.status(201).json(createdProduct);
   } catch (error) {
-    console.error('Error creating product:', error);
+    console.error("Error creating product:", error);
     // Check for multer specific errors
     if (error instanceof multer.MulterError) {
-        return res.status(400).json({ message: 'Multer error: ' + error.message });
+      return res
+        .status(400)
+        .json({ message: "Multer error: " + error.message });
     }
     // Check for duplicate key error (for 'id' field)
     if (error.code === 11000) {
-        return res.status(400).json({ message: 'Error creating product: ID already exists.' });
+      return res
+        .status(400)
+        .json({ message: "Error creating product: ID already exists." });
     }
-    res.status(500).json({ message: 'Error creating product', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error creating product", error: error.message });
   }
 };
 
@@ -105,8 +127,8 @@ const updateProduct = async (req, res) => {
   try {
     // productDataString is expected to be a JSON string from FormData
     const productDataString = req.body.productData;
-     if (!productDataString) {
-      return res.status(400).json({ message: 'Product data is missing.' });
+    if (!productDataString) {
+      return res.status(400).json({ message: "Product data is missing." });
     }
     const {
       general,
@@ -124,19 +146,21 @@ const updateProduct = async (req, res) => {
     let product = await Product.findOne({ id: productId });
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
 
     // Check if the product belongs to the authenticated seller
     if (product.seller.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized to update this product' });
+      return res
+        .status(401)
+        .json({ message: "Not authorized to update this product" });
     }
 
     // Handle image uploads
     let imagePaths = product.general.images || []; // Keep existing images by default
     if (req.files && req.files.length > 0) {
       imagePaths = []; // Replace existing images if new ones are uploaded
-      req.files.forEach(file => {
+      req.files.forEach((file) => {
         imagePaths.push(`/uploads/product_images/${file.filename}`);
       });
       // Note: Old images are not deleted from the filesystem here.
@@ -145,18 +169,20 @@ const updateProduct = async (req, res) => {
       imagePaths = general.images;
     }
 
-
     // Update product fields (nested structure)
     if (general) {
       product.general.title = general.title || product.general.title;
-      product.general.description = general.description || product.general.description;
+      product.general.description =
+        general.description || product.general.description;
       product.general.category = general.category || product.general.category;
       product.general.images = imagePaths; // Assign new or existing image paths
     }
-    if (specifications) product.specifications = { ...product.specifications, ...specifications };
+    if (specifications)
+      product.specifications = { ...product.specifications, ...specifications };
     if (pricing) product.pricing = { ...product.pricing, ...pricing };
     if (inventory) product.inventory = { ...product.inventory, ...inventory };
-    if (additional) product.additional = { ...product.additional, ...additional };
+    if (additional)
+      product.additional = { ...product.additional, ...additional };
     if (seo) product.seo = { ...product.seo, ...seo };
 
     // The 'id' field of the product should not be changed.
@@ -165,11 +191,15 @@ const updateProduct = async (req, res) => {
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } catch (error) {
-    console.error('Error updating product:', error);
+    console.error("Error updating product:", error);
     if (error instanceof multer.MulterError) {
-        return res.status(400).json({ message: 'Multer error: ' + error.message });
+      return res
+        .status(400)
+        .json({ message: "Multer error: " + error.message });
     }
-    res.status(500).json({ message: 'Error updating product', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error updating product", error: error.message });
   }
 };
 
@@ -182,20 +212,24 @@ const deleteProduct = async (req, res) => {
     const product = await Product.findOne({ id: req.params.id });
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
 
     // Check if the product belongs to the authenticated seller
     if (product.seller.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized to delete this product' });
+      return res
+        .status(401)
+        .json({ message: "Not authorized to delete this product" });
     }
 
     // await product.remove(); // .remove() is deprecated
     await Product.deleteOne({ id: req.params.id });
-    res.json({ message: 'Product removed successfully' });
+    res.json({ message: "Product removed successfully" });
   } catch (error) {
-    console.error('Error deleting product:', error);
-    res.status(500).json({ message: 'Error deleting product', error: error.message });
+    console.error("Error deleting product:", error);
+    res
+      .status(500)
+      .json({ message: "Error deleting product", error: error.message });
   }
 };
 
@@ -208,8 +242,10 @@ const getSellerProducts = async (req, res) => {
     const products = await Product.find({ seller: req.user.id });
     res.json(products);
   } catch (error) {
-    console.error('Error fetching seller products:', error);
-    res.status(500).json({ message: 'Error fetching products', error: error.message });
+    console.error("Error fetching seller products:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching products", error: error.message });
   }
 };
 
@@ -229,7 +265,7 @@ const getSellerProductById = async (req, res) => {
     const product = await Product.findOne({ id: req.params.id });
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
 
     // Check if the product belongs to the authenticated seller
@@ -238,13 +274,54 @@ const getSellerProductById = async (req, res) => {
       // it's better to return 404 to not reveal its existence.
       // Or, return 401/403 if you want to explicitly state an auth error.
       // For this case, 404 is often preferred for security.
-      return res.status(404).json({ message: 'Product not found or not authorized' });
+      return res
+        .status(404)
+        .json({ message: "Product not found or not authorized" });
     }
 
     res.json(product);
   } catch (error) {
-    console.error('Error fetching product by ID:', error);
-    res.status(500).json({ message: 'Error fetching product', error: error.message });
+    console.error("Error fetching product by ID:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching product", error: error.message });
+  }
+};
+
+// @desc    Get all products
+// @route   GET /api/customer/products
+// @access  Public
+const getAllProducts = async (req, res) => {
+  console.log("first")
+  try {
+    const products = await Product.find({});
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching all products:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching products", error: error.message });
+  }
+};
+
+// @desc    Get a single product by ID
+// @route   GET /api/customer/products/:id
+// @access  Public
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findOne({ id: req.params.id }).populate(
+      "seller",
+      "firstName lastName email phone"
+    );
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error("Error fetching product by ID:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching product", error: error.message });
   }
 };
 
@@ -257,33 +334,4 @@ module.exports = {
   upload,
   getAllProducts, // Export new function
   getProductById, // Export new function
-};
-
-// @desc    Get all products
-// @route   GET /api/customer/products
-// @access  Public
-const getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find({});
-    res.json(products);
-  } catch (error) {
-    console.error('Error fetching all products:', error);
-    res.status(500).json({ message: 'Error fetching products', error: error.message });
-  }
-};
-
-// @desc    Get a single product by ID
-// @route   GET /api/customer/products/:id
-// @access  Public
-const getProductById = async (req, res) => {
-  try {
-    const product = await Product.findOne({ id: req.params.id }).populate('seller', 'firstName lastName email phone');
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-    res.json(product);
-  } catch (error) {
-    console.error('Error fetching product by ID:', error);
-    res.status(500).json({ message: 'Error fetching product', error: error.message });
-  }
 };

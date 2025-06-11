@@ -78,7 +78,8 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const router = useRouter();
 
-  const fetchProducts = async () => { // Moved to its own function to be callable for refetch
+  const fetchProducts = async () => {
+    // Moved to its own function to be callable for refetch
     setLoading(true);
     setError(null);
     try {
@@ -86,7 +87,8 @@ export default function ProductsPage() {
       setProducts(data);
     } catch (err) {
       console.error("Failed to fetch products:", err);
-      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred";
       setError(`Failed to fetch products: ${errorMessage}`);
       toast.error("Failed to fetch products.");
       setProducts([]); // Clear products on error
@@ -172,7 +174,8 @@ export default function ProductsPage() {
     },
   ];
 
-  const getProductActions = (row: Product): Action<Product>[] => { // Ensure row is typed as Product
+  const getProductActions = (row: Product): Action<Product>[] => {
+    // Ensure row is typed as Product
     return [
       {
         label: "Edit",
