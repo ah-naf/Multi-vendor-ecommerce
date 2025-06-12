@@ -1,82 +1,59 @@
-// models/User.js
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const { Schema } = mongoose;
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-// Address sub‐schema
-const AddressSchema = new Schema(
-  {
-    type: { type: String, required: true },
-    address: { type: String, required: true },
-    isDefault: { type: Boolean, default: false },
-  },
-  { _id: true }
-);
+const addressSchema = new mongoose.Schema({
+  street: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  zip: { type: String, required: true },
+  country: { type: String, required: true },
+  isDefault: { type: Boolean, default: false },
+});
 
-// Cart item sub‐schema
-const CartItemSchema = new Schema(
+const userSchema = new mongoose.Schema(
   {
-    productId: { type: String, required: true },
-    name: { type: String, required: true },
-    attributes: { type: String, default: "" },
-    price: { type: Number, required: true },
-    quantity: { type: Number, required: true, min: 1 },
-    image: { type: String, default: "" },
-    addedAt: { type: Date, default: Date.now },
-  },
-  { _id: true }
-);
-
-// Wishlist item sub‐schema
-const WishlistItemSchema = new Schema(
-  {
-    productId: { type: String, required: true },
-    name: { type: String, required: true },
-    attributes: { type: String, default: "" },
-    price: { type: Number, required: true },
-    image: { type: String, default: "" },
-    addedAt: { type: Date, default: Date.now },
-  },
-  { _id: true }
-);
-
-const UserSchema = new Schema(
-  {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phone: { type: String, default: "" },
-    bio: { type: String, default: "" },
-    roles: { type: [String], default: ["customer"] },
-    addresses: { type: [AddressSchema], default: [] },
-    cart: { type: [CartItemSchema], default: [] },
-    wishlist: { type: [WishlistItemSchema], default: [] },
-    password: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    role: {
+      type: String,
+      enum: ['customer', 'seller'],
+      default: 'customer',
+    },
+    addresses: [addressSchema],
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
   }
 );
 
-// Pre-save hook to hash password
-UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Method to compare password
-UserSchema.methods.comparePassword = async function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+// Match user entered password to hashed password in database
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model("User", UserSchema);
+// Encrypt password using bcrypt
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+module.exports = mongoose.model('User', userSchema);

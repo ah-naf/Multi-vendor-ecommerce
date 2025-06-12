@@ -17,15 +17,48 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Home, Briefcase, PlusCircle, Edit3, Trash2 } from "lucide-react";
 
-import {
-  getUserProfile,
-  updateUserProfile,
-  addAddress,
-  updateAddress,
-  deleteAddress,
-  // Note: setDefaultAddress was conceptual and handled by updateAddress in the component logic.
-  // If a dedicated setDefaultAddress service function exists, it should be imported.
-} from '@/services/userProfileService'; // Use the actual service
+// --- MOCK SERVICES ---
+// Replace with actual service imports later
+// Assuming userProfileService is generic enough for sellers too
+const mockUserProfileService = {
+  getUserProfile: async (token: string) => {
+    console.log("Mock: Fetching user profile (seller)...");
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return {
+      _id: "seller123",
+      name: "Sarah Seller",
+      email: "sarah.seller@example.com",
+      phone: "+1 (555) 987-6543",
+      bio: "Experienced seller providing quality products.",
+      isAdmin: false, // Sellers are not necessarily admins
+      role: "seller",
+      addresses: [
+        { _id: "s_addr1", street: "123 Seller St", city: "Sellerville", state: "CA", zip: "90210", country: "United States", isDefault: true, type: "Business" },
+      ],
+    };
+  },
+  updateUserProfile: async (data: any, token: string) => {
+    console.log("Mock: Updating user profile (seller)...", data);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { ...data, _id: "seller123" };
+  },
+  addAddress: async (address: any, token: string) => {
+    console.log("Mock: Adding address (seller)...", address);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { ...address, _id: `s_addr${Date.now()}` };
+  },
+  updateAddress: async (addressId: string, address: any, token: string) => {
+    console.log("Mock: Updating address (seller)...", addressId, address);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { ...address, _id: addressId };
+  },
+  deleteAddress: async (addressId: string, token: string) => {
+    console.log("Mock: Deleting address (seller)...", addressId);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return true;
+  },
+};
 
 // --- TYPES ---
 interface Address {
@@ -36,7 +69,7 @@ interface Address {
   zip: string;
   country: string;
   isDefault?: boolean;
-  type?: string; // For frontend display, like "Home" or "Work"
+  type?: string;
 }
 
 interface UserProfile {
@@ -47,6 +80,7 @@ interface UserProfile {
   bio: string;
   isAdmin: boolean;
   addresses: Address[];
+  role?: string; // Added role for clarity
 }
 
 // --- PERSONAL INFO & NOTIFICATIONS SECTION ---
@@ -102,26 +136,26 @@ const PersonalInformationSection = ({ userProfile, onSave, token }: { userProfil
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="firstName">First name</Label>
-              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Alex" />
+              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Sarah" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last name</Label>
-              <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Johnson" />
+              <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Seller" />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="alex.johnson@email.com" />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sarah.seller@example.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
+              <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 987-6543" />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="bio">Bio</Label>
-            <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself" className="min-h-[100px]" />
+            <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about your business" className="min-h-[100px]" />
           </div>
         </CardContent>
         <div className="flex justify-end p-6 pt-0 gap-3">
@@ -131,7 +165,7 @@ const PersonalInformationSection = ({ userProfile, onSave, token }: { userProfil
           </Button>
         </div>
       </Card>
-      {/* Notification Preferences Card (static for now) */}
+      {/* Notification Preferences Card (static for now, can be adapted for sellers) */}
       <Card>
       <CardHeader>
         <CardTitle>Notification Preferences</CardTitle>
@@ -139,10 +173,9 @@ const PersonalInformationSection = ({ userProfile, onSave, token }: { userProfil
       </CardHeader>
       <CardContent className="space-y-5">
         {[
-          { id: "order-updates", label: "Order updates", description: "Notifications about your order status.", checked: true },
-          { id: "promotions", label: "Promotions and deals", description: "Receive emails about our latest offers.", checked: true },
-          { id: "newsletter", label: "Newsletter", description: "Stay up to date with our weekly newsletter.", checked: false },
-          { id: "wishlist", label: "Wishlist updates", description: "Get notified when items on your wishlist are back in stock or on sale.", checked: true },
+          { id: "order-updates", label: "New order alerts", description: "Notifications about new customer orders.", checked: true },
+          { id: "product-reviews", label: "New product reviews", description: "Receive notifications for new reviews on your products.", checked: true },
+          { id: "seller-updates", label: "Platform updates for sellers", description: "Stay up to date with important news for sellers.", checked: true },
         ].map((pref) => (
           <div key={pref.id} className="flex items-start justify-between">
             <div className="space-y-2">
@@ -179,7 +212,7 @@ const AddressForm = ({
   const [zip, setZip] = useState(address?.zip || "");
   const [country, setCountry] = useState(address?.country || "");
   const [isDefault, setIsDefault] = useState(address?.isDefault || false);
-  const [type, setType] = useState(address?.type || "Home"); // For frontend display
+  const [type, setType] = useState(address?.type || "Business");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,11 +220,7 @@ const AddressForm = ({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="p-6 rounded-lg border bg-white space-y-4 my-4"
-      data-testid={address ? "edit-address-form" : "add-address-form"} // Dynamic data-testid
-    >
+    <form onSubmit={handleSubmit} className="p-6 rounded-lg border bg-white space-y-4 my-4">
       <h3 className="text-lg font-semibold">{address ? "Edit Address" : "Add New Address"}</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} required />
@@ -202,7 +231,7 @@ const AddressForm = ({
         <Input placeholder="Zip/Postal Code" value={zip} onChange={(e) => setZip(e.target.value)} required />
       </div>
       <Input placeholder="Country" value={country} onChange={(e) => setCountry(e.target.value)} required />
-      <Input placeholder="Label (e.g. Home, Work)" value={type} onChange={(e) => setType(e.target.value)} />
+      <Input placeholder="Label (e.g. Business, Warehouse)" value={type} onChange={(e) => setType(e.target.value)} />
       <div className="flex items-center space-x-2">
         <Switch id="isDefault" checked={isDefault} onCheckedChange={setIsDefault} />
         <Label htmlFor="isDefault">Set as default address</Label>
@@ -300,10 +329,9 @@ const AddressSection = ({ addresses, onAdd, onEdit, onDelete, onSetDefault, toke
     }
   };
 
-
   const getAddressIcon = (type?: string) => {
-    if (type?.toLowerCase() === 'work') return Briefcase;
-    return Home; // Default to Home
+    if (type?.toLowerCase() === 'business' || type?.toLowerCase() === 'work') return Briefcase;
+    return Home; // Default to Home or a generic icon
   };
 
   return (
@@ -311,7 +339,7 @@ const AddressSection = ({ addresses, onAdd, onEdit, onDelete, onSetDefault, toke
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between">
         <div>
           <CardTitle>Addresses</CardTitle>
-          <CardDescription>Manage your shipping and billing addresses.</CardDescription>
+          <CardDescription>Manage your business and shipping addresses.</CardDescription>
         </div>
         {!showAddressForm && (
           <Button className="bg-red-500 hover:bg-red-600 text-white mt-3 sm:mt-0 w-full sm:w-auto" onClick={handleAddNewAddress}>
@@ -331,7 +359,7 @@ const AddressSection = ({ addresses, onAdd, onEdit, onDelete, onSetDefault, toke
         {addresses.map((addr) => {
           const IconComponent = getAddressIcon(addr.type);
           return (
-            <div key={addr._id} className="p-6 rounded-lg border bg-gray-50/50" data-testid={`address-item-${addr._id}`}>
+            <div key={addr._id} className="p-6 rounded-lg border bg-gray-50/50">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <IconComponent className="h-6 w-6 text-gray-600" />
@@ -363,24 +391,25 @@ export default function ProfilePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   // Assume token is managed by a context or similar in a real app
-  const [token] = useState<string | null>("mock-auth-token"); // Replace with actual token management
+  const [token] = useState<string | null>("mock-auth-token-seller"); // Replace with actual token management
 
   const fetchProfileData = async () => {
     if (!token) {
       setIsLoading(false);
-      // Handle missing token (e.g., redirect to login)
       console.error("Authentication token not found.");
       alert("You are not authenticated. Please log in.");
       return;
     }
     setIsLoading(true);
     try {
-      // Use imported service function
-      const profileData = await getUserProfile(token);
+      // Using the same mock service, but it's adapted to return seller-like data for this page.
+      // In a real app, userProfileService.getUserProfile would hit the same backend endpoint,
+      // and the backend would return the profile of the authenticated user (customer or seller).
+      const profileData = await mockUserProfileService.getUserProfile(token);
       setUserProfile(profileData as UserProfile);
     } catch (error) {
-      console.error("Failed to fetch profile data", error);
-      alert("Failed to load profile data.");
+      console.error("Failed to fetch seller profile data", error);
+      alert("Failed to load seller profile data.");
     } finally {
       setIsLoading(false);
     }
@@ -393,29 +422,25 @@ export default function ProfilePage() {
 
   const handleSavePersonalInfo = async (data: { name: string; email: string; phone: string; bio: string }) => {
     if (!token || !userProfile) return;
-    // Use imported service function
-    await updateUserProfile({ ...userProfile, ...data }, token);
+    await mockUserProfileService.updateUserProfile({ ...userProfile, ...data }, token);
     fetchProfileData();
   };
 
   const handleAddAddress = async (address: Address) => {
     if (!token) return;
-    // Use imported service function
-    await addAddress(address, token);
+    await mockUserProfileService.addAddress(address, token);
     fetchProfileData();
   };
 
   const handleEditAddress = async (addressId: string, address: Address) => {
     if (!token) return;
-    // Use imported service function
-    await updateAddress(addressId, address, token);
+    await mockUserProfileService.updateAddress(addressId, address, token);
     fetchProfileData();
   };
 
   const handleDeleteAddress = async (addressId: string) => {
     if (!token) return;
-    // Use imported service function
-    await deleteAddress(addressId, token);
+    await mockUserProfileService.deleteAddress(addressId, token);
     fetchProfileData();
   };
 
@@ -423,25 +448,24 @@ export default function ProfilePage() {
     if (!token || !userProfile) return;
     const addressToUpdate = userProfile.addresses.find(addr => addr._id === addressId);
     if (addressToUpdate) {
-        // Use imported service function
-        await updateAddress(addressId, { ...addressToUpdate, isDefault: true }, token);
+        await mockUserProfileService.updateAddress(addressId, { ...addressToUpdate, isDefault: true }, token);
         fetchProfileData();
     }
   };
 
   if (isLoading && !userProfile) {
-    return <div className="container mx-auto px-4 py-8 text-center"><p>Loading profile...</p></div>;
+    return <div className="container mx-auto px-4 py-8 text-center"><p>Loading seller profile...</p></div>;
   }
 
   if (!userProfile) {
-    return <div className="container mx-auto px-4 py-8 text-center"><p>Could not load profile. Please try again later.</p></div>;
+    return <div className="container mx-auto px-4 py-8 text-center"><p>Could not load seller profile. Please try again later.</p></div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-10">
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">Profile Settings</h1>
-        <p className="text-gray-500 mt-1">Manage your account settings, preferences, and addresses.</p>
+        <h1 className="text-3xl font-bold text-gray-800">Seller Profile Settings</h1>
+        <p className="text-gray-500 mt-1">Manage your seller account settings, preferences, and addresses.</p>
       </div>
 
       <PersonalInformationSection userProfile={userProfile} onSave={handleSavePersonalInfo} token={token} />

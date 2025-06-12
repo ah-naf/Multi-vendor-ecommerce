@@ -123,9 +123,101 @@ export const addToWishlistApi = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to add item to wishlist");
   }
-  return response.json(); // Assuming backend returns the updated wishlist
+
+// User Profile API Functions
+
+export const getUserProfile = async () => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch user profile");
+  }
+  return response.json();
 };
 
+export const updateUserProfile = async (profileData: any) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(profileData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to update user profile");
+  }
+  return response.json();
+};
+
+// Address API Functions
+
+export const addAddress = async (addressData: any) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/addresses`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(addressData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to add address");
+  }
+  return response.json(); // Assuming backend returns updated addresses
+};
+
+export const updateAddress = async (addressId: string, addressData: any) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/addresses/${addressId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(addressData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to update address");
+  }
+  return response.json(); // Assuming backend returns updated addresses
+};
+
+export const deleteAddress = async (addressId: string) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/addresses/${addressId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to delete address");
+  }
 export const clearWishlistApi = async (): Promise<void> => {
   const token = getAuthToken();
   const response = await fetch(`${API_BASE_URL}/wishlist/clear`, {
@@ -159,4 +251,101 @@ export const removeFromWishlistApi = async (
     throw new Error(errorData.message || "Failed to remove item from wishlist");
   }
   return response.json(); // Assuming backend returns the updated wishlist
+};
+
+// User Profile API Functions
+
+export const getUserProfile = async () => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch user profile");
+  }
+  return response.json();
+};
+
+export const updateUserProfile = async (profileData: any) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(profileData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to update user profile");
+  }
+  return response.json();
+};
+
+// Address API Functions
+
+export const addAddress = async (addressData: any) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/addresses`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(addressData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to add address");
+  }
+  return response.json(); // Assuming backend returns updated addresses
+};
+
+export const updateAddress = async (addressId: string, addressData: any) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/addresses/${addressId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(addressData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to update address");
+  }
+  return response.json(); // Assuming backend returns updated addresses
+};
+
+export const deleteAddress = async (addressId: string) => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const response = await fetch(`${API_BASE_URL}/users/addresses/${addressId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to delete address");
+  }
+  return response.json(); // Assuming backend returns updated addresses
 };
