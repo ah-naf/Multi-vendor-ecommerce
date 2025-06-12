@@ -18,6 +18,7 @@ const PaymentSchema = new Schema(
     method: { type: String, required: true },
     last4: { type: String, required: true },
     billingAddress: { type: String, required: true },
+    transactionId: { type: Schema.Types.ObjectId, ref: 'Transaction' },
   },
   { _id: false }
 );
@@ -46,6 +47,7 @@ const SummarySchema = new Schema(
 
 const OrderDetailSchema = new Schema(
   {
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     id: { type: String, required: true, unique: true },
     date: { type: Date, required: true },
     status: {

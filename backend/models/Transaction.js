@@ -5,7 +5,8 @@ const { Schema } = mongoose;
 const TransactionSchema = new Schema(
   {
     id: { type: String, required: true, unique: true },
-    product: { type: String, required: true },
+    orderId: { type: Schema.Types.ObjectId, ref: 'OrderDetail' },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     amount: { type: Number, required: true },
     date: { type: Date, required: true },
     status: {
@@ -13,6 +14,7 @@ const TransactionSchema = new Schema(
       required: true,
       enum: ["Paid", "Pending", "Failed"],
     },
+    paymentGatewayTransactionId: { type: String },
   },
   {
     timestamps: true,
