@@ -31,12 +31,17 @@ export default function CartPage() {
   } = useCart();
 
   const [showRemoveItemDialog, setShowRemoveItemDialog] = useState(false);
-  const [itemToRemove, setItemToRemove] = useState<{id: string, name: string} | null>(null);
+  const [itemToRemove, setItemToRemove] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
-  const [showQuantityRemoveDialog, setShowQuantityRemoveDialog] = useState(false);
-  const [itemForQuantityRemoval, setItemForQuantityRemoval] = useState<string | null>(null);
-
+  const [showQuantityRemoveDialog, setShowQuantityRemoveDialog] =
+    useState(false);
+  const [itemForQuantityRemoval, setItemForQuantityRemoval] = useState<
+    string | null
+  >(null);
 
   const handleQuantityChange = (
     productId: string,
@@ -61,7 +66,6 @@ export default function CartPage() {
     setShowQuantityRemoveDialog(false);
     setItemForQuantityRemoval(null);
   };
-
 
   const handleRemoveItem = (productId: string, itemName: string) => {
     setItemToRemove({ id: productId, name: itemName });
@@ -119,7 +123,10 @@ export default function CartPage() {
                 <h2 className="text-xl font-semibold text-gray-800">
                   {totalItems} item{totalItems > 1 ? "s" : ""} in your cart
                 </h2>
-                <Dialog open={showClearCartDialog} onOpenChange={setShowClearCartDialog}>
+                <Dialog
+                  open={showClearCartDialog}
+                  onOpenChange={setShowClearCartDialog}
+                >
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
@@ -134,12 +141,20 @@ export default function CartPage() {
                     <DialogHeader>
                       <DialogTitle>Clear Entire Cart?</DialogTitle>
                       <DialogDescription>
-                        Are you sure you want to remove all items from your shopping cart? This action cannot be undone.
+                        Are you sure you want to remove all items from your
+                        shopping cart? This action cannot be undone.
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowClearCartDialog(false)}>Cancel</Button>
-                      <Button variant="destructive" onClick={confirmClearCart}>Yes, Clear Cart</Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowClearCartDialog(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button variant="destructive" onClick={confirmClearCart}>
+                        Yes, Clear Cart
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -199,12 +214,23 @@ export default function CartPage() {
                         <PlusCircle className="h-6 w-6" />
                       </Button>
                     </div>
-                    <Dialog open={showRemoveItemDialog && itemToRemove?.id === item.productId} onOpenChange={(isOpen) => { if(!isOpen) setItemToRemove(null); setShowRemoveItemDialog(isOpen);}}>
+                    <Dialog
+                      open={
+                        showRemoveItemDialog &&
+                        itemToRemove?.id === item.productId
+                      }
+                      onOpenChange={(isOpen) => {
+                        if (!isOpen) setItemToRemove(null);
+                        setShowRemoveItemDialog(isOpen);
+                      }}
+                    >
                       <DialogTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRemoveItem(item.productId, item.name)}
+                          onClick={() =>
+                            handleRemoveItem(item.productId, item.name)
+                          }
                           className="text-gray-400 hover:text-red-600"
                         >
                           <Trash2 className="h-5 w-5" />
@@ -212,14 +238,30 @@ export default function CartPage() {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Remove {itemToRemove?.name}?</DialogTitle>
+                          <DialogTitle>
+                            Remove {itemToRemove?.name}?
+                          </DialogTitle>
                           <DialogDescription>
-                            Are you sure you want to remove this item from your cart?
+                            Are you sure you want to remove this item from your
+                            cart?
                           </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                          <Button variant="outline" onClick={() => {setItemToRemove(null); setShowRemoveItemDialog(false);}}>Cancel</Button>
-                          <Button variant="destructive" onClick={confirmRemoveItem}>Remove Item</Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setItemToRemove(null);
+                              setShowRemoveItemDialog(false);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={confirmRemoveItem}
+                          >
+                            Remove Item
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -228,17 +270,34 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Dialog open={showQuantityRemoveDialog} onOpenChange={setShowQuantityRemoveDialog}>
+            <Dialog
+              open={showQuantityRemoveDialog}
+              onOpenChange={setShowQuantityRemoveDialog}
+            >
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Remove Item?</DialogTitle>
                   <DialogDescription>
-                    Reducing quantity to zero will remove this item from the cart. Do you want to proceed?
+                    Reducing quantity to zero will remove this item from the
+                    cart. Do you want to proceed?
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => {setItemForQuantityRemoval(null); setShowQuantityRemoveDialog(false)}}>Cancel</Button>
-                  <Button variant="destructive" onClick={confirmRemoveFromQuantity}>Yes, Remove</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setItemForQuantityRemoval(null);
+                      setShowQuantityRemoveDialog(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={confirmRemoveFromQuantity}
+                  >
+                    Yes, Remove
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

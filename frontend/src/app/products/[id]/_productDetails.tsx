@@ -18,7 +18,7 @@ import {
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types";
 import { User } from "@/context/AuthContext";
-import { getApiBaseUrl } from "@/services/productService";
+import { getApiBaseUrl, getBackendBaseUrl } from "@/services/productService";
 
 interface PopulatedSeller
   extends Omit<
@@ -49,7 +49,7 @@ export default function ProductDetails({ product }: Props) {
       ? pricing.salePrice
       : pricing.price;
   const imageUrl = general.images?.[0]
-    ? `http://localhost:5000${general.images[0]}`
+    ? general.images[0]
     : "https://placehold.co/600x600/333333/ffffff?text=No+Image";
 
   const handleWishlistToggle = () => {
@@ -57,8 +57,7 @@ export default function ProductDetails({ product }: Props) {
       removeFromWishlist(product.id);
     } else {
       addToWishlist({
-        id: product.id,
-        _id: product._id,
+        productId: product.id,
         name: general.title,
         price: currentPrice,
         image: imageUrl,
@@ -81,7 +80,7 @@ export default function ProductDetails({ product }: Props) {
                   {" "}
                   {/* Ensure container has size */}
                   <Image
-                    src={imageUrl}
+                    src={`${getBackendBaseUrl()}${imageUrl}`}
                     alt={general.title}
                     layout="fill" // Use fill to respect parent dimensions
                     objectFit="contain" // Or "cover" depending on desired behavior
@@ -177,8 +176,7 @@ export default function ProductDetails({ product }: Props) {
                           removeFromWishlist(product.id);
                         } else {
                           addToWishlist({
-                            id: product.id,
-                            _id: product._id,
+                            productId: product.id,
                             name: product.general.title,
                             price: currentPrice,
                             image: imageUrl,
