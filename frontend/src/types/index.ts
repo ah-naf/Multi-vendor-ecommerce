@@ -71,3 +71,41 @@ export interface ProductSummary {
   image?: string;
   category?: string;
 }
+
+// User Address Type - based on backend/models/User.js AddressSchema
+export interface Address {
+  _id?: string; // Subdocument ID from Mongoose
+  type: string; // e.g., 'Home', 'Work'
+  address: string; // Full address string
+  isDefault: boolean;
+}
+
+// User Profile Data Type
+export interface UserProfile {
+  _id: string;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
+  isAdmin: boolean;
+  addresses: Address[];
+  // We don't include password here
+  // Other fields like cart, wishlist, orders are likely handled by their own services/types
+}
+
+// For updating profile - not all fields are required
+export interface UpdateUserProfileData {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
+}
+
+// For adding/updating address - not all fields are required for update
+export interface AddressData {
+  type: string;
+  address: string;
+  isDefault?: boolean;
+}

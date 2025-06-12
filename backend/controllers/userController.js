@@ -1,0 +1,222 @@
+const User = require('../models/User.js');
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming protect middleware populates req.user
+    const { firstName, lastName, phone, bio } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    // Update fields if provided
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.phone = phone || user.phone;
+    user.bio = bio || user.bio;
+
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      phone: updatedUser.phone,
+      bio: updatedUser.bio,
+      isAdmin: updatedUser.isAdmin,
+      // Do not return password
+    });
+  } catch (error) {
+    res.status(res.statusCode || 500); // Use existing status code if set (e.g., 404)
+    res.json({
+      message: error.message,
+      // Optionally, include stack trace in development
+      // stack: process.env.NODE_ENV === 'production' ? null : error.stack,
+    });
+  }
+};
+
+// @desc    Add a new address
+// @route   POST /api/users/addresses
+// @access  Private
+const addAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { type, address, isDefault } = req.body;
+
+    if (!type || !address) {
+      res.status(400);
+      throw new Error('Type and address are required');
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    if (isDefault) {
+      user.addresses.forEach(addr => {
+        addr.isDefault = false;
+      });
+    }
+
+    const newAddress = {
+      type,
+      address,
+      isDefault: isDefault || false, // Ensure isDefault is a boolean
+    };
+
+    user.addresses.push(newAddress);
+    await user.save();
+
+    // Return the newly added address or the updated user
+    // For simplicity, returning the last added address (which is the new one)
+    res.status(201).json(user.addresses[user.addresses.length - 1]);
+
+  } catch (error) {
+    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+  }
+};
+
+// @desc    Update an existing address
+// @route   PUT /api/users/addresses/:addressId
+// @access  Private
+const updateAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { addressId } = req.params;
+    const { type, address, isDefault } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    const addressToUpdate = user.addresses.id(addressId);
+
+    if (!addressToUpdate) {
+      res.status(404);
+      throw new Error('Address not found');
+    }
+
+    if (isDefault) {
+      user.addresses.forEach(addr => {
+        if (!addr._id.equals(addressToUpdate._id)) {
+          addr.isDefault = false;
+        }
+      });
+    }
+
+    addressToUpdate.type = type || addressToUpdate.type;
+    addressToUpdate.address = address || addressToUpdate.address;
+    // Explicitly set isDefault, even if it's to false
+    if (typeof isDefault === 'boolean') {
+        addressToUpdate.isDefault = isDefault;
+    }
+
+
+    await user.save();
+    res.json(user.addresses); // Return all addresses or just the updated one
+
+  } catch (error) {
+    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete an address
+// @route   DELETE /api/users/addresses/:addressId
+// @access  Private
+const deleteAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { addressId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    const addressIndex = user.addresses.findIndex(addr => addr._id.equals(addressId));
+
+    if (addressIndex === -1) {
+      res.status(404);
+      throw new Error('Address not found');
+    }
+
+    const deletedAddress = user.addresses[addressIndex];
+    user.addresses.splice(addressIndex, 1);
+
+    // Optional: if the deleted address was default, set another one as default
+    if (deletedAddress.isDefault && user.addresses.length > 0) {
+      // For simplicity, setting the first one as default if the deleted one was default
+      // More complex logic could be implemented here if needed
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+    res.json({ message: 'Address removed', addresses: user.addresses });
+
+  } catch (error) {
+    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+  }
+};
+
+// @desc    Set an address as default
+// @route   PUT /api/users/addresses/:addressId/default
+// @access  Private
+const setDefaultAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { addressId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    let foundAddress = false;
+    user.addresses.forEach(addr => {
+      if (addr._id.equals(addressId)) {
+        addr.isDefault = true;
+        foundAddress = true;
+      } else {
+        addr.isDefault = false;
+      }
+    });
+
+    if (!foundAddress) {
+      res.status(404);
+      throw new Error('Address not found to set as default');
+    }
+
+    await user.save();
+    res.json(user.addresses);
+
+  } catch (error) {
+    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  updateUserProfile,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+};
