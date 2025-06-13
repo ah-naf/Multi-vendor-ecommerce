@@ -16,6 +16,7 @@ import {
   addToCartApi,
   removeFromCartApi,
   updateCartQuantityApi,
+  clearCartApi, // Import the new service function
 } from "@/services/userProfileService";
 
 interface CartContextType {
@@ -136,16 +137,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const clearCart = async () => {
-    if (!user) return;
+    if (!user || !token) { // Check for user and ensure token is present
+      toast.error("Please log in to modify your cart.");
+      return;
+    }
     setIsLoading(true);
     try {
-      // Iterate and remove each item. Inefficient, but works without a dedicated backend endpoint.
-      // A better approach would be a single API call to clear the entire cart.
-      for (const item of cartItems) {
-        await removeFromCartApi(item.productId); // This will call setCartItems multiple times
-      }
-      setCartItems([]); // Explicitly clear after all removals
-      toast.info("Cart cleared.");
+      await clearCartApi(token); // Call the new API endpoint, passing the token
+      setCartItems([]); // Set frontend cart to empty
+      toast.info("Cart cleared successfully.");
     } catch (error: any) {
       console.error("Failed to clear cart:", error);
       toast.error(error.message || "Failed to clear cart.");

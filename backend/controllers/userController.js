@@ -43,6 +43,22 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Get user addresses
+// @route   GET /api/users/addresses
+// @access  Private
+const getUserAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('addresses'); // Only select addresses
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json(user.addresses);
+  } catch (error) {
+    console.error('Error fetching user addresses:', error);
+    res.status(500).json({ message: 'Server error while fetching addresses' });
+  }
+};
+
 // @desc    Add a new address
 // @route   POST /api/users/addresses
 // @access  Private
@@ -223,4 +239,5 @@ module.exports = {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
+  getUserAddresses, // Added
 };

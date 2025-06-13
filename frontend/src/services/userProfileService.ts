@@ -94,6 +94,31 @@ export const updateCartQuantityApi = async (
   return response.json(); // Assuming backend returns the updated cart
 };
 
+export const clearCartApi = async (token: string | null): Promise<CartItem[]> => {
+  if (!token) {
+    // Or handle this more gracefully depending on how other service functions expect tokens
+    throw new Error("Authentication token not provided for clearCartApi.");
+  }
+  // Note: API_BASE_URL is already defined in this file.
+  // The prompt used /api/cart/clear, which implies it's not using API_BASE_URL directly here.
+  // For consistency with other functions in this file, I will use API_BASE_URL.
+  // If the intent was truly /api/cart/clear (e.g. Next.js proxy), this needs clarification.
+  // Assuming consistency for now.
+  const response = await fetch(`${API_BASE_URL}/cart/clear`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Failed to clear cart and could not parse error response' }));
+    throw new Error(errorData.message || 'Failed to clear cart');
+  }
+  const data = await response.json();
+  return data.cart; // Assuming backend returns { message: '...', cart: [] }
+};
+
 // Wishlist API Functions
 
 export const fetchWishlistApi = async (): Promise<WishlistItem[]> => {

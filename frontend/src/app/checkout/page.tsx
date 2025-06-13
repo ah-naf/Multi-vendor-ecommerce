@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,56 +19,210 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Home, Briefcase, Plus } from "lucide-react";
 import { Header } from "@/components/Header";
+import { useCart } from "@/context/CartContext";
+import Image from "next/image";
+import { getBackendBaseUrl } from "@/services/productService";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from 'next/navigation'; // Added
+import { toast } from 'sonner'; // Added (ensure it's available)
+
+// Define Address Type
+interface Address {
+  _id: string;
+  type: string;
+  address: string;
+  isDefault?: boolean;
+}
 
 export default function CheckoutPage() {
-  const [selectedAddress, setSelectedAddress] = useState("home");
-  const [paymentMethod, setPaymentMethod] = useState("redirect");
+  // const [selectedAddress, setSelectedAddress] = useState("home"); // Removed
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]); // Added
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null); // Added
+  const [addressLoading, setAddressLoading] = useState<boolean>(true);
+  const [addressError, setAddressError] = useState<string | null>(null);
+
+  // Form states for manual address entry
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [address1, setAddress1] = useState('');
+  const [address2, setAddress2] = useState('');
+  const [city, setCity] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [country, setCountry] = useState('');
+  const [formState, setFormState] = useState(''); // Renamed from 'state'
+
+  const [paymentMethod, setPaymentMethod] = useState("redirect"); // This will become non-interactive
   const [billingAddress, setBillingAddress] = useState(false);
-  const [cashOnDelivery, setCashOnDelivery] = useState(false);
+  const [cashOnDelivery, setCashOnDelivery] = useState(true); // Default to true
   const [promoCode, setPromoCode] = useState("");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false); // Added
 
-  const orderItems = [
-    {
-      id: 1,
-      name: "Wireless Noise-Cancelling Headphones",
-      edition: "Black Premium Edition",
-      price: 249.99,
-      quantity: 1,
-      image: "/api/placeholder/60/60",
-    },
-    {
-      id: 2,
-      name: "Wireless Noise-Cancelling Headphones",
-      edition: "Black Premium Edition",
-      price: 249.99,
-      quantity: 1,
-      image: "/api/placeholder/60/60",
-    },
-    {
-      id: 3,
-      name: "Wireless Noise-Cancelling Headphones",
-      edition: "Black Premium Edition",
-      price: 249.99,
-      quantity: 1,
-      image: "/api/placeholder/60/60",
-    },
-    {
-      id: 4,
-      name: "Wireless Noise-Cancelling Headphones",
-      edition: "Black Premium Edition",
-      price: 249.99,
-      quantity: 1,
-      image: "/api/placeholder/60/60",
-    },
-  ];
+  const { cartItems, getCartTotal, clearCart } = useCart(); // Added clearCart
+  const { token, user } = useAuth(); // Added user
+  const router = useRouter(); // Added
 
-  const subtotal = orderItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shipping = 69.99;
-  const tax = 2.0;
-  const total = subtotal + shipping + tax;
+  // Pre-fill form fields if user is logged in
+  useEffect(() => {
+    if (user) {
+      setFullName(user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.username || ''));
+      setEmail(user.email || '');
+      // Add other pre-fills if available, e.g., phone from user profile
+    }
+  }, [user]);
+
+  // Fetch Addresses Logic
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!token) {
+        setAddressLoading(false);
+        setAddressError("Please log in to view addresses.");
+        return;
+      }
+      try {
+        setAddressLoading(true);
+        const response = await fetch("/api/users/addresses", {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch addresses");
+        }
+        const data: Address[] = await response.json();
+        setSavedAddresses(data);
+        const defaultAddress = data.find(addr => addr.isDefault);
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress._id);
+        } else if (data.length > 0) {
+          setSelectedAddressId(data[0]._id); // Select the first address if no default
+        }
+        setAddressError(null);
+      } catch (error: any) {
+        setAddressError(error.message || "An error occurred while fetching addresses.");
+        setSavedAddresses([]); // Clear addresses on error
+      } finally {
+        setAddressLoading(false);
+      }
+    };
+
+    fetchAddresses();
+  }, [token]);
+
+  // const orderItems = [
+  //   {
+  //     id: 1,
+  //     name: "Wireless Noise-Cancelling Headphones",
+  //     edition: "Black Premium Edition",
+  //     price: 249.99,
+  //     quantity: 1,
+  //     image: "/api/placeholder/60/60",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Wireless Noise-Cancelling Headphones",
+  //     edition: "Black Premium Edition",
+  //     price: 249.99,
+  //     quantity: 1,
+  //     image: "/api/placeholder/60/60",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Wireless Noise-Cancelling Headphones",
+  //     edition: "Black Premium Edition",
+  //     price: 249.99,
+  //     quantity: 1,
+  //     image: "/api/placeholder/60/60",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Wireless Noise-Cancelling Headphones",
+  //     edition: "Black Premium Edition",
+  //     price: 249.99,
+  //     quantity: 1,
+  //     image: "/api/placeholder/60/60",
+  //   },
+  // ];
+
+  const subtotal = getCartTotal(); // Updated
+  const shipping = 69.99; // Static as per requirement
+  const tax = 2.0; // Static as per requirement
+  const total = subtotal + shipping + tax; // Recalculated
+
+  const handlePlaceOrder = async () => {
+    setIsPlacingOrder(true);
+
+    if (!selectedAddressId && (!fullName || !address1 || !city || !formState || !zipCode || !country || !phoneNumber || !email)) {
+      toast.error("Please fill in all required shipping address fields or select a saved address.");
+      setIsPlacingOrder(false);
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty.");
+      setIsPlacingOrder(false);
+      return;
+    }
+
+    const orderPayloadItems = cartItems.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      attributes: item.attributes, // Ensure attributes are passed if they exist on CartItem type
+    }));
+
+    let payload;
+    if (selectedAddressId) {
+      payload = {
+        items: orderPayloadItems,
+        shippingAddressId: selectedAddressId,
+      };
+    } else {
+      // Using new address from form
+      payload = {
+        items: orderPayloadItems,
+        shippingAddressDetails: {
+          name: fullName,
+          address: address2 ? `${address1}, ${address2}` : address1,
+          city,
+          state: formState,
+          zip: zipCode,
+          country,
+          phone: phoneNumber,
+        },
+      };
+    }
+
+    try {
+      if (!token) {
+        toast.error("Authentication token not found. Please log in again.");
+        setIsPlacingOrder(false);
+        return;
+      }
+      const response = await fetch('/api/orders/place', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        toast.success('Order placed successfully!');
+        await clearCart();
+        router.push(`/dashboard-customer/my-order/${responseData.id}`);
+      } else {
+        throw new Error(responseData.message || 'Failed to place order.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'An unexpected error occurred.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -119,87 +273,87 @@ export default function CheckoutPage() {
                     Saved Addresses
                   </Label>
                   <RadioGroup
-                    value={selectedAddress}
-                    onValueChange={setSelectedAddress}
+                    value={selectedAddressId || ""} // Ensure value is not null
+                    onValueChange={setSelectedAddressId}
+                    className="space-y-3"
                   >
-                    <div className="space-y-3 ">
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <RadioGroupItem value="home" id="home" />
-                        <Home className="w-5 h-5 text-gray-500" />
-                        <div className="flex-1">
-                          <Label htmlFor="home" className="font-medium">
-                            Home / Default
+                    {addressLoading && <p>Loading addresses...</p>}
+                    {addressError && !addressLoading && (
+                      <Alert variant="destructive"><AlertDescription>{addressError}</AlertDescription></Alert>
+                    )}
+                    {!addressLoading && !addressError && savedAddresses.length === 0 && (
+                      <p>No saved addresses. Please add one below or in your profile.</p>
+                    )}
+                    {!addressLoading && !addressError && savedAddresses.map((addr) => (
+                      <div key={addr._id} className="flex items-center space-x-3 p-4 border rounded-lg hover:border-gray-400 cursor-pointer">
+                        <RadioGroupItem value={addr._id} id={addr._id} />
+                        {/* Icon can be conditional based on addr.type */}
+                        {addr.type.toLowerCase() === 'home' && <Home className="w-5 h-5 text-gray-500" />}
+                        {addr.type.toLowerCase() === 'work' && <Briefcase className="w-5 h-5 text-gray-500" />}
+                        {/* Add more icons or a default one if needed */}
+                        <div className="flex-1" onClick={() => setSelectedAddressId(addr._id)}>
+                          <Label htmlFor={addr._id} className="font-medium cursor-pointer">
+                            {addr.type} {addr.isDefault && <Badge variant="outline" className="ml-2">Default</Badge>}
                           </Label>
-                          <p className="text-sm text-gray-500">
-                            3929 Lemon Grove Rd. Apt. 54. State CA | 81001
-                            United Kingdom
-                          </p>
+                          <p className="text-sm text-gray-500">{addr.address}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <RadioGroupItem value="work" id="work" />
-                        <Briefcase className="w-5 h-5 text-gray-500" />
-                        <div className="flex-1">
-                          <Label htmlFor="work" className="font-medium">
-                            Work
-                          </Label>
-                          <p className="text-sm text-gray-500">
-                            1700 Golden Grove Park. Rosevilleville. Awesome
-                            Georgia. 69 CXT United
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </RadioGroup>
                 </div>
+                 {/* "Add New Address" Button - Consider adding this for better UX later */}
+                 {/* <div className="mt-4">
+                    <Button variant="outline" onClick={() => {}}> <Plus className="mr-2 h-4 w-4" /> Add New Address</Button>
+                </div> */}
 
-                {/* Form Fields */}
+                {/* Form Fields for new address (can be conditionally shown) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name *</Label>
-                    <Input id="fullName" placeholder="Enter Product Name" />
+                    <Input id="fullName" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={!!selectedAddressId} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phoneNumber">Phone Number *</Label>
-                    <Input id="phoneNumber" placeholder="Enter Product Name" />
+                    <Input id="phoneNumber" placeholder="+1234567890" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} disabled={!!selectedAddressId} />
                   </div>
                 </div>
 
                 <div>
                   <Label htmlFor="email">Email *</Label>
-                  <Input id="email" placeholder="Enter Product Name" />
+                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={!!selectedAddressId} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="address1">Address Line 1 *</Label>
-                  <Input id="address1" placeholder="Enter Product Name" />
+                  <Input id="address1" placeholder="123 Main St" value={address1} onChange={(e) => setAddress1(e.target.value)} disabled={!!selectedAddressId} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="address2">Address Line 2 (Optional)</Label>
-                  <Input id="address2" placeholder="Enter Product Name" />
+                  <Input id="address2" placeholder="Apartment, suite, etc." value={address2} onChange={(e) => setAddress2(e.target.value)} disabled={!!selectedAddressId} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city">City *</Label>
-                    <Input id="city" placeholder="Enter Product Name" />
+                    <Input id="city" placeholder="Your City" value={city} onChange={(e) => setCity(e.target.value)} disabled={!!selectedAddressId} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="zipCode">Zip/Postal Code *</Label>
-                    <Input id="zipCode" placeholder="Enter Product Name" />
+                    <Input id="zipCode" placeholder="12345" value={zipCode} onChange={(e) => setZipCode(e.target.value)} disabled={!!selectedAddressId} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="country">Country *</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Enter Product Name" />
+                    <Select value={country} onValueChange={setCountry} disabled={!!selectedAddressId}>
+                      <SelectTrigger id="country">
+                        <SelectValue placeholder="Select Country" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="bd">Bangladesh</SelectItem>
-                        <SelectItem value="us">United States</SelectItem>
-                        <SelectItem value="uk">United Kingdom</SelectItem>
-                        <SelectItem value="ca">Canada</SelectItem>
+                        {/* Add more countries as needed */}
+                        <SelectItem value="US">United States</SelectItem>
+                        <SelectItem value="CA">Canada</SelectItem>
+                        <SelectItem value="GB">United Kingdom</SelectItem>
+                        <SelectItem value="BD">Bangladesh</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -207,8 +361,13 @@ export default function CheckoutPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="state">State/Province *</Label>
-                  <Input id="state" placeholder="Enter Product Name" />
+                  <Input id="state" placeholder="Your State/Province" value={formState} onChange={(e) => setFormState(e.target.value)} disabled={!!selectedAddressId} />
                 </div>
+
+                {/* Optionally, add a checkbox to toggle manual address entry based on selectedAddressId */}
+                 <p className="text-sm text-gray-500">
+                   {selectedAddressId ? "Using saved address. To enter a new address, first unselect the saved address above (feature to unselect can be added)." : "Please fill in your shipping details."}
+                 </p>
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -229,6 +388,7 @@ export default function CheckoutPage() {
                 <CardTitle>Payment Method</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/*
                 <Alert className="bg-red-50 border-red-200">
                   <AlertDescription className="text-red-700">
                     You will be redirected to XYZ gateway, to complete your
@@ -260,12 +420,15 @@ export default function CheckoutPage() {
                     Please check here.
                   </a>
                 </div>
+                */}
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 pt-4"> {/* Added pt-4 for spacing after commented section */}
                   <Checkbox
                     id="cashOnDelivery"
-                    checked={cashOnDelivery}
-                    onCheckedChange={setCashOnDelivery}
+                    checked={true} // Always checked
+                    disabled={true} // User cannot change it
+                    aria-readonly="true" // For accessibility
+                    // onCheckedChange={setCashOnDelivery} // No longer needed as it's always true
                   />
                   <Label
                     htmlFor="cashOnDelivery"
@@ -274,11 +437,11 @@ export default function CheckoutPage() {
                     Cash On Delivery
                   </Label>
                   <Badge variant="secondary" className="ml-2">
-                    NEW
+                    ONLY OPTION
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-500 ml-6">
-                  Payment collected upon delivery
+                <p className="text-sm text-gray-500 ml-6"> {/* This assumes Checkbox takes up some space, adjust if needed */}
+                  Payment will be collected upon delivery.
                 </p>
               </CardContent>
             </Card>
@@ -308,18 +471,30 @@ export default function CheckoutPage() {
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {orderItems.map((item, index) => (
-                  <div key={item.id} className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                      <div className="w-8 h-8 bg-gray-400 rounded"></div>
+                {cartItems.map((item) => (
+                  <div key={item.productId} className="flex items-center space-x-3">
+                    <div className="relative w-12 h-12 bg-gray-200 rounded overflow-hidden">
+                      {item.image ? (
+                        <Image
+                          src={`${getBackendBaseUrl()}${item.image}`}
+                          alt={item.name}
+                          layout="fill"
+                          objectFit="cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                          <span className="text-xs text-gray-500">No img</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-medium">{item.name}</h4>
-                      <p className="text-xs text-gray-500">{item.edition}</p>
-                      <p className="text-sm font-medium">${item.price}</p>
+                      {/* Assuming 'edition' is not part of cartItem, removing or can be adapted if available */}
+                      {/* <p className="text-xs text-gray-500">{item.edition}</p> */}
+                      <p className="text-sm font-medium">${item.price.toFixed(2)}</p>
                     </div>
                     <div className="text-sm text-gray-500">
-                      Quantity: {item.quantity}
+                      Qty: {item.quantity}
                     </div>
                   </div>
                 ))}
@@ -346,8 +521,12 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                  Place Order
+                <Button
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handlePlaceOrder}
+                  disabled={isPlacingOrder || cartItems.length === 0 || addressLoading || (!selectedAddressId && !fullName) } // Basic disable condition
+                >
+                  {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
                 </Button>
               </CardContent>
             </Card>

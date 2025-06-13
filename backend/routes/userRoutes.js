@@ -7,7 +7,11 @@ const {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
+  getUserAddresses, // Added
 } = require('../controllers/userController.js');
+
+// GET /addresses - Protected route for fetching all user addresses
+router.get('/addresses', protect, getUserAddresses);
 
 // GET /profile - Protected route
 router.get('/profile', protect, (req, res) => {

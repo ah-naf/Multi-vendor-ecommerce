@@ -273,15 +273,14 @@ export default function CartPage() {
                   <span>${cartTotal.toFixed(2)}</span>
                 </div>
 
-                <Button
-                  className="w-full mt-8 bg-red-500 hover:bg-red-600 text-white py-3 text-lg"
-                  onClick={() => {
-                    toast.info("Checkout process not implemented yet.");
-                    console.log("Proceed to Checkout", cartItems);
-                  }}
-                >
-                  Proceed to Checkout
-                </Button>
+                <Link href="/checkout" passHref>
+                  <Button
+                    className="w-full mt-8 bg-red-500 hover:bg-red-600 text-white py-3 text-lg"
+                    // onClick logic removed as Link handles navigation
+                  >
+                    Proceed to Checkout
+                  </Button>
+                </Link>
 
                 <Link href="/" passHref>
                   <Button

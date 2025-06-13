@@ -43,6 +43,25 @@ const addToCart = async (req, res) => {
   }
 };
 
+// @desc Clear all items from user's cart
+// @route DELETE /api/cart/clear
+// @access Private
+const clearUserCart = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.cart = [];
+    await user.save({ validateBeforeSave: false });
+    res.status(200).json({ message: 'Cart cleared successfully', cart: user.cart });
+  } catch (error) {
+    console.error('Error clearing cart:', error);
+    res.status(500).json({ message: 'Server error while clearing cart' });
+  }
+};
+
 // @desc Remove item from cart
 // @route DELETE /api/cart/remove/:productId
 // @access Private
@@ -128,4 +147,5 @@ module.exports = {
   removeFromCart,
   updateCartItemQuantity,
   getCartItems,
+  clearUserCart, // Added
 };

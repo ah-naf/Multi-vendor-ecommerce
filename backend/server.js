@@ -60,6 +60,10 @@ app.use('/api/cart', cartRoutes);
 const wishlistRoutes = require('./routes/wishlistRoutes');
 app.use('/api/wishlist', wishlistRoutes);
 
+// Order Routes
+const orderRoutes = require('./routes/orderRoutes'); // Added
+app.use('/api/orders', orderRoutes); // Added
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
