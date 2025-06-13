@@ -1,4 +1,11 @@
-import { CartItem, WishlistItem, UserProfile, Address, UpdateUserProfileData, AddressData } from "@/types";
+import {
+  CartItem,
+  WishlistItem,
+  UserProfile,
+  Address,
+  UpdateUserProfileData,
+  AddressData,
+} from "@/types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
@@ -146,7 +153,9 @@ export const fetchUserProfile = async (): Promise<UserProfile> => {
   return response.json();
 };
 
-export const updateUserProfile = async (profileData: UpdateUserProfileData): Promise<UserProfile> => {
+export const updateUserProfile = async (
+  profileData: UpdateUserProfileData
+): Promise<UserProfile> => {
   const token = getAuthToken();
   const response = await fetch(`${USER_API_URL}/profile`, {
     method: "PUT",
@@ -165,7 +174,10 @@ export const updateUserProfile = async (profileData: UpdateUserProfileData): Pro
 
 // Address API Functions
 
-export const addAddress = async (addressData: AddressData): Promise<Address> => { // Backend returns the new address
+export const addAddress = async (
+  addressData: AddressData
+): Promise<Address> => {
+  // Backend returns the new address
   const token = getAuthToken();
   const response = await fetch(`${USER_API_URL}/addresses`, {
     method: "POST",
@@ -182,7 +194,11 @@ export const addAddress = async (addressData: AddressData): Promise<Address> => 
   return response.json(); // Assuming backend returns the newly added address object
 };
 
-export const updateAddress = async (addressId: string, addressData: Partial<AddressData>): Promise<Address[]> => { // Backend returns updated addresses array
+export const updateAddress = async (
+  addressId: string,
+  addressData: Partial<AddressData>
+): Promise<Address[]> => {
+  // Backend returns updated addresses array
   const token = getAuthToken();
   const response = await fetch(`${USER_API_URL}/addresses/${addressId}`, {
     method: "PUT",
@@ -234,7 +250,9 @@ export const removeFromWishlistApi = async (
   return response.json(); // Assuming backend returns the updated wishlist
 };
 
-export const deleteAddress = async (addressId: string): Promise<{ message: string; addresses: Address[] }> => {
+export const deleteAddress = async (
+  addressId: string
+): Promise<{ message: string; addresses: Address[] }> => {
   const token = getAuthToken();
   const response = await fetch(`${USER_API_URL}/addresses/${addressId}`, {
     method: "DELETE",
@@ -250,15 +268,21 @@ export const deleteAddress = async (addressId: string): Promise<{ message: strin
   return response.json(); // Assuming backend returns a message and the updated list of addresses
 };
 
-export const setDefaultAddress = async (addressId: string): Promise<Address[]> => { // Backend returns updated addresses array
+export const setDefaultAddress = async (
+  addressId: string
+): Promise<Address[]> => {
+  // Backend returns updated addresses array
   const token = getAuthToken();
-  const response = await fetch(`${USER_API_URL}/addresses/${addressId}/default`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
+  const response = await fetch(
+    `${USER_API_URL}/addresses/${addressId}/default`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    }
+  );
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to set default address");

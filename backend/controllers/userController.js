@@ -1,4 +1,4 @@
-const User = require('../models/User.js');
+const User = require("../models/User.js");
 
 // @desc    Update user profile
 // @route   PUT /api/users/profile
@@ -12,7 +12,7 @@ const updateUserProfile = async (req, res) => {
 
     if (!user) {
       res.status(404);
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     // Update fields if provided
@@ -32,7 +32,6 @@ const updateUserProfile = async (req, res) => {
       phone: updatedUser.phone,
       bio: updatedUser.bio,
       isAdmin: updatedUser.isAdmin,
-      // Do not return password
     });
   } catch (error) {
     res.status(res.statusCode || 500); // Use existing status code if set (e.g., 404)
@@ -54,18 +53,18 @@ const addAddress = async (req, res) => {
 
     if (!type || !address) {
       res.status(400);
-      throw new Error('Type and address are required');
+      throw new Error("Type and address are required");
     }
 
     const user = await User.findById(userId);
 
     if (!user) {
       res.status(404);
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     if (isDefault) {
-      user.addresses.forEach(addr => {
+      user.addresses.forEach((addr) => {
         addr.isDefault = false;
       });
     }
@@ -82,9 +81,10 @@ const addAddress = async (req, res) => {
     // Return the newly added address or the updated user
     // For simplicity, returning the last added address (which is the new one)
     res.status(201).json(user.addresses[user.addresses.length - 1]);
-
   } catch (error) {
-    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+    res
+      .status(res.statusCode >= 400 ? res.statusCode : 500)
+      .json({ message: error.message });
   }
 };
 
@@ -101,18 +101,18 @@ const updateAddress = async (req, res) => {
 
     if (!user) {
       res.status(404);
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     const addressToUpdate = user.addresses.id(addressId);
 
     if (!addressToUpdate) {
       res.status(404);
-      throw new Error('Address not found');
+      throw new Error("Address not found");
     }
 
     if (isDefault) {
-      user.addresses.forEach(addr => {
+      user.addresses.forEach((addr) => {
         if (!addr._id.equals(addressToUpdate._id)) {
           addr.isDefault = false;
         }
@@ -122,16 +122,16 @@ const updateAddress = async (req, res) => {
     addressToUpdate.type = type || addressToUpdate.type;
     addressToUpdate.address = address || addressToUpdate.address;
     // Explicitly set isDefault, even if it's to false
-    if (typeof isDefault === 'boolean') {
-        addressToUpdate.isDefault = isDefault;
+    if (typeof isDefault === "boolean") {
+      addressToUpdate.isDefault = isDefault;
     }
-
 
     await user.save();
     res.json(user.addresses); // Return all addresses or just the updated one
-
   } catch (error) {
-    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+    res
+      .status(res.statusCode >= 400 ? res.statusCode : 500)
+      .json({ message: error.message });
   }
 };
 
@@ -147,14 +147,16 @@ const deleteAddress = async (req, res) => {
 
     if (!user) {
       res.status(404);
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
-    const addressIndex = user.addresses.findIndex(addr => addr._id.equals(addressId));
+    const addressIndex = user.addresses.findIndex((addr) =>
+      addr._id.equals(addressId)
+    );
 
     if (addressIndex === -1) {
       res.status(404);
-      throw new Error('Address not found');
+      throw new Error("Address not found");
     }
 
     const deletedAddress = user.addresses[addressIndex];
@@ -168,10 +170,11 @@ const deleteAddress = async (req, res) => {
     }
 
     await user.save();
-    res.json({ message: 'Address removed', addresses: user.addresses });
-
+    res.json({ message: "Address removed", addresses: user.addresses });
   } catch (error) {
-    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+    res
+      .status(res.statusCode >= 400 ? res.statusCode : 500)
+      .json({ message: error.message });
   }
 };
 
@@ -187,11 +190,11 @@ const setDefaultAddress = async (req, res) => {
 
     if (!user) {
       res.status(404);
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     let foundAddress = false;
-    user.addresses.forEach(addr => {
+    user.addresses.forEach((addr) => {
       if (addr._id.equals(addressId)) {
         addr.isDefault = true;
         foundAddress = true;
@@ -202,14 +205,15 @@ const setDefaultAddress = async (req, res) => {
 
     if (!foundAddress) {
       res.status(404);
-      throw new Error('Address not found to set as default');
+      throw new Error("Address not found to set as default");
     }
 
     await user.save();
     res.json(user.addresses);
-
   } catch (error) {
-    res.status(res.statusCode >= 400 ? res.statusCode : 500).json({ message: error.message });
+    res
+      .status(res.statusCode >= 400 ? res.statusCode : 500)
+      .json({ message: error.message });
   }
 };
 
