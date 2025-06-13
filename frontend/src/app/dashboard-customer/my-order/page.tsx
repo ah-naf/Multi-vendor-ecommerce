@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react"; // Added useState
+import React, { useState, useEffect } from "react"; // Added useEffect
+import { useRouter } from "next/navigation"; // Added useRouter
 import { DataTable, Column, Action } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,9 @@ import {
   PackageCheck,
   RefreshCw,
   Pencil,
+  Loader2, // Added Loader2 for loading state
 } from "lucide-react";
-import { toast } from "sonner"; // Added toast
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -27,55 +29,89 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog"; // Added Dialog components
+} from "@/components/ui/dialog"; // DialogClose and DialogTrigger removed as not directly used by Dialog open prop
 
-// --- MOCK DATA & TYPE DEFINITION ---
-interface Order {
-  id: string;
-  date: string;
-  status: "Delivered" | "Shipped" | "Processing" | "Cancelled";
-  total: number;
+// --- TYPE DEFINITIONS ---
+interface OrderItem {
+  id: string; // Product ID
+  name: string;
+  quantity: number;
+  price: number;
+  image?: string;
 }
 
-const orders: Order[] = [
-  { id: "ORD-12345", date: "May 20, 2023", status: "Delivered", total: 249.99 },
-  { id: "ORD-12346", date: "May 15, 2023", status: "Shipped", total: 399.99 },
-  {
-    id: "ORD-12347",
-    date: "May 10, 2023",
-    status: "Processing",
-    total: 159.98,
-  },
-  { id: "ORD-12348", date: "May 5, 2023", status: "Delivered", total: 79.99 },
-  {
-    id: "ORD-12349",
-    date: "April 30, 2023",
-    status: "Cancelled",
-    total: 129.99,
-  },
-];
+interface Order {
+  id: string; // Order UUID
+  date: string; // ISO String date
+  status: string; // "Processing", "Shipped", "Delivered", "Cancelled" from backend
+  summary: {
+    subtotal: number;
+    shipping: number;
+    tax: number;
+    total: number;
+  };
+  items: OrderItem[];
+  // shippingAddress: any; // Add if needed for display
+  // payment: any; // Add if needed for display
+}
 
 // --- HELPER COMPONENT FOR STATUS BADGE ---
-const StatusBadge = ({ status }: { status: Order["status"] }) => {
+// Updated to handle string status and provide a fallback style
+const StatusBadge = ({ status }: { status: string }) => {
   const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full";
-  const statusClasses = {
+  const statusClasses: Record<string, string> = {
     Delivered: "bg-green-100 text-green-700",
     Shipped: "bg-blue-100 text-blue-700",
     Processing: "bg-yellow-100 text-yellow-700",
     Cancelled: "bg-red-100 text-red-700",
+    // Add any other status values from your backend if they differ or are more numerous
   };
   return (
-    <span className={`${baseClasses} ${statusClasses[status]}`}>{status}</span>
+    <span
+      className={`${baseClasses} ${
+        statusClasses[status] || "bg-gray-100 text-gray-700" // Fallback for unknown statuses
+      }`}
+    >
+      {status}
+    </span>
   );
 };
 
 // --- MY ORDERS PAGE COMPONENT ---
 export default function MyOrdersPage() {
+  const router = useRouter();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+  // const [searchTerm, setSearchTerm] = useState(""); // For search functionality
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch("/api/orders/my-orders");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: "An unknown server error occurred" }));
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
+        }
+        const data: Order[] = await response.json();
+        setOrders(data);
+      } catch (err: any) {
+        const errorMessage = err.message || "Failed to fetch orders. Please try again.";
+        setError(errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []); // Empty dependency array to run once on mount
 
   const handleCancelOrderClick = (order: Order) => {
     setOrderToCancel(order);
@@ -84,10 +120,13 @@ export default function MyOrdersPage() {
 
   const confirmCancelOrder = () => {
     if (orderToCancel) {
-      // Here you would typically call an API to cancel the order
-      // For now, we'll just mock it with a toast message
-      toast.success(`Order ${orderToCancel.id} has been requested for cancellation.`);
-      // You might want to update the local state of orders or re-fetch
+      // TODO: Implement API call to cancel order (e.g., POST /api/orders/:orderId/cancel)
+      toast.success(
+        `Cancellation request for order ${orderToCancel.id} submitted.`
+      );
+      // OPTIONAL: Optimistically update UI or re-fetch orders
+      // setOrders(prevOrders => prevOrders.map(o => o.id === orderToCancel.id ? {...o, status: "Cancelled"} : o));
+      // fetchOrders(); // Or re-fetch
     }
     setShowCancelDialog(false);
     setOrderToCancel(null);
@@ -97,11 +136,12 @@ export default function MyOrdersPage() {
     {
       header: "Order ID",
       accessor: "id",
-      cell: (row) => <span className="font-mono text-gray-700">#{row.id}</span>,
+      cell: (row) => <span className="font-mono text-gray-700">{row.id}</span>, // Displaying UUID directly
     },
     {
       header: "Date",
       accessor: "date",
+      cell: (row) => new Date(row.date).toLocaleDateString(), // Format date string
     },
     {
       header: "Status",
@@ -110,8 +150,8 @@ export default function MyOrdersPage() {
     },
     {
       header: "Total",
-      accessor: "total",
-      cell: (row) => `$${row.total.toFixed(2)}`,
+      accessor: "summary.total", // Accessing nested property
+      cell: (row) => `$${row.summary.total.toFixed(2)}`,
     },
   ];
 
@@ -119,60 +159,108 @@ export default function MyOrdersPage() {
     const actions: Action<Order>[] = [];
 
     actions.push({
-      label: "View",
+      label: "View Details",
       icon: <Pencil className="mr-2 h-4 w-4" />,
-      onClick: (row) => toast.info(`Viewing details for order: ${row.id}`), // Changed to toast.info
+      onClick: (row) => router.push(`/dashboard-customer/my-order/${row.id}`), // Navigate to order detail page
       className: "bg-gray-200 text-gray-800 hover:bg-gray-300",
     });
 
+    // Ensure these status strings match exactly what the backend provides
     switch (order.status) {
       case "Processing":
         actions.push({
-          label: "Cancel",
+          label: "Request Cancellation",
           icon: <XCircle className="mr-2 h-4 w-4" />,
-          onClick: (row) => handleCancelOrderClick(row), // Changed to open dialog
+          onClick: (row) => handleCancelOrderClick(row),
           className: "bg-red-600 text-white hover:bg-red-700 hover:text-white",
         });
         break;
 
       case "Shipped":
         actions.push({
-          label: "Track",
+          label: "Track Order",
           icon: <PackageCheck className="mr-2 h-4 w-4" />,
-          onClick: (row) => toast.info(`Tracking order: ${row.id}`), // Changed to toast.info
-          className:
-            "bg-blue-600 text-white hover:bg-blue-500 hover:text-white",
-        });
-        actions.push({
-          label: "Buy Again",
-          icon: <RefreshCw className="mr-2 h-4 w-4" />,
-          onClick: (row) => toast.info(`Adding items from order ${row.id} to cart.`), // Changed to toast.info
-          className:
-            "bg-green-600 text-white hover:bg-green-500 hover:text-white",
+          onClick: (row) => toast.info(`Tracking order: ${row.id}`), // Placeholder for tracking logic
+          className: "bg-blue-600 text-white hover:bg-blue-500 hover:text-white",
         });
         break;
+    }
 
-      case "Delivered":
-      case "Cancelled":
+    // "Buy Again" action available for most statuses if items exist
+    if (order.items && order.items.length > 0) {
         actions.push({
-          label: "Buy Again",
-          icon: <RefreshCw className="mr-2 h-4 w-4" />,
-          onClick: (row) => toast.info(`Adding items from order ${row.id} to cart.`), // Changed to toast.info
-          className:
-            "bg-green-600 text-white hover:bg-green-500 hover:text-white",
+            label: "Buy Again",
+            icon: <RefreshCw className="mr-2 h-4 w-4" />,
+            onClick: (row) => toast.info(`Re-ordering items from order ${row.id}`), // Placeholder for re-order logic
+            className: "bg-green-600 text-white hover:bg-green-500 hover:text-white",
         });
-        break;
-
-      // 'Cancelled' orders will have no actions
-      default:
-        break;
     }
     return actions;
   };
 
+  // Filter logic should compare with actual status values from the backend
   const filteredData = orders.filter((order) => {
-    return statusFilter === "all" || order.status === statusFilter;
+    if (statusFilter === "all") return true;
+    // Make comparison case-insensitive if backend statuses might vary in case
+    return order.status.toLowerCase() === statusFilter.toLowerCase();
   });
+
+  // Dynamically generate status options for filter dropdown from available orders
+  const statusOptionsFromOrders = Array.from(new Set(orders.map(order => order.status)));
+
+
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-96">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-lg text-gray-600">Loading your orders...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10 px-4">
+        <XCircle className="mx-auto h-12 w-12 text-red-500" />
+        <h2 className="mt-4 text-xl font-semibold text-red-700">
+          Failed to Load Orders
+        </h2>
+        <p className="mt-2 text-gray-600">{error}</p>
+        <Button
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            // Re-run useEffect logic:
+            const fetchOrders = async () => {
+              setLoading(true);
+              setError(null);
+              try {
+                const response = await fetch("/api/orders/my-orders");
+                if (!response.ok) {
+                  const errorData = await response.json().catch(() => ({ message: "An unknown server error occurred" }));
+                  throw new Error(
+                    errorData.message || `HTTP error! status: ${response.status}`
+                  );
+                }
+                const data: Order[] = await response.json();
+                setOrders(data);
+              } catch (err: any) {
+                const errorMessage = err.message || "Failed to fetch orders. Please try again.";
+                setError(errorMessage);
+                toast.error(errorMessage);
+              } finally {
+                setLoading(false);
+              }
+            };
+            fetchOrders();
+          }}
+          className="mt-6"
+        >
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -181,19 +269,19 @@ export default function MyOrdersPage() {
         <p className="text-gray-500">View and manage your order history.</p>
       </div>
 
-      {/* Filter and Search Controls */}
       <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
         <div className="relative w-full md:w-auto md:flex-grow">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
-            placeholder="Search by order ID..."
+            placeholder="Search by Order ID..." // Search functionality not implemented in this step
             className="pl-10 h-12 bg-white"
+            // onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full md:w-auto h-11">
-              Order Status <ChevronDown className="ml-2 h-4 w-4" />
+              Filter by Status <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -201,43 +289,66 @@ export default function MyOrdersPage() {
               value={statusFilter}
               onValueChange={setStatusFilter}
             >
-              <DropdownMenuRadioItem value="all">All</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="Delivered">
-                Delivered
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="Shipped">
-                Shipped
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="Processing">
-                Processing
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="Cancelled">
-                Cancelled
-              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="all">All Statuses</DropdownMenuRadioItem>
+              {/* Dynamically populate filter options from actual data */}
+              {statusOptionsFromOrders.map(status => (
+                <DropdownMenuRadioItem key={status} value={status}>
+                  {status}
+                </DropdownMenuRadioItem>
+              ))}
+              {/* Provide static options as fallback or if no orders yet */}
+              {["Processing", "Shipped", "Delivered", "Cancelled"]
+                .filter(s => !statusOptionsFromOrders.includes(s)) // Only add if not already in dynamic list
+                .map(status => (
+                  <DropdownMenuRadioItem key={status} value={status}>
+                    {status}
+                  </DropdownMenuRadioItem>
+              ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Orders Table */}
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        getActions={getActionsForOrder}
-      />
+      {orders.length === 0 ? (
+         <div className="text-center py-10">
+            <Pencil className="mx-auto h-12 w-12 text-gray-400" /> {/* Using Pencil as an icon for "no orders" */}
+            <h2 className="mt-4 text-xl font-semibold text-gray-700">No Orders Yet</h2>
+            <p className="mt-2 text-gray-500">It looks like you haven't placed any orders. Time to start shopping!</p>
+            <Button onClick={() => router.push('/')} className="mt-6">
+                Browse Products
+            </Button>
+        </div>
+      ) : (
+        <DataTable
+            columns={columns}
+            data={filteredData}
+            getActions={getActionsForOrder}
+        />
+      )}
 
-      {/* Cancel Order Dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancel Order: {orderToCancel?.id}?</DialogTitle>
+            <DialogTitle>Request Order Cancellation: {orderToCancel?.id}?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to request cancellation for this order? This action might not be reversible depending on the order status.
+              Are you sure you want to request cancellation for this order? This
+              action may not be reversible if the order has already been processed or shipped.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>Keep Order</Button>
-            <Button variant="destructive" onClick={confirmCancelOrder} className="bg-red-600 hover:bg-red-700">Confirm Cancellation</Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+            >
+              Keep Order
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmCancelOrder}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Confirm Cancellation Request
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

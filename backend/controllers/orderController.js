@@ -184,4 +184,104 @@ const updateOrderStatusBySeller = async (req, res) => {
   }
 };
 
-module.exports = { placeOrder, updateOrderStatusBySeller };
+// Get all orders for the logged-in user
+const getOrdersByUser = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const orders = await OrderDetail.find({ user: userId }).sort({ date: -1 });
+    if (!orders) {
+      // This case might not be strictly necessary if find returns [] for no matches
+      // but good for explicit clarity if an actual DB error occurred resulting in null
+      return res.status(404).json({ message: "No orders found for this user." });
+    }
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching orders by user:", error);
+    res.status(500).json({ message: "Server error while fetching orders." });
+  }
+};
+
+// Get a specific order by its ID for the logged-in user (or any user if no user check)
+const getOrderById = async (req, res) => {
+  const { id: orderId } = req.params; // Ensure this 'id' is the UUID string field, not _id
+  // const userId = req.user.id; // Optional: Uncomment if orders should only be fetched by the user who placed them
+
+  try {
+    const order = await OrderDetail.findOne({ id: orderId });
+    // Optional: Add user check: await OrderDetail.findOne({ id: orderId, user: userId });
+    // If adding user check, adjust error message for "not found or not authorized"
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error("Error fetching order by ID:", error);
+    res.status(500).json({ message: "Server error while fetching order." });
+  }
+};
+
+// Get orders relevant to a seller
+const getOrdersBySeller = async (req, res) => {
+  const sellerId = req.user.id;
+
+  try {
+    // Find all products belonging to the seller
+    const sellerProducts = await Product.find({ user: sellerId }); // Assuming Product model has a 'user' field for seller ID
+    if (!sellerProducts || sellerProducts.length === 0) {
+      return res.status(404).json({ message: "No products found for this seller." });
+    }
+
+    const sellerProductIds = sellerProducts.map(product => product.id); // Assuming product.id is the UUID
+
+    // Find orders that contain at least one item from the seller's products
+    const orders = await OrderDetail.find({
+      "items.id": { $in: sellerProductIds } // Check if any item.id in the items array is in sellerProductIds
+    }).sort({ date: -1 });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found containing items from this seller." });
+    }
+
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching orders by seller:", error);
+    res.status(500).json({ message: "Server error while fetching seller orders." });
+  }
+};
+
+// Get a specific order by ID for a seller, ensuring the order contains one of their products
+const getSellerOrderById = async (req, res) => {
+  const { id: orderId } = req.params;
+  const sellerId = req.user.id;
+
+  try {
+    const order = await OrderDetail.findOne({ id: orderId });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    // Verify that at least one item in the order belongs to the seller
+    const sellerProducts = await Product.find({ user: sellerId });
+    if (!sellerProducts || sellerProducts.length === 0) {
+      // This case means the seller has no products, so no order can belong to them.
+      return res.status(404).json({ message: "Seller has no products, order cannot be verified." });
+    }
+    const sellerProductIds = sellerProducts.map(product => product.id);
+
+    const isSellersOrder = order.items.some(item => sellerProductIds.includes(item.id));
+
+    if (!isSellersOrder) {
+      return res.status(404).json({ message: "Order not found or does not contain any items from this seller." });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error("Error fetching seller order by ID:", error);
+    res.status(500).json({ message: "Server error while fetching seller order." });
+  }
+};
+
+module.exports = { placeOrder, updateOrderStatusBySeller, getOrdersByUser, getOrderById, getOrdersBySeller, getSellerOrderById };
