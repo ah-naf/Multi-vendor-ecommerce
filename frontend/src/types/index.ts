@@ -76,7 +76,12 @@ export interface ProductSummary {
 export interface Address {
   _id?: string; // Subdocument ID from Mongoose
   type: string; // e.g., 'Home', 'Work'
-  address: string; // Full address string
+  addressLine1: string; // Main address line
+  addressLine2?: string; // Secondary address line (optional)
+  city: string; // City name
+  state: string; // State/Province
+  zipCode: string; // Zip/Postal code
+  country: string; // Country name
   isDefault: boolean;
 }
 
@@ -105,7 +110,13 @@ export interface UpdateUserProfileData {
 
 // For adding/updating address - not all fields are required for update
 export interface AddressData {
+  _id?: string;
   type: string;
-  address: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
   isDefault?: boolean;
 }

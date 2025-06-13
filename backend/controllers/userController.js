@@ -48,14 +48,14 @@ const updateUserProfile = async (req, res) => {
 // @access  Private
 const getUserAddresses = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('addresses'); // Only select addresses
+    const user = await User.findById(req.user.id).select("addresses"); // Only select addresses
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
     res.status(200).json(user.addresses);
   } catch (error) {
-    console.error('Error fetching user addresses:', error);
-    res.status(500).json({ message: 'Server error while fetching addresses' });
+    console.error("Error fetching user addresses:", error);
+    res.status(500).json({ message: "Server error while fetching addresses" });
   }
 };
 
@@ -65,20 +65,32 @@ const getUserAddresses = async (req, res) => {
 const addAddress = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { type, address, isDefault } = req.body;
+    const {
+      type,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      zipCode,
+      country,
+      isDefault,
+    } = req.body;
 
-    if (!type || !address) {
+    // Validate required fields
+    if (!type || !addressLine1 || !city || !state || !zipCode || !country) {
       res.status(400);
-      throw new Error("Type and address are required");
+      throw new Error(
+        "Type, address line 1, city, state, zip code, and country are required"
+      );
     }
 
     const user = await User.findById(userId);
-
     if (!user) {
       res.status(404);
       throw new Error("User not found");
     }
 
+    // If this address is set as default, make all other addresses non-default
     if (isDefault) {
       user.addresses.forEach((addr) => {
         addr.isDefault = false;
@@ -87,15 +99,19 @@ const addAddress = async (req, res) => {
 
     const newAddress = {
       type,
-      address,
-      isDefault: isDefault || false, // Ensure isDefault is a boolean
+      addressLine1,
+      addressLine2: addressLine2 || "", // Optional field
+      city,
+      state,
+      zipCode,
+      country,
+      isDefault: isDefault || false,
     };
 
     user.addresses.push(newAddress);
     await user.save();
 
-    // Return the newly added address or the updated user
-    // For simplicity, returning the last added address (which is the new one)
+    // Return the newly added address
     res.status(201).json(user.addresses[user.addresses.length - 1]);
   } catch (error) {
     res
@@ -104,29 +120,37 @@ const addAddress = async (req, res) => {
   }
 };
 
-// @desc    Update an existing address
-// @route   PUT /api/users/addresses/:addressId
-// @access  Private
+// @desc Update an existing address
+// @route PUT /api/users/addresses/:addressId
+// @access Private
 const updateAddress = async (req, res) => {
   try {
     const userId = req.user.id;
     const { addressId } = req.params;
-    const { type, address, isDefault } = req.body;
+    const {
+      type,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      zipCode,
+      country,
+      isDefault,
+    } = req.body;
 
     const user = await User.findById(userId);
-
     if (!user) {
       res.status(404);
       throw new Error("User not found");
     }
 
     const addressToUpdate = user.addresses.id(addressId);
-
     if (!addressToUpdate) {
       res.status(404);
       throw new Error("Address not found");
     }
 
+    // If this address is being set as default, make all other addresses non-default
     if (isDefault) {
       user.addresses.forEach((addr) => {
         if (!addr._id.equals(addressToUpdate._id)) {
@@ -135,8 +159,16 @@ const updateAddress = async (req, res) => {
       });
     }
 
+    // Update fields if provided, otherwise keep existing values
     addressToUpdate.type = type || addressToUpdate.type;
-    addressToUpdate.address = address || addressToUpdate.address;
+    addressToUpdate.addressLine1 = addressLine1 || addressToUpdate.addressLine1;
+    addressToUpdate.addressLine2 =
+      addressLine2 !== undefined ? addressLine2 : addressToUpdate.addressLine2;
+    addressToUpdate.city = city || addressToUpdate.city;
+    addressToUpdate.state = state || addressToUpdate.state;
+    addressToUpdate.zipCode = zipCode || addressToUpdate.zipCode;
+    addressToUpdate.country = country || addressToUpdate.country;
+
     // Explicitly set isDefault, even if it's to false
     if (typeof isDefault === "boolean") {
       addressToUpdate.isDefault = isDefault;
@@ -188,6 +220,7 @@ const deleteAddress = async (req, res) => {
     await user.save();
     res.json({ message: "Address removed", addresses: user.addresses });
   } catch (error) {
+    console.log(error);
     res
       .status(res.statusCode >= 400 ? res.statusCode : 500)
       .json({ message: error.message });

@@ -35,7 +35,12 @@ const initialProfileData: UpdateUserProfileData = {
 
 const initialAddressData: AddressData = {
   type: "Home",
-  address: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  country: "",
   isDefault: false,
 };
 
@@ -128,8 +133,14 @@ export default function ProfilePage() {
   const handleOpenEditAddressModal = (address: Address) => {
     setEditingAddressId(address._id!);
     setCurrentAddressData({
+      _id: address._id,
       type: address.type,
-      address: address.address,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2 || "",
+      city: address.city,
+      state: address.state,
+      zipCode: address.zipCode,
+      country: address.country,
       isDefault: address.isDefault,
     });
     setShowAddressModal(true);

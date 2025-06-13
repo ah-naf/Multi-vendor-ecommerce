@@ -48,16 +48,16 @@ const AddressSection: React.FC<AddressSectionProps> = ({
         )}
         {addresses.map((addr) => (
           <div key={addr._id} className="p-6 rounded-lg border bg-gray-50/50">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 {addr.type === "Home" && (
-                  <Home className="h-6 w-6 text-gray-600" />
+                  <Home className="h-6 w-6 text-gray-600 flex-shrink-0" />
                 )}
                 {addr.type === "Work" && (
-                  <Briefcase className="h-6 w-6 text-gray-600" />
+                  <Briefcase className="h-6 w-6 text-gray-600 flex-shrink-0" />
                 )}
                 {addr.type !== "Home" && addr.type !== "Work" && (
-                  <Briefcase className="h-6 w-6 text-gray-600" />
+                  <Briefcase className="h-6 w-6 text-gray-600 flex-shrink-0" />
                 )}{" "}
                 {/* Fallback icon */}
                 <h3 className="text-lg font-bold text-gray-800">{addr.type}</h3>
@@ -68,8 +68,15 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 </Badge>
               )}
             </div>
-            <p className="text-gray-600 mb-4">{addr.address}</p>
-            <div className="flex items-center gap-2 flex-wrap">
+
+            <div className="text-gray-700 space-y-1 mb-4 pl-9">
+              <p>
+                {addr.addressLine1}, {addr.addressLine2}, {addr.city},{" "}
+                {addr.country}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap pl-9">
               <Button
                 variant="outline"
                 onClick={() => onEditAddressClick(addr)}

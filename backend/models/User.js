@@ -7,7 +7,12 @@ const { Schema } = mongoose;
 const AddressSchema = new Schema(
   {
     type: { type: String, required: true },
-    address: { type: String, required: true },
+    addressLine1: { type: String, required: true },
+    addressLine2: { type: String, required: false },
+    city: { type: String, required: true },
+    state: { type: String, required: true }, // state/province
+    zipCode: { type: String, required: true }, // zip/postal code
+    country: { type: String, required: true },
     isDefault: { type: Boolean, default: false },
   },
   { _id: true }
