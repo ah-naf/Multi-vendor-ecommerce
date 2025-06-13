@@ -74,7 +74,7 @@ export interface ProductSummary {
 
 // User Address Type - based on backend/models/User.js AddressSchema
 export interface Address {
-  _id?: string; // Subdocument ID from Mongoose
+  _id: string; // Subdocument ID from Mongoose
   type: string; // e.g., 'Home', 'Work'
   addressLine1: string; // Main address line
   addressLine2?: string; // Secondary address line (optional)
