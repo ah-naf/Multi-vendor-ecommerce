@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -19,7 +20,8 @@ import {
   PackageCheck,
   RefreshCw,
   Pencil,
-  Loader2, // Added Loader2 for loading state
+  Loader2,
+  MoreHorizontal, // Added Loader2 for loading state
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -30,6 +32,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"; // DialogClose and DialogTrigger removed as not directly used by Dialog open prop
+import { getBackendBaseUrl } from "@/services/productService";
+import { useAuth } from "@/context/AuthContext";
 
 // --- TYPE DEFINITIONS ---
 interface OrderItem {
@@ -86,16 +90,30 @@ export default function MyOrdersPage() {
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+  const { token } = useAuth(); // Added user
   // const [searchTerm, setSearchTerm] = useState(""); // For search functionality
 
   useEffect(() => {
+    if (!token) {
+      setError("Please log in to view orders");
+      return;
+    }
     const fetchOrders = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/orders/my-orders");
+        const response = await fetch(
+          `${getBackendBaseUrl()}/api/orders/my-orders`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ message: "An unknown server error occurred" }));
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "An unknown server error occurred" }));
           throw new Error(
             errorData.message || `HTTP error! status: ${response.status}`
           );
@@ -103,7 +121,8 @@ export default function MyOrdersPage() {
         const data: Order[] = await response.json();
         setOrders(data);
       } catch (err: any) {
-        const errorMessage = err.message || "Failed to fetch orders. Please try again.";
+        const errorMessage =
+          err.message || "Failed to fetch orders. Please try again.";
         setError(errorMessage);
         toast.error(errorMessage);
       } finally {
@@ -111,7 +130,7 @@ export default function MyOrdersPage() {
       }
     };
     fetchOrders();
-  }, []); // Empty dependency array to run once on mount
+  }, [token]); // Empty dependency array to run once on mount
 
   const handleCancelOrderClick = (order: Order) => {
     setOrderToCancel(order);
@@ -135,23 +154,49 @@ export default function MyOrdersPage() {
   const columns: Column<Order>[] = [
     {
       header: "Order ID",
-      accessor: "id",
       cell: (row) => <span className="font-mono text-gray-700">{row.id}</span>, // Displaying UUID directly
     },
     {
       header: "Date",
-      accessor: "date",
       cell: (row) => new Date(row.date).toLocaleDateString(), // Format date string
     },
     {
       header: "Status",
-      accessor: "status",
       cell: (row) => <StatusBadge status={row.status} />,
     },
     {
       header: "Total",
-      accessor: "summary.total", // Accessing nested property
       cell: (row) => `$${row.summary.total.toFixed(2)}`,
+    },
+    {
+      header: "Actions",
+      cell: (row) => {
+        const actions = getActionsForOrder(row);
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {actions.map((action, index) => (
+                <DropdownMenuItem
+                  key={index}
+                  onClick={() => action.onClick(row)}
+                  className={
+                    action.variant === "destructive" ? "text-red-500" : ""
+                  }
+                >
+                  {action.icon}
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];
 
@@ -181,19 +226,21 @@ export default function MyOrdersPage() {
           label: "Track Order",
           icon: <PackageCheck className="mr-2 h-4 w-4" />,
           onClick: (row) => toast.info(`Tracking order: ${row.id}`), // Placeholder for tracking logic
-          className: "bg-blue-600 text-white hover:bg-blue-500 hover:text-white",
+          className:
+            "bg-blue-600 text-white hover:bg-blue-500 hover:text-white",
         });
         break;
     }
 
     // "Buy Again" action available for most statuses if items exist
     if (order.items && order.items.length > 0) {
-        actions.push({
-            label: "Buy Again",
-            icon: <RefreshCw className="mr-2 h-4 w-4" />,
-            onClick: (row) => toast.info(`Re-ordering items from order ${row.id}`), // Placeholder for re-order logic
-            className: "bg-green-600 text-white hover:bg-green-500 hover:text-white",
-        });
+      actions.push({
+        label: "Buy Again",
+        icon: <RefreshCw className="mr-2 h-4 w-4" />,
+        onClick: (row) => toast.info(`Re-ordering items from order ${row.id}`), // Placeholder for re-order logic
+        className:
+          "bg-green-600 text-white hover:bg-green-500 hover:text-white",
+      });
     }
     return actions;
   };
@@ -206,8 +253,9 @@ export default function MyOrdersPage() {
   });
 
   // Dynamically generate status options for filter dropdown from available orders
-  const statusOptionsFromOrders = Array.from(new Set(orders.map(order => order.status)));
-
+  const statusOptionsFromOrders = Array.from(
+    new Set(orders.map((order) => order.status))
+  );
 
   if (loading) {
     return (
@@ -235,17 +283,28 @@ export default function MyOrdersPage() {
               setLoading(true);
               setError(null);
               try {
-                const response = await fetch("/api/orders/my-orders");
+                const response = await fetch(
+                  `${getBackendBaseUrl()}/api/orders/my-orders`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
                 if (!response.ok) {
-                  const errorData = await response.json().catch(() => ({ message: "An unknown server error occurred" }));
+                  const errorData = await response.json().catch(() => ({
+                    message: "An unknown server error occurred",
+                  }));
                   throw new Error(
-                    errorData.message || `HTTP error! status: ${response.status}`
+                    errorData.message ||
+                      `HTTP error! status: ${response.status}`
                   );
                 }
                 const data: Order[] = await response.json();
                 setOrders(data);
               } catch (err: any) {
-                const errorMessage = err.message || "Failed to fetch orders. Please try again.";
+                const errorMessage =
+                  err.message || "Failed to fetch orders. Please try again.";
                 setError(errorMessage);
                 toast.error(errorMessage);
               } finally {
@@ -289,50 +348,59 @@ export default function MyOrdersPage() {
               value={statusFilter}
               onValueChange={setStatusFilter}
             >
-              <DropdownMenuRadioItem value="all">All Statuses</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="all">
+                All Statuses
+              </DropdownMenuRadioItem>
               {/* Dynamically populate filter options from actual data */}
-              {statusOptionsFromOrders.map(status => (
+              {statusOptionsFromOrders.map((status) => (
                 <DropdownMenuRadioItem key={status} value={status}>
                   {status}
                 </DropdownMenuRadioItem>
               ))}
               {/* Provide static options as fallback or if no orders yet */}
               {["Processing", "Shipped", "Delivered", "Cancelled"]
-                .filter(s => !statusOptionsFromOrders.includes(s)) // Only add if not already in dynamic list
-                .map(status => (
+                .filter((s) => !statusOptionsFromOrders.includes(s)) // Only add if not already in dynamic list
+                .map((status) => (
                   <DropdownMenuRadioItem key={status} value={status}>
                     {status}
                   </DropdownMenuRadioItem>
-              ))}
+                ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       {orders.length === 0 ? (
-         <div className="text-center py-10">
-            <Pencil className="mx-auto h-12 w-12 text-gray-400" /> {/* Using Pencil as an icon for "no orders" */}
-            <h2 className="mt-4 text-xl font-semibold text-gray-700">No Orders Yet</h2>
-            <p className="mt-2 text-gray-500">It looks like you haven't placed any orders. Time to start shopping!</p>
-            <Button onClick={() => router.push('/')} className="mt-6">
-                Browse Products
-            </Button>
+        <div className="text-center py-10">
+          <Pencil className="mx-auto h-12 w-12 text-gray-400" />{" "}
+          {/* Using Pencil as an icon for "no orders" */}
+          <h2 className="mt-4 text-xl font-semibold text-gray-700">
+            No Orders Yet
+          </h2>
+          <p className="mt-2 text-gray-500">
+            It looks like you haven't placed any orders. Time to start shopping!
+          </p>
+          <Button onClick={() => router.push("/")} className="mt-6">
+            Browse Products
+          </Button>
         </div>
       ) : (
         <DataTable
-            columns={columns}
-            data={filteredData}
-            getActions={getActionsForOrder}
+          columns={columns}
+          data={filteredData}
         />
       )}
 
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Request Order Cancellation: {orderToCancel?.id}?</DialogTitle>
+            <DialogTitle>
+              Request Order Cancellation: {orderToCancel?.id}?
+            </DialogTitle>
             <DialogDescription>
               Are you sure you want to request cancellation for this order? This
-              action may not be reversible if the order has already been processed or shipped.
+              action may not be reversible if the order has already been
+              processed or shipped.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

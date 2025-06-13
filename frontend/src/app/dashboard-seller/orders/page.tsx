@@ -10,6 +10,8 @@ import { ShipOrderDialog } from "@/components/orders/ShipOrderDialog"; // Ensure
 import { Pencil, Search, Truck, Loader2, XCircle } from "lucide-react"; // Added Loader2, XCircle
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { getBackendBaseUrl } from "@/services/productService";
 
 // Define the Order structure based on backend OrderDetail model
 interface OrderItem {
@@ -49,8 +51,12 @@ interface Order {
 }
 
 // Define available status tabs. "Pending" for seller likely means "Processing" from backend.
-type ActiveTabStatus = "All" | "Pending" | "Shipped" | "Delivered" | "Cancelled";
-
+type ActiveTabStatus =
+  | "All"
+  | "Pending"
+  | "Shipped"
+  | "Delivered"
+  | "Cancelled";
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<ActiveTabStatus>("All");
@@ -59,17 +65,33 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [shipOrder, setShipOrder] = useState<Order | null>(null); // For the dialog
   const router = useRouter();
+  const { token } = useAuth();
   // const [searchTerm, setSearchTerm] = useState(""); // For future search implementation
 
   useEffect(() => {
+    if (!token) {
+      setError("Please log in to view orders");
+      return;
+    }
     const fetchSellerOrders = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/orders/seller-orders");
+        const response = await fetch(
+          `${getBackendBaseUrl()}/api/orders/seller-orders`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ message: "An unknown error occurred" }));
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "An unknown error occurred" }));
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
         }
         const data: Order[] = await response.json();
         setOrders(data);
@@ -81,7 +103,7 @@ export default function OrdersPage() {
       }
     };
     fetchSellerOrders();
-  }, []);
+  }, [token]);
 
   const filteredOrders = useMemo(() => {
     if (activeTab === "All") return orders;
@@ -92,7 +114,11 @@ export default function OrdersPage() {
 
   const columns: Column<Order>[] = useMemo(
     () => [
-      { header: "Order ID", accessor: "id", cell: (r) => <span className="font-mono">{r.id}</span> },
+      {
+        header: "Order ID",
+        accessor: "id",
+        cell: (r) => <span className="font-mono">{r.id}</span>,
+      },
       {
         header: "Date",
         accessor: "date",
@@ -179,10 +205,10 @@ export default function OrdersPage() {
         </h2>
         <p className="mt-2 text-gray-600">{error}</p>
         <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-            Try Again
+          Try Again
         </button>
       </div>
     );
@@ -204,10 +230,17 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTabStatus)} className="mb-4 w-full">
-        <TabsList className="w-full h-12 grid grid-cols-3 sm:grid-cols-5"> {/* Responsive grid for tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as ActiveTabStatus)}
+        className="mb-4 w-full"
+      >
+        <TabsList className="w-full h-12 grid grid-cols-3 sm:grid-cols-5">
+          {" "}
+          {/* Responsive grid for tabs */}
           <TabsTrigger value="All">All</TabsTrigger>
-          <TabsTrigger value="Pending">Pending</TabsTrigger> {/* UI "Pending" maps to "Processing" status */}
+          <TabsTrigger value="Pending">Pending</TabsTrigger>{" "}
+          {/* UI "Pending" maps to "Processing" status */}
           <TabsTrigger value="Shipped">Shipped</TabsTrigger>
           <TabsTrigger value="Delivered">Delivered</TabsTrigger>
           <TabsTrigger value="Cancelled">Cancelled</TabsTrigger>
@@ -217,8 +250,12 @@ export default function OrdersPage() {
       {filteredOrders.length === 0 && !loading && !error ? (
         <div className="text-center py-10">
           <Pencil className="mx-auto h-12 w-12 text-gray-400" />
-          <h2 className="mt-4 text-xl font-semibold text-gray-700">No Orders Found</h2>
-          <p className="mt-2 text-gray-500">There are no orders matching the current filter.</p>
+          <h2 className="mt-4 text-xl font-semibold text-gray-700">
+            No Orders Found
+          </h2>
+          <p className="mt-2 text-gray-500">
+            There are no orders matching the current filter.
+          </p>
         </div>
       ) : (
         <DataTable<Order>

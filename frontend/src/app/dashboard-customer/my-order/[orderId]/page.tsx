@@ -24,6 +24,8 @@ import {
   CheckCircle,
   Loader2,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { getBackendBaseUrl } from "@/services/productService";
 
 // --- TYPE DEFINITIONS (align with backend OrderDetail model) ---
 interface OrderItem {
@@ -79,7 +81,6 @@ interface OrderDetail {
   // If backend provides `cancelledDate` or `deliveredDate` etc., those can be used in info cards.
 }
 
-
 // --- HELPER UI COMPONENTS (Modified to use OrderDetail type and handle optional fields) ---
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -101,7 +102,13 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // Updated OrderTracker to accept orderDate
-const OrderTracker = ({ status, orderDate }: { status: string, orderDate?: string }) => {
+const OrderTracker = ({
+  status,
+  orderDate,
+}: {
+  status: string;
+  orderDate?: string;
+}) => {
   const steps = ["Processing", "Shipped", "Delivered"];
   let currentStepIndex = steps.indexOf(status);
 
@@ -116,7 +123,11 @@ const OrderTracker = ({ status, orderDate }: { status: string, orderDate?: strin
     <Card>
       <CardHeader>
         <CardTitle>Order Progress</CardTitle>
-        {orderDate && <CardDescription>Order Placed: {new Date(orderDate).toLocaleDateString()}</CardDescription>}
+        {orderDate && (
+          <CardDescription>
+            Order Placed: {new Date(orderDate).toLocaleDateString()}
+          </CardDescription>
+        )}
       </CardHeader>
       <CardContent className="pt-2">
         <div className="flex items-center justify-between w-full">
@@ -125,7 +136,9 @@ const OrderTracker = ({ status, orderDate }: { status: string, orderDate?: strin
             const isCurrent = index === currentStepIndex; // Highlight the current step more distinctly
             return (
               <React.Fragment key={step}>
-                <div className="flex flex-col items-center text-center flex-1 min-w-0 px-1"> {/* Added flex-1, min-w-0 and px-1 for better spacing */}
+                <div className="flex flex-col items-center text-center flex-1 min-w-0 px-1">
+                  {" "}
+                  {/* Added flex-1, min-w-0 and px-1 for better spacing */}
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
                       isActive
@@ -133,11 +146,20 @@ const OrderTracker = ({ status, orderDate }: { status: string, orderDate?: strin
                         : "bg-gray-100 border-gray-300 text-gray-500"
                     }`}
                   >
-                    {step === "Delivered" && isActive ? <CheckCircle className="h-5 w-5" /> : <Package className="h-5 w-5" />}
+                    {step === "Delivered" && isActive ? (
+                      <CheckCircle className="h-5 w-5" />
+                    ) : (
+                      <Package className="h-5 w-5" />
+                    )}
                   </div>
                   <p
-                    className={`mt-2 text-xs sm:text-sm font-semibold truncate ${ // Added truncate for long step names if any
-                      isCurrent ? "text-blue-600" : isActive ? "text-gray-900" : "text-gray-500"
+                    className={`mt-2 text-xs sm:text-sm font-semibold truncate ${
+                      // Added truncate for long step names if any
+                      isCurrent
+                        ? "text-blue-600"
+                        : isActive
+                        ? "text-gray-900"
+                        : "text-gray-500"
                     }`}
                   >
                     {step}
@@ -146,7 +168,9 @@ const OrderTracker = ({ status, orderDate }: { status: string, orderDate?: strin
                 {index < steps.length - 1 && (
                   <div
                     className={`flex-1 h-1.5 mx-1 sm:mx-2 rounded-full ${
-                      isActive && index < currentStepIndex ? "bg-blue-500" : "bg-gray-200"
+                      isActive && index < currentStepIndex
+                        ? "bg-blue-500"
+                        : "bg-gray-200"
                     }`}
                   />
                 )}
@@ -166,13 +190,18 @@ const ShippedInfoCard = ({ order }: { order: OrderDetail }) => (
         <Truck /> On Its Way!
       </CardTitle>
       <CardDescription className="text-blue-700">
-        Your order was shipped {order.estimatedShipDate ? `on ${new Date(order.estimatedShipDate).toLocaleDateString()}` : 'and is currently in transit'}.
+        Your order was shipped{" "}
+        {order.estimatedShipDate
+          ? `on ${new Date(order.estimatedShipDate).toLocaleDateString()}`
+          : "and is currently in transit"}
+        .
       </CardDescription>
     </CardHeader>
     <CardContent className="space-y-2">
       {order.estimatedDelivery && (
         <p>
-          <strong>Estimated Delivery:</strong> {new Date(order.estimatedDelivery).toLocaleDateString()}
+          <strong>Estimated Delivery:</strong>{" "}
+          {new Date(order.estimatedDelivery).toLocaleDateString()}
         </p>
       )}
       {order.carrier && (
@@ -184,7 +213,9 @@ const ShippedInfoCard = ({ order }: { order: OrderDetail }) => (
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 pt-2">
           <p className="font-semibold">Tracking: {order.trackingNumber}</p>
           <Button
-            onClick={() => toast.info(`Tracking for ${order.trackingNumber} (placeholder).`)}
+            onClick={() =>
+              toast.info(`Tracking for ${order.trackingNumber} (placeholder).`)
+            }
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 h-auto"
           >
             Track Package
@@ -209,7 +240,8 @@ const CancelledInfoCard = ({ order }: { order: OrderDetail }) => (
     {order.payment?.method && (
       <CardContent>
         <p>
-          If applicable, refunds are typically processed to the original payment method ({order.payment.method}) within 5-10 business days.
+          If applicable, refunds are typically processed to the original payment
+          method ({order.payment.method}) within 5-10 business days.
         </p>
       </CardContent>
     )}
@@ -223,8 +255,9 @@ const DeliveredInfoCard = ({ order }: { order: OrderDetail }) => (
         <CheckCircle /> Delivered
       </CardTitle>
       <CardDescription className="text-green-700">
-        This order was successfully delivered on {new Date(order.date).toLocaleDateString()}.
-         {/* Assuming order.date might be updated to delivery date by backend, or use a specific 'deliveredAt' field */}
+        This order was successfully delivered on{" "}
+        {new Date(order.date).toLocaleDateString()}.
+        {/* Assuming order.date might be updated to delivery date by backend, or use a specific 'deliveredAt' field */}
       </CardDescription>
     </CardHeader>
   </Card>
@@ -241,8 +274,13 @@ export default function OrderDetailsPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { token } = useAuth(); // Added user
 
   useEffect(() => {
+    if (!token) {
+      setError("Please log in to view orders");
+      return;
+    }
     if (!orderId) {
       setError("Order ID is missing.");
       setLoading(false);
@@ -254,15 +292,28 @@ export default function OrderDetailsPage({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/orders/${orderId}`);
+        const response = await fetch(
+          `${getBackendBaseUrl()}/api/orders/${orderId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error(`Order with ID ${orderId} not found.`);
           }
-          const errorData = await response.json().catch(() => ({ message: "An unknown server error occurred while fetching order details." }));
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => ({
+            message:
+              "An unknown server error occurred while fetching order details.",
+          }));
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
         }
         const data: OrderDetail = await response.json();
+        console.log(data);
         setOrderDetails(data);
       } catch (err: any) {
         const message = err.message || "Failed to fetch order details.";
@@ -274,7 +325,7 @@ export default function OrderDetailsPage({
     };
 
     fetchOrderDetails();
-  }, [orderId]);
+  }, [orderId, token]);
 
   const order = orderDetails;
 
@@ -291,9 +342,14 @@ export default function OrderDetailsPage({
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <XCircle className="mx-auto h-12 w-12 text-red-500" />
-        <h1 className="text-2xl font-bold text-red-700 mt-4">Error Fetching Order</h1>
+        <h1 className="text-2xl font-bold text-red-700 mt-4">
+          Error Fetching Order
+        </h1>
         <p className="text-gray-600 mt-2">{error}</p>
-        <Button onClick={() => router.push('/dashboard-customer/my-order')} className="mt-6">
+        <Button
+          onClick={() => router.push("/dashboard-customer/my-order")}
+          className="mt-6"
+        >
           Back to My Orders
         </Button>
       </div>
@@ -303,12 +359,20 @@ export default function OrderDetailsPage({
   if (!order) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-         <XCircle className="mx-auto h-12 w-12 text-gray-400" />
-        <h1 className="text-2xl font-bold text-gray-700 mt-4">Order Not Found</h1>
+        <XCircle className="mx-auto h-12 w-12 text-gray-400" />
+        <h1 className="text-2xl font-bold text-gray-700 mt-4">
+          Order Not Found
+        </h1>
         <p className="text-gray-500 mt-2">
-          We couldn't find details for order ID "{orderId}". It might have been removed or the ID is incorrect.
+          We couldn't find details for order ID "{orderId}". It might have been
+          removed or the ID is incorrect.
         </p>
-         <Button onClick={() => router.push('/dashboard-customer/my-order')} className="mt-6">View All Orders</Button>
+        <Button
+          onClick={() => router.push("/dashboard-customer/my-order")}
+          className="mt-6"
+        >
+          View All Orders
+        </Button>
       </div>
     );
   }
@@ -320,7 +384,11 @@ export default function OrderDetailsPage({
       case "Processing":
         return (
           <Button
-            onClick={() => toast.info(`Requesting cancellation for order ${order.id}... (Placeholder)`)}
+            onClick={() =>
+              toast.info(
+                `Requesting cancellation for order ${order.id}... (Placeholder)`
+              )
+            }
             className="w-full h-11 bg-red-600 hover:bg-red-700 text-white"
           >
             <XCircle className="mr-2 h-4 w-4" /> Request Cancellation
@@ -331,13 +399,21 @@ export default function OrderDetailsPage({
         return (
           <>
             <Button
-              onClick={() => toast.info(`Initiating return for items from order ${order.id}... (Placeholder)`)}
+              onClick={() =>
+                toast.info(
+                  `Initiating return for items from order ${order.id}... (Placeholder)`
+                )
+              }
               className="w-full h-11 bg-gray-700 hover:bg-gray-800 text-white" // Adjusted color for distinction
             >
               Return Items
             </Button>
             <Button
-              onClick={() => toast.info(`Adding items from order ${order.id} to cart... (Placeholder)`)}
+              onClick={() =>
+                toast.info(
+                  `Adding items from order ${order.id} to cart... (Placeholder)`
+                )
+              }
               className="w-full h-11 bg-green-500 hover:bg-green-600 text-white mt-3"
             >
               <RefreshCw className="mr-2 h-4 w-4" /> Buy Again
@@ -347,7 +423,11 @@ export default function OrderDetailsPage({
       case "Cancelled":
         return (
           <Button
-            onClick={() => toast.info(`Adding items from order ${order.id} to cart... (Placeholder)`)}
+            onClick={() =>
+              toast.info(
+                `Adding items from order ${order.id} to cart... (Placeholder)`
+              )
+            }
             className="w-full h-11 bg-green-500 hover:bg-green-600 text-white"
           >
             <RefreshCw className="mr-2 h-4 w-4" /> Buy Again
@@ -366,14 +446,18 @@ export default function OrderDetailsPage({
           <h1 className="text-3xl font-bold text-gray-800">
             Order #{order.id}
           </h1>
-          <p className="text-gray-500 mt-1">Placed on {new Date(order.date).toLocaleDateString()}</p>
+          <p className="text-gray-500 mt-1">
+            Placed on {new Date(order.date).toLocaleDateString()}
+          </p>
         </div>
         <StatusBadge status={order.status} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {order.status === "Shipped" && order.trackingNumber && <ShippedInfoCard order={order} />}
+          {order.status === "Shipped" && order.trackingNumber && (
+            <ShippedInfoCard order={order} />
+          )}
           {order.status === "Cancelled" && <CancelledInfoCard order={order} />}
           {order.status === "Delivered" && <DeliveredInfoCard order={order} />}
 
@@ -387,11 +471,13 @@ export default function OrderDetailsPage({
             </CardHeader>
             <CardContent>
               {order.items.map((item, index) => (
-                <React.Fragment key={item.id + '-' + index}> {/* Using index for key if item.id is not unique within items (e.g. product id) */}
+                <React.Fragment key={item.id + "-" + index}>
+                  {" "}
+                  {/* Using index for key if item.id is not unique within items (e.g. product id) */}
                   <div className="flex items-center gap-6 py-4">
                     <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
                       <img
-                        src={item.image || "/placeholder-image.svg"}
+                        src={`${getBackendBaseUrl()}${item.image}`}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
@@ -400,7 +486,11 @@ export default function OrderDetailsPage({
                       <p className="font-semibold text-lg text-gray-900">
                         {item.name}
                       </p>
-                      {item.attributes && <p className="text-sm text-gray-500">{item.attributes}</p>}
+                      {item.attributes && (
+                        <p className="text-sm text-gray-500">
+                          {item.attributes}
+                        </p>
+                      )}
                       <p className="text-md text-gray-700 mt-2">
                         ${item.price.toFixed(2)} x {item.quantity}
                       </p>
@@ -426,13 +516,15 @@ export default function OrderDetailsPage({
                   {order.shippingAddress.name}
                 </p>
                 <p>{order.shippingAddress.addressLine1}</p>
-                {order.shippingAddress.addressLine2 && <p>{order.shippingAddress.addressLine2}</p>}
+                {order.shippingAddress.addressLine2 && (
+                  <p>{order.shippingAddress.addressLine2}</p>
+                )}
                 <p>
                   {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
                   {order.shippingAddress.zipCode}
                 </p>
-                 <p>{order.shippingAddress.country}</p>
-                 <p>Phone: {order.shippingAddress.phone}</p>
+                <p>{order.shippingAddress.country}</p>
+                <p>Phone: {order.shippingAddress.phone}</p>
               </CardContent>
             </Card>
             <Card>
@@ -442,7 +534,10 @@ export default function OrderDetailsPage({
               </CardHeader>
               <CardContent className="text-gray-600 space-y-1">
                 <p className="font-semibold text-gray-800">
-                  Paid with {order.payment.method}{order.payment.last4 ? ` ending in ${order.payment.last4}` : ''}
+                  Paid with {order.payment.method}
+                  {order.payment.last4
+                    ? ` ending in ${order.payment.last4}`
+                    : ""}
                 </p>
                 <p>Billing Address: {order.payment.billingAddress}</p>
                 {/* Additional payment details if available */}
@@ -483,7 +578,9 @@ export default function OrderDetailsPage({
                 <div className="pt-2 space-y-3">
                   {renderActionButtons()}
                   <Button
-                    onClick={() => toast.info("Invoice generation/download placeholder.")}
+                    onClick={() =>
+                      toast.info("Invoice generation/download placeholder.")
+                    }
                     className="w-full h-11 bg-gray-200 hover:bg-gray-300 text-gray-800"
                   >
                     <FileText className="mr-2 h-4 w-4" /> Get Invoice
