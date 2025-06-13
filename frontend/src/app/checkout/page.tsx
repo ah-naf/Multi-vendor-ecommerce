@@ -163,7 +163,7 @@ export default function CheckoutPage() {
             : addressForm.addressLine1,
           city: addressForm.city,
           state: addressForm.state,
-          zip: addressForm.zipCode,
+          zipCode: addressForm.zipCode,
           country: addressForm.country,
           phone: phoneNumber,
         },

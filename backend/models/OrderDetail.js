@@ -5,10 +5,13 @@ const { Schema } = mongoose;
 const ShippingAddressSchema = new Schema(
   {
     name: { type: String, required: true },
-    address: { type: String, required: true },
+    addressLine1: { type: String, required: true },
+    addressLine2: { type: String, required: false },
     city: { type: String, required: true },
     state: { type: String, required: true },
-    zip: { type: String, required: true },
+    zipCode: { type: String, required: true },
+    country: { type: String, required: true },
+    phone: { type: String, required: false },
   },
   { _id: false }
 );
@@ -18,13 +21,15 @@ const PaymentSchema = new Schema(
     method: { type: String, required: true },
     last4: { type: String, required: true },
     billingAddress: { type: String, required: true },
+    country: { type: String, required: true },
+    phone: { type: String, required: false },
   },
   { _id: false }
 );
 
 const OrderItemSchema = new Schema(
   {
-    id: { type: Number, required: true },
+    id: { type: String, required: true },
     name: { type: String, required: true },
     attributes: { type: String, default: "" },
     price: { type: Number, required: true },
@@ -51,7 +56,14 @@ const OrderDetailSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ["Delivered", "Shipped", "Processing", "Cancelled"],
+      enum: [
+        "Processing",
+        "Packed",
+        "Shipped",
+        "Out for Delivery",
+        "Delivered",
+        "Cancelled",
+      ],
     },
     deliveredDate: { type: Date },
     cancelledDate: { type: Date },
@@ -66,6 +78,12 @@ const OrderDetailSchema = new Schema(
     payment: { type: PaymentSchema, required: true },
     items: { type: [OrderItemSchema], required: true },
     summary: { type: SummarySchema, required: true },
+    user: {
+      // It's good practice to link the order to a user
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   {
     timestamps: true,
