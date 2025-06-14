@@ -41,6 +41,7 @@ export default function SellerDashboard() {
 
   const [salesTodayData, setSalesTodayData] = useState<SalesData | null>(null);
   const [salesMonthData, setSalesMonthData] = useState<SalesData | null>(null);
+  const [salesWeekData, setSalesWeekData] = useState<SalesData | null>(null);
   // SalesPerformanceData is fetched but its backend is a placeholder, so UI will reflect that.
   const [salesPerformance, setSalesPerformance] = useState<SalesPerformanceData | null>(null);
   const [orderStatusCounts, setOrderStatusCounts] = useState<OrderStatusCountsData | null>(null);
@@ -50,6 +51,7 @@ export default function SellerDashboard() {
 
   const [loadingSalesToday, setLoadingSalesToday] = useState(true);
   const [loadingSalesMonth, setLoadingSalesMonth] = useState(true);
+  const [loadingSalesWeek, setLoadingSalesWeek] = useState(true);
   const [loadingSalesPerf, setLoadingSalesPerf] = useState(true);
   const [loadingOrderStatus, setLoadingOrderStatus] = useState(true);
   const [loadingRevenueTrend, setLoadingRevenueTrend] = useState(true);
@@ -57,6 +59,7 @@ export default function SellerDashboard() {
 
   const [errorSalesToday, setErrorSalesToday] = useState<string | null>(null);
   const [errorSalesMonth, setErrorSalesMonth] = useState<string | null>(null);
+  const [errorSalesWeek, setErrorSalesWeek] = useState<string | null>(null);
   // Error state for sales performance (though it's a placeholder)
   const [errorSalesPerf, setErrorSalesPerf] = useState<string | null>(null);
   const [errorOrderStatus, setErrorOrderStatus] = useState<string | null>(null);
@@ -78,6 +81,13 @@ export default function SellerDashboard() {
         .then(setSalesMonthData)
         .catch(err => setErrorSalesMonth(err.message || "Failed to load month's sales"))
         .finally(() => setLoadingSalesMonth(false));
+
+      // Sales Data (Week)
+      setLoadingSalesWeek(true);
+      fetchSalesDataForPeriod('week')
+        .then(setSalesWeekData)
+        .catch(err => setErrorSalesWeek(err.message || "Failed to load week's sales"))
+        .finally(() => setLoadingSalesWeek(false));
 
       // Sales Performance (Placeholder)
       setLoadingSalesPerf(true);
@@ -174,7 +184,7 @@ export default function SellerDashboard() {
           </CardContent>
         </Card>
 
-        {/* Sales This Week Card (Placeholder - shows N/A or loading) */}
+        {/* Sales This Week Card */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -182,10 +192,17 @@ export default function SellerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <LoadingCardContent />
-            {/* Or show N/A as this specific period isn't fetched by default */}
-            {/* <p className="text-3xl font-bold text-gray-800">N/A</p> */}
-            {/* <p className="text-xs text-gray-500">Performance N/A</p> */}
+            {loadingSalesWeek ? <LoadingCardContent /> : errorSalesWeek ? <p className="text-xs text-red-500">{errorSalesWeek}</p> : (
+              <>
+                <p className="text-3xl font-bold text-gray-800">
+                  ${salesWeekData?.totalSales.toLocaleString() ?? 'N/A'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {/* Performance data is placeholder */}
+                  {salesPerformance?.percentageChange !== undefined ? `${salesPerformance.percentageChange >= 0 ? '+' : ''}${salesPerformance.percentageChange}% from last period` : "Performance N/A"}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -265,7 +282,7 @@ export default function SellerDashboard() {
       {/* Revenue Trend Chart */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Revenue Trend (Monthly - Placeholder Data)</CardTitle>
+          <CardTitle>Revenue Trend (Monthly)</CardTitle>
         </CardHeader>
         <CardContent className="h-[350px] w-full">
           {loadingRevenueTrend ? <div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin text-gray-400" /></div> :
@@ -273,7 +290,7 @@ export default function SellerDashboard() {
            revenueTrend.length === 0 ? <p className="text-gray-500 text-center py-10">No revenue data available.</p> : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={revenueTrend} // Using fetched (but currently placeholder) data
+                data={revenueTrend}
                 margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />

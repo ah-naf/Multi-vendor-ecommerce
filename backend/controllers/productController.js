@@ -239,15 +239,22 @@ const deleteProduct = async (req, res) => {
 const getSellerProducts = async (req, res) => {
   try {
     const sellerId = req.user.id;
-    const { search } = req.query; // Get search query parameter
+    // The frontend service sends searchTerm, so we use that.
+    // If it were 'search', we'd use req.query.search
+    const { searchTerm } = req.query;
 
-    let query = { seller: sellerId };
+    let filterQuery = { seller: sellerId };
 
-    if (search) {
-      query['general.title'] = { $regex: search, $options: 'i' }; // Case-insensitive search
+    if (searchTerm) {
+      // Build a regex query for case-insensitive search on title or SKU
+      const regex = { $regex: searchTerm, $options: 'i' };
+      filterQuery.$or = [
+        { 'general.title': regex },
+        { 'inventory.sku': regex }
+      ];
     }
 
-    const products = await Product.find(query);
+    const products = await Product.find(filterQuery);
     res.json(products);
   } catch (error) {
     console.error("Error fetching seller products:", error);

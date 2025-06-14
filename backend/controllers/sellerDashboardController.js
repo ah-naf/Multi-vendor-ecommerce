@@ -6,18 +6,24 @@ const User = require('../models/User'); // For seller info if needed
 // Helper function to get date ranges
 const getDateRange = (period) => {
   const now = new Date();
-  let startDate, endDate = new Date(now); // endDate is today or end of current period for 'this' queries
+  let startDate, endDate = new Date(now);
 
   switch (period) {
     case 'today':
       startDate = new Date(now.setHours(0, 0, 0, 0));
-      endDate = new Date(now.setHours(23, 59, 59, 999)); // End of today
+      endDate = new Date(new Date().setHours(23, 59, 59, 999));
       break;
-    case 'week': // Current week (e.g., Sunday to Saturday, or Monday to Sunday depending on locale)
-      startDate = new Date(now.setDate(now.getDate() - now.getDay())); // Assuming week starts on Sunday
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
+    case 'week':
+      const currentDay = now.getDay(); // 0 (Sunday) to 6 (Saturday)
+      // Adjust to make Monday the first day of the week
+      const firstDayOfWeek = new Date(now);
+      firstDayOfWeek.setDate(now.getDate() - (currentDay === 0 ? 6 : currentDay - 1)); // If Sunday, go back 6 days, else go back (currentDay - 1)
+      firstDayOfWeek.setHours(0, 0, 0, 0);
+
+      startDate = new Date(firstDayOfWeek);
+
+      endDate = new Date(firstDayOfWeek);
+      endDate.setDate(firstDayOfWeek.getDate() + 6);
       endDate.setHours(23, 59, 59, 999);
       break;
     case 'month': // Current month
@@ -147,15 +153,50 @@ const getOrderStatusCounts = async (req, res) => {
 // @access  Private (Seller)
 const getRevenueTrendData = async (req, res) => {
   try {
-    // Placeholder: A real implementation would aggregate monthly sales for the seller over the past 12 months.
-    const trendData = [ // Example: { month: 'Jan 2023', revenue: 1200 }
-      { month: "Jan", revenue: 0 }, { month: "Feb", revenue: 0 },
-      { month: "Mar", revenue: 0 }, { month: "Apr", revenue: 0 },
-      { month: "May", revenue: 0 }, { month: "Jun", revenue: 0 },
-      { month: "Jul", revenue: 0 }, { month: "Aug", revenue: 0 },
-      { month: "Sep", revenue: 0 }, { month: "Oct", revenue: 0 },
-      { month: "Nov", revenue: 0 }, { month: "Dec", revenue: 0 },
-    ];
+    const sellerId = req.user.id;
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+    twelveMonthsAgo.setDate(1); // Start from the first day of that month
+    twelveMonthsAgo.setHours(0, 0, 0, 0);
+
+    const now = new Date();
+    const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    endOfCurrentMonth.setHours(23, 59, 59, 999);
+
+    const orders = await OrderDetail.find({
+      'items.sellerId': sellerId,
+      'status': { $in: ['Delivered', 'Shipped'] }, // Consider only completed or near-completed sales for revenue
+      'date': { $gte: twelveMonthsAgo, $lte: endOfCurrentMonth }
+    }).sort({ date: 1 }); // Sort by date to make processing easier if needed, though aggregation handles grouping
+
+    const monthlyRevenue = {}; // Store revenue like { 'YYYY-MM': revenue }
+
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        if (item.sellerId && item.sellerId.toString() === sellerId.toString()) {
+          const orderMonth = order.date.getFullYear() + '-' + (order.date.getMonth() + 1).toString().padStart(2, '0');
+          const itemRevenue = item.price * item.quantity;
+          monthlyRevenue[orderMonth] = (monthlyRevenue[orderMonth] || 0) + itemRevenue;
+        }
+      });
+    });
+
+    // Initialize trendData for the last 12 months with 0 revenue
+    const trendData = [];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    for (let i = 0; i < 12; i++) {
+      const dateCursor = new Date(now);
+      dateCursor.setMonth(now.getMonth() - (11 - i)); // Iterate from 11 months ago to current month
+      const monthKey = dateCursor.getFullYear() + '-' + (dateCursor.getMonth() + 1).toString().padStart(2, '0');
+      const monthName = monthNames[dateCursor.getMonth()];
+
+      trendData.push({
+        name: monthName, // Format: "Jan", "Feb", etc.
+        revenue: parseFloat((monthlyRevenue[monthKey] || 0).toFixed(2))
+      });
+    }
+
     res.json(trendData);
   } catch (error) {
     console.error("Error in getRevenueTrendData:", error);

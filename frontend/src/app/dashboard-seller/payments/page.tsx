@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
 import { DataTable, Column } from "@/components/DataTable";
 import {
   Dialog,
@@ -118,6 +119,15 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-8">
+      {/* Alert Notification */}
+      <Alert variant="destructive" className="mb-6">
+        <AlertTriangle className="h-4 w-4" /> {/* Optional: Add an icon */}
+        <AlertTitle>Important Notice</AlertTitle>
+        <AlertDescription>
+          Please note: Payment and withdrawal functionalities are currently under development and not yet available. We apologize for any inconvenience.
+        </AlertDescription>
+      </Alert>
+
       <h1 className="text-2xl font-bold">Payments</h1>
 
       {/* 1. Balances */}
@@ -146,8 +156,9 @@ export default function PaymentsPage() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Withdraw History</h2>
           <Button
-            className="bg-red-500 font-semibold"
+            className="bg-red-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setShowWithdraw(true)}
+            disabled
           >
             Request Payout
           </Button>
@@ -160,8 +171,9 @@ export default function PaymentsPage() {
         <CardHeader className="flex justify-between items-center">
           <CardTitle>Payment Methods</CardTitle>
           <Button
-            className="bg-red-500 font-semibold"
+            className="bg-red-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setShowAddMethod(true)}
+            disabled
           >
             Add Payment Method
           </Button>
