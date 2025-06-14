@@ -68,7 +68,7 @@ export default function OrdersPage() {
   const [shipOrder, setShipOrder] = useState<Order | null>(null); // For the dialog
   const router = useRouter();
   const { token } = useAuth();
-  // const [searchTerm, setSearchTerm] = useState(""); // For future search implementation
+  const [searchTerm, setSearchTerm] = useState(""); // For future search implementation
 
   useEffect(() => {
     if (!token) {
@@ -108,11 +108,24 @@ export default function OrdersPage() {
   }, [token]);
 
   const filteredOrders = useMemo(() => {
-    if (activeTab === "All") return orders;
-    // Map tab "Pending" to backend status "Processing"
+    let processedOrders = [...orders];
+
+    // Filter by searchTerm first
+    if (searchTerm.trim() !== "") {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      processedOrders = processedOrders.filter((order) => {
+        const orderIdMatch = order.id.toLowerCase().includes(lowercasedSearchTerm);
+        const buyerNameMatch = order.shippingAddress.name.toLowerCase().includes(lowercasedSearchTerm);
+        return orderIdMatch || buyerNameMatch;
+      });
+    }
+
+    // Then filter by activeTab
+    if (activeTab === "All") return processedOrders;
+
     const filterStatus = activeTab === "Pending" ? "Processing" : activeTab;
-    return orders.filter((o) => o.status === filterStatus);
-  }, [activeTab, orders]);
+    return processedOrders.filter((o) => o.status === filterStatus);
+  }, [activeTab, orders, searchTerm]);
 
   const columns: Column<Order>[] = useMemo(
     () => [
@@ -228,10 +241,10 @@ export default function OrdersPage() {
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
-            placeholder="Search by Order ID or Buyer Name..." // TODO: Implement search
+            placeholder="Search by Order ID or Buyer Name..."
             className="pl-10 bg-white h-12"
-            // value={searchTerm}
-            // onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>

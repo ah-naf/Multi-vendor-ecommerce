@@ -445,8 +445,9 @@ export default function OrderDetailsPage() {
         <Timeline
           status={order.status}
           orderDate={order.date}
-          shipDate={order.estimatedShipDate}
-          deliveryDate={order.estimatedDelivery}
+          shippedDate={order.estimatedShipDate} // Prop name updated, using estimatedShipDate as per Order interface
+          deliveredDate={order.deliveredDate}   // Prop name updated, using deliveredDate from Order interface
+          cancelledDate={order.cancelledDate}   // Added cancelledDate
         />
 
         <div className="bg-white border rounded-lg p-6">

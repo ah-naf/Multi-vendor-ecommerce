@@ -24,6 +24,7 @@ import {
   CheckCircle,
   Loader2,
 } from "lucide-react";
+import Timeline from "@/components/orders/Timeline"; // Import the new Timeline component
 import { useAuth } from "@/context/AuthContext";
 import { getBackendBaseUrl } from "@/services/productService";
 import {
@@ -111,87 +112,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-// Updated OrderTracker to accept orderDate
-const OrderTracker = ({
-  status,
-  orderDate,
-}: {
-  status: string;
-  orderDate?: string;
-}) => {
-  const steps = ["Processing", "Shipped", "Delivered"];
-  let currentStepIndex = steps.indexOf(status);
-
-  if (status === "Cancelled" || currentStepIndex === -1) {
-    // For cancelled or unknown status, tracker might show no progress or a specific state
-    // For simplicity, we can either hide it or show all steps as inactive.
-    // Here, we'll still render it but steps won't be "active".
-    currentStepIndex = -1; // Or some other value to indicate no active step in the sequence
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Order Progress</CardTitle>
-        {orderDate && (
-          <CardDescription>
-            Order Placed: {new Date(orderDate).toLocaleDateString()}
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="pt-2">
-        <div className="flex items-center justify-between w-full">
-          {steps.map((step, index) => {
-            const isActive = index <= currentStepIndex;
-            const isCurrent = index === currentStepIndex; // Highlight the current step more distinctly
-            return (
-              <React.Fragment key={step}>
-                <div className="flex flex-col items-center text-center flex-1 min-w-0 px-1">
-                  {" "}
-                  {/* Added flex-1, min-w-0 and px-1 for better spacing */}
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                      isActive
-                        ? "bg-blue-500 border-blue-500 text-white"
-                        : "bg-gray-100 border-gray-300 text-gray-500"
-                    }`}
-                  >
-                    {step === "Delivered" && isActive ? (
-                      <CheckCircle className="h-5 w-5" />
-                    ) : (
-                      <Package className="h-5 w-5" />
-                    )}
-                  </div>
-                  <p
-                    className={`mt-2 text-xs sm:text-sm font-semibold truncate ${
-                      // Added truncate for long step names if any
-                      isCurrent
-                        ? "text-blue-600"
-                        : isActive
-                        ? "text-gray-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {step}
-                  </p>
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`flex-1 h-1.5 mx-1 sm:mx-2 rounded-full ${
-                      isActive && index < currentStepIndex
-                        ? "bg-blue-500"
-                        : "bg-gray-200"
-                    }`}
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+// OrderTracker component definition is removed from here.
 
 const ShippedInfoCard = ({ order }: { order: OrderDetail }) => (
   <Card className="bg-blue-50 border-blue-200">
@@ -524,9 +445,14 @@ export default function OrderDetailsPage({
               <DeliveredInfoCard order={order} />
             )}
 
-          {order.status !== "Cancelled" && ( // OrderTracker might not be relevant for cancelled orders
-            <OrderTracker status={order.status} orderDate={order.date} />
-          )}
+          {/* Replace OrderTracker with Timeline */}
+          <Timeline
+            status={order.status}
+            orderDate={order.date}
+            shippedDate={order.estimatedShipDate} // Using estimatedShipDate as per OrderDetail interface
+            deliveredDate={order.deliveredDate}
+            cancelledDate={order.cancelledDate}
+          />
 
           <Card>
             <CardHeader>

@@ -98,7 +98,7 @@ export default function MyOrdersPage() {
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const [cancellationReasonInput, setCancellationReasonInput] = useState(""); // Added state for reason
   const { token } = useAuth(); // Added user
-  // const [searchTerm, setSearchTerm] = useState(""); // For search functionality
+  const [searchTerm, setSearchTerm] = useState(""); // For search functionality
 
   // Define fetchOrders outside of useEffect so it can be called by other functions
   const fetchOrders = async () => {
@@ -289,12 +289,27 @@ export default function MyOrdersPage() {
     return actions;
   };
 
-  // Filter logic should compare with actual status values from the backend
-  const filteredData = orders.filter((order) => {
-    if (statusFilter === "all") return true;
-    // Make comparison case-insensitive if backend statuses might vary in case
-    return order.status.toLowerCase() === statusFilter.toLowerCase();
-  });
+  // Filter logic with search and status filter
+  const filteredData = React.useMemo(() => {
+    let processedOrders = [...orders];
+
+    // Filter by searchTerm first (Order ID)
+    if (searchTerm.trim() !== "") {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      processedOrders = processedOrders.filter((order) =>
+        order.id.toLowerCase().includes(lowercasedSearchTerm)
+      );
+    }
+
+    // Then filter by statusFilter
+    if (statusFilter !== "all") {
+      processedOrders = processedOrders.filter(
+        (order) => order.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    return processedOrders;
+  }, [orders, searchTerm, statusFilter]);
 
   // Dynamically generate status options for filter dropdown from available orders
   const statusOptionsFromOrders = Array.from(
@@ -344,9 +359,10 @@ export default function MyOrdersPage() {
         <div className="relative w-full md:w-auto md:flex-grow">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
-            placeholder="Search by Order ID..." // Search functionality not implemented in this step
+            placeholder="Search by Order ID..."
             className="pl-10 h-12 bg-white"
-            // onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <DropdownMenu>
