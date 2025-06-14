@@ -6,24 +6,27 @@ const {
   updateProduct,
   deleteProduct,
   getSellerProducts,
-  getSellerProductById, // Import the new controller function
-  upload, // Import the multer upload middleware
+  getSellerProductById,
+  upload,
 } = require("../controllers/productController");
 const { updateOrderStatusBySeller } = require("../controllers/orderController");
-const Product = require("../models/Product"); // Assuming the Product model path
+const {
+  getSalesData,
+  getSalesPerformance,
+  getOrderStatusCounts,
+  getRevenueTrendData,
+  getLowStockProductCount,
+} = require("../controllers/sellerDashboardController"); // Import new controller functions
 
-// GET /dashboard - Protected and Seller-authorized route
-router.get("/dashboard", protect, authorize(["seller"]), (req, res) => {
-  res.json({
-    message: "Welcome to Seller Dashboard",
-    data: {
-      sales: 100, // Example data
-      products: 50, // Example data
-    },
-  });
-});
+// Seller Dashboard Routes
+router.get("/dashboard/sales-data", protect, authorize(["seller"]), getSalesData); // expects ?period=today|week|month|year
+router.get("/dashboard/sales-performance", protect, authorize(["seller"]), getSalesPerformance);
+router.get("/dashboard/order-status-counts", protect, authorize(["seller"]), getOrderStatusCounts);
+router.get("/dashboard/revenue-trend", protect, authorize(["seller"]), getRevenueTrendData);
+router.get("/dashboard/low-stock-count", protect, authorize(["seller"]), getLowStockProductCount); // expects ?threshold=X (optional)
 
-// Product Management Routes
+
+// Product Management Routes (existing)
 router
   .route("/products")
   .post(

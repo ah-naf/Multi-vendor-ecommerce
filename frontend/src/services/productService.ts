@@ -62,8 +62,11 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
 };
 
 // Get all products for the authenticated seller
-export const getSellerProducts = async () => {
-  const API_URL = `${getApiBaseUrl()}/seller/products`;
+export const getSellerProducts = async (searchTerm?: string) => {
+  let API_URL = `${getApiBaseUrl()}/seller/products`;
+  if (searchTerm && searchTerm.trim() !== "") {
+    API_URL += `?search=${encodeURIComponent(searchTerm.trim())}`;
+  }
   return apiRequest(API_URL);
 };
 

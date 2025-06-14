@@ -66,6 +66,12 @@ app.use('/api/orders', orderRoutes); // Added
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Only start listening if the file is run directly (e.g., `node server.js`)
+// and not when imported (e.g., by test files)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app; // Export the app for testing

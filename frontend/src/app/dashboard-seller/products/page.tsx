@@ -74,32 +74,45 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]); // Ensure Product type is used
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState(""); // For input field
+  const [activeSearchTerm, setActiveSearchTerm] = useState(""); // For triggering fetch
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const router = useRouter();
 
-  const fetchProducts = async () => {
-    // Moved to its own function to be callable for refetch
+  const fetchProducts = async (currentSearchTerm: string) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getSellerProducts();
+      const data = await getSellerProducts(currentSearchTerm);
       setProducts(data);
+      if (data.length === 0 && currentSearchTerm) {
+        toast.info(`No products found matching "${currentSearchTerm}".`);
+      }
     } catch (err) {
       console.error("Failed to fetch products:", err);
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred";
       setError(`Failed to fetch products: ${errorMessage}`);
       toast.error("Failed to fetch products.");
-      setProducts([]); // Clear products on error
+      setProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts(activeSearchTerm);
+  }, [activeSearchTerm]); // Re-fetch when activeSearchTerm changes
+
+  const handleSearch = () => {
+    setActiveSearchTerm(searchTerm);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setActiveSearchTerm("");
+  };
 
   const handleDeleteClick = (product: Product) => {
     setSelectedProduct(product);

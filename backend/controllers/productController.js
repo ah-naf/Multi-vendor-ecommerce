@@ -238,8 +238,16 @@ const deleteProduct = async (req, res) => {
 // @access  Private/Seller
 const getSellerProducts = async (req, res) => {
   try {
-    // No change needed here as it's already filtering by seller: req.user.id which is an ObjectId
-    const products = await Product.find({ seller: req.user.id });
+    const sellerId = req.user.id;
+    const { search } = req.query; // Get search query parameter
+
+    let query = { seller: sellerId };
+
+    if (search) {
+      query['general.title'] = { $regex: search, $options: 'i' }; // Case-insensitive search
+    }
+
+    const products = await Product.find(query);
     res.json(products);
   } catch (error) {
     console.error("Error fetching seller products:", error);
