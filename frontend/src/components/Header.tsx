@@ -22,22 +22,22 @@ import {
   ChevronDown,
   Menu,
   Home,
-  Heart, // <-- Import Heart icon
-  ShoppingCart, // <-- Import ShoppingCart icon
-  User, // <-- Import User icon for dropdown
-  LayoutDashboard, // <-- Import Dashboard icon for dropdown
-  LogOut, // <-- Import LogOut icon for dropdown
+  Heart,
+  ShoppingCart,
+  User,
+  LayoutDashboard,
+  LogOut,
 } from "lucide-react";
 import React from "react";
-import Link from "next/link"; // <-- Import Link for navigation
-import { useAuth } from "@/context/AuthContext"; // <-- Import useAuth
-import { useCart } from "@/context/CartContext"; // <-- Import useCart
-import { useWishlist } from "@/context/WishlistContext"; // <-- Import useWishlist
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 export const Header = () => {
-  const { user: authUser, logout } = useAuth(); // <-- Get auth data
-  const { getTotalItems: getTotalCartItems } = useCart(); // <-- Get cart data
-  const { getWishlistTotalItems } = useWishlist(); // <-- Get wishlist data
+  const { user: authUser, logout } = useAuth();
+  const { getTotalItems: getTotalCartItems } = useCart();
+  const { getWishlistTotalItems } = useWishlist();
   const totalCartItems = getTotalCartItems();
   const totalWishlistItems = getWishlistTotalItems();
 
@@ -119,7 +119,6 @@ export const Header = () => {
           <HelpCircle className="h-6 w-6 text-gray-600" />
         </Button>
 
-        {/* --- ADDED: Wishlist and Cart Icons --- */}
         <Link href="/dashboard-customer/wishlist" passHref>
           {" "}
           {/* Updated wishlist link */}
@@ -150,7 +149,6 @@ export const Header = () => {
           <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
         </Button>
 
-        {/* --- UPDATED: Profile Dropdown Menu --- */}
         {authUser ? (
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center space-x-2 cursor-pointer">

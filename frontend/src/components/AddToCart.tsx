@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useCart } from "@/context/CartContext"; // Import useCart
+import { useCart } from "@/context/CartContext";
 
 interface AddToCartProps {
   productId: string;
@@ -12,7 +12,7 @@ interface AddToCartProps {
   productImage: string;
   maxQty: number; // Max quantity available from inventory
   selectedQuantity: number; // Quantity selected by the user on the product page
-  isOwnProduct?: boolean; // <-- Add this line
+  isOwnProduct?: boolean;
 }
 
 export function AddToCart({
@@ -22,7 +22,7 @@ export function AddToCart({
   productImage,
   maxQty,
   selectedQuantity,
-  isOwnProduct, // <-- Destructure prop
+  isOwnProduct,
 }: AddToCartProps) {
   const { addToCart, cartItems } = useCart();
 

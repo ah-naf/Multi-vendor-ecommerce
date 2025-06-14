@@ -1,4 +1,3 @@
-// frontend/src/services/sellerDashboardService.ts
 
 // Define types for the expected API responses
 // These should match the structure returned by your backend endpoints.

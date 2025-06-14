@@ -33,7 +33,6 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(url, {
     ...options,
     headers,
-    // credentials: "include", // Kept if cookies are also used, otherwise can be removed for pure token auth
   });
 
   if (!response.ok) {

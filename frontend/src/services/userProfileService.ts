@@ -131,7 +131,6 @@ export const fetchWishlistApi = async (): Promise<WishlistItem[]> => {
       ...(token && { Authorization: `Bearer ${token}` }),
     },
   });
-  console.log(response);
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to fetch wishlist");

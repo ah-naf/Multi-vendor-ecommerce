@@ -10,19 +10,19 @@ import React, {
 } from "react";
 import { toast } from "sonner";
 import { WishlistItem } from "@/types";
-import { useAuth } from "./AuthContext"; // To check authentication status
+import { useAuth } from "./AuthContext";
 import {
   fetchWishlistApi,
   addToWishlistApi,
   removeFromWishlistApi,
-  clearWishlistApi, // Import for the new API call
+  clearWishlistApi,
 } from "@/services/userProfileService";
 
 interface WishlistContextType {
   wishlistItems: WishlistItem[];
   addToWishlist: (item: Omit<WishlistItem, "addedAt">) => Promise<void>;
   removeFromWishlist: (productId: string) => Promise<void>;
-  clearWishlist?: () => Promise<void>; // Optional for now, will be implemented
+  clearWishlist?: () => Promise<void>;
   isWishlisted: (productId: string) => boolean;
   getWishlistTotalItems: () => number;
   isLoading: boolean;
@@ -41,7 +41,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({
 }) => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { user, token } = useAuth(); // Get user and token from AuthContext
+  const { user, token } = useAuth();
 
   const loadWishlist = useCallback(async () => {
     if (user && token) {
@@ -139,7 +139,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({
     wishlistItems,
     addToWishlist,
     removeFromWishlist,
-    clearWishlist, // Add to context
+    clearWishlist,
     isWishlisted,
     getWishlistTotalItems,
     isLoading,

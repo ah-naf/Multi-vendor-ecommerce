@@ -9,15 +9,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Heart } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Product } from "@/types"; // Import Product type
-import { useWishlist } from "@/context/WishlistContext"; // Import useWishlist
+import { Product, ApiError } from "@/types";
+import { useWishlist } from "@/context/WishlistContext";
 import { getApiBaseUrl } from "@/services/productService";
+import axios, { AxiosError } from "axios";
 import { useCart } from "@/context/CartContext";
 
 // --- MAIN HOMEPAGE COMPONENT ---
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuth();
-  console.log(user);
   const router = useRouter();
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
@@ -47,7 +47,6 @@ export default function HomePage() {
         }
         const data = await response.json();
         setProducts(data);
-        console.log(data);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "An unknown error occurred";
@@ -99,9 +98,18 @@ export default function HomePage() {
       await addToCart(itemForCart, 1);
       await removeFromWishlist(product.id); // product.id is the productId
       toast.success(`${product.general.title} moved to cart!`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let errorMessage = "An unknown error occurred";
+      if (axios.isAxiosError(error)) {
+        // If the error originates from an axios call in a service
+        errorMessage = error.response?.data?.message || error.message;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === "object" && "message" in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
       toast.error(
-        `Failed to move ${product.general.title} to cart: ${error.message}`
+        `Failed to move ${product.general.title} to cart: ${errorMessage}`
       );
     }
   };

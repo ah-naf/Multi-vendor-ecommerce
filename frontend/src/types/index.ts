@@ -120,3 +120,31 @@ export interface AddressData {
   country: string;
   isDefault?: boolean;
 }
+
+// Type for login credentials
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+// Type for registration data
+export interface RegistrationData {
+  username: string;
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}
+
+// Generic API Error Type
+export interface ApiError {
+  message: string;
+  response?: {
+    data?: {
+      message?: string;
+      errors?: any; // Can be more specific if error structure is known
+    };
+    status?: number;
+  };
+}

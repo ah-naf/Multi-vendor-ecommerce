@@ -110,9 +110,7 @@ export function DataTable<T extends { id: string }>({
 
     return (
       <div className="bg-white p-4 rounded-lg border">
-        <div className="flex items-start justify-between">
-          {/* ... mobile card data rendering */}
-        </div>
+        <div className="flex items-start justify-between"></div>
         {itemActions.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

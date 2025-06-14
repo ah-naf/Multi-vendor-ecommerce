@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,8 @@ import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 import { getBackendBaseUrl } from "@/services/productService";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation"; // Added
-import { toast } from "sonner"; // Added (ensure it's available)
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Address } from "@/types";
 
 export default function CheckoutPage() {
@@ -46,11 +46,11 @@ export default function CheckoutPage() {
 
   const [billingAddress, setBillingAddress] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false); // Added
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-  const { cartItems, getCartTotal, clearCart } = useCart(); // Added clearCart
-  const { token, user } = useAuth(); // Added user
-  const router = useRouter(); // Added
+  const { cartItems, getCartTotal, clearCart } = useCart();
+  const { token, user } = useAuth();
+  const router = useRouter();
 
   // Pre-fill form fields if user is logged in
   useEffect(() => {
@@ -58,7 +58,6 @@ export default function CheckoutPage() {
       setFullName(`${user.firstName} ${user.lastName}`);
       setEmail(user.email || "");
       setPhoneNumber(user.phone || "");
-      // Add other pre-fills if available, e.g., phone from user profile
     }
   }, [user]);
 
@@ -88,7 +87,6 @@ export default function CheckoutPage() {
         setSavedAddresses(data);
         const defaultAddress = data.find((addr) => addr.isDefault);
         if (defaultAddress) {
-          // setSelectedAddressId(defaultAddress._id);
           setAddressForm(defaultAddress);
           setSelectedAddressId(defaultAddress._id);
         } else if (data.length > 0) {
@@ -109,10 +107,10 @@ export default function CheckoutPage() {
     fetchAddresses();
   }, [token]);
 
-  const subtotal = getCartTotal(); // Updated
+  const subtotal = getCartTotal();
   const shipping = 69.99; // Static as per requirement
   const tax = 2.0; // Static as per requirement
-  const total = subtotal + shipping + tax; // Recalculated
+  const total = subtotal + shipping + tax;
 
   const handlePlaceOrder = async () => {
     setIsPlacingOrder(true);
@@ -203,7 +201,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Replace with your Header component */}
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -492,8 +489,6 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="flex items-center space-x-2 pt-4">
-                  {" "}
-                  {/* Added pt-4 for spacing after commented section */}
                   <Checkbox
                     id="cashOnDelivery"
                     checked={true} // Always checked
@@ -512,7 +507,6 @@ export default function CheckoutPage() {
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-500 ml-6">
-                  {" "}
                   {/* This assumes Checkbox takes up some space, adjust if needed */}
                   Payment will be collected upon delivery.
                 </p>

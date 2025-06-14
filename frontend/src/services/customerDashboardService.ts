@@ -1,4 +1,3 @@
-// frontend/src/services/customerDashboardService.ts
 
 // Define types for the expected API responses (optional but good practice)
 // These should match the structure returned by your backend endpoints.

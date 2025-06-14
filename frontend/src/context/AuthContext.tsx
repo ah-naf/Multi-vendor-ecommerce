@@ -7,7 +7,12 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+import {
+  LoginCredentials,
+  RegistrationData,
+  ApiError,
+} from "../../types"; // Adjust path as necessary
 
 // Configure Axios defaults
 axios.defaults.baseURL =
@@ -29,12 +34,12 @@ export interface User {
 
 export interface AuthContextType {
   user: User | null;
-  token: string | null; // Added token state
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (credentials: any) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (userData: RegistrationData) => Promise<void>;
   logout: () => Promise<void>;
   // fetchUser is internal, no need to expose if loadUserOnMount handles it
 }
@@ -63,17 +68,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(data);
       setIsAuthenticated(true);
       setError(null);
-    } catch (err: any) {
-      // on 401 we simply force logout; on other errors, show them
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        // token expired or invalid → clear it
-      } else {
-        setError(
-          axios.isAxiosError(err)
-            ? err.response?.data?.message || "Failed to fetch profile"
-            : "Unknown error"
-        );
+    } catch (err: unknown) {
+      let errorMessage = "An unknown error occurred";
+      if (axios.isAxiosError(err)) {
+        errorMessage =
+          err.response?.data?.message || err.message || "Failed to fetch profile";
+        if (err.response?.status === 401) {
+          localStorage.removeItem("jwtToken");
+          delete axios.defaults.headers.common["Authorization"];
+          setToken(null);
+          setUser(null);
+          setIsAuthenticated(false);
+          setError(null);
+          setIsLoading(false); // Ensure loading is stopped
+          return; // Exit if 401 caused logout
+        }
+      } else if (err && typeof err === "object" && "message" in err) {
+        errorMessage = (err as { message: string }).message;
       }
+      setError(errorMessage);
+      // Clear auth state for other auth-related errors too
       localStorage.removeItem("jwtToken");
       delete axios.defaults.headers.common["Authorization"];
       setToken(null);
@@ -96,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (credentials: any) => {
+  const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -109,19 +123,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(me);
       setIsAuthenticated(true);
       window.location.href = "/";
-    } catch (err: any) {
-      setError(
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || "Login failed"
-          : "Unexpected login error"
-      );
+    } catch (err: unknown) {
+      let message = "An unexpected error occurred";
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.message || err.message || "Login failed";
+      } else if (err && typeof err === "object" && "message" in err) {
+        message = (err as Error).message;
+      }
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (userData: any) => {
+  const register = async (userData: RegistrationData) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -129,12 +145,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // If it does, this logic needs to mirror login success (set token, user, etc.)
       await axios.post("/api/auth/register", userData);
       // Potentially: toast.success("Registration successful! Please login.");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      let message = "An unexpected error occurred during registration.";
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Registration failed");
-      } else {
-        setError("An unexpected error occurred during registration.");
+        message =
+          err.response?.data?.message || err.message || "Registration failed";
+      } else if (err && typeof err === "object" && "message" in err) {
+        message = (err as Error).message;
       }
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -146,19 +165,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
     try {
       await axios.post("/api/auth/logout"); // Backend logout
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Log error but proceed with client-side logout anyway
       console.error("Logout API call failed:", err);
+      let message =
+        "An unexpected error occurred during server logout, logged out locally.";
       if (axios.isAxiosError(err)) {
-        setError(
+        message =
           err.response?.data?.message ||
-            "Logout failed on server, logged out locally."
-        );
-      } else {
-        setError(
-          "An unexpected error occurred during server logout, logged out locally."
-        );
+          err.message ||
+          "Logout failed on server, logged out locally.";
+      } else if (err && typeof err === "object" && "message" in err) {
+        message = (err as Error).message;
       }
+      setError(message);
     } finally {
       localStorage.removeItem("jwtToken");
       delete axios.defaults.headers.common["Authorization"];

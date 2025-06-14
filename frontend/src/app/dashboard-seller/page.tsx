@@ -1,4 +1,3 @@
-// File Path: src/app/dashboard/page.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";

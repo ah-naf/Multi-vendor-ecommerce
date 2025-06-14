@@ -1,4 +1,3 @@
-// File Path: src/components/Sidebar.tsx
 "use client";
 
 import { usePathname } from "next/navigation";

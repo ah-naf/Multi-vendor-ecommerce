@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "../context/AuthContext"; // Added import
-import { CartProvider } from "../context/CartContext"; // Import CartProvider
-import { WishlistProvider } from "../context/WishlistContext"; // Import WishlistProvider
+import { AuthProvider } from "../context/AuthContext";
+import { CartProvider } from "../context/CartContext";
+import { WishlistProvider } from "../context/WishlistContext";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({

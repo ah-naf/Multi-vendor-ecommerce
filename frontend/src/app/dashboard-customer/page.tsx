@@ -17,8 +17,8 @@ import {
   MapPin,
   LifeBuoy,
   ChevronRight,
-  AlertCircle, // For error display
-  Loader2, // For loading state
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -27,8 +27,8 @@ import {
   fetchTotalSpent,
   fetchRecentOrders,
   fetchActiveOrder,
-} from "@/services/customerDashboardService"; // Assuming path is correct
-import { useAuth } from "@/context/AuthContext"; // To get user's name
+} from "@/services/customerDashboardService";
+import { useAuth } from "@/context/AuthContext";
 
 // --- TYPES --- (Should ideally be in a central types file)
 interface RecentOrderData {

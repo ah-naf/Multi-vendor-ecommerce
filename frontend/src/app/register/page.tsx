@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react"; // Added useState
-import { useRouter } from "next/navigation"; // Added useRouter
-import { useAuth } from "../../context/AuthContext"; // Added useAuth
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../context/AuthContext";
 import {
   Card,
   CardHeader,
@@ -22,7 +22,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { toast } from "sonner"; // Added toast
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const { register, loading, error } = useAuth();

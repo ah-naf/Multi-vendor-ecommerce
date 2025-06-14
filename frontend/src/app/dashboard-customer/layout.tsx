@@ -1,8 +1,7 @@
-// File Path: src/app/dashboard-customer/layout.tsx
 import React from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
-import PrivateRoute from "@/components/auth/PrivateRoute"; // Import PrivateRoute
+import PrivateRoute from "@/components/auth/PrivateRoute";
 
 export default function DashboardLayout({
   children,

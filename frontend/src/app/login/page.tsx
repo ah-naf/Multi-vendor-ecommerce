@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react"; // Added useState, useEffect
-import { useRouter } from "next/navigation"; // Added useRouter
-import { useAuth } from "../../context/AuthContext"; // Added useAuth
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../context/AuthContext";
 import {
   Card,
   CardHeader,
@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
-  const { login, isLoading, error, user } = useAuth(); // Use AuthContext
+  const { login, isLoading, error, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
