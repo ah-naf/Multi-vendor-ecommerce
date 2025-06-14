@@ -172,7 +172,7 @@ const updateOrderStatusBySeller = async (req, res) => {
           // return res.status(400).json({ message: "Cancellation reason is required when cancelling an order." });
         }
         order.cancellationReason = cancellationReason || "Cancelled by seller"; // Default reason if not provided
-        order.cancelledBy = 'seller';
+        order.cancelledBy = "seller";
         order.cancelledDate = new Date();
       } else {
         // Potentially clear cancellation fields if status changes from 'Cancelled' to something else
@@ -324,16 +324,6 @@ const getSellerOrderById = async (req, res) => {
   }
 };
 
-module.exports = {
-  placeOrder,
-  updateOrderStatusBySeller,
-  getOrdersByUser,
-  getOrderById,
-  getOrdersBySeller,
-  getSellerOrderById,
-  requestOrderCancellationByCustomer, // Added new function
-};
-
 // Request order cancellation by customer
 const requestOrderCancellationByCustomer = async (req, res) => {
   const { orderId } = req.params;
@@ -341,9 +331,7 @@ const requestOrderCancellationByCustomer = async (req, res) => {
   const userId = req.user.id; // Assuming authMiddleware provides req.user
 
   if (!cancellationReason) {
-    return res
-      .status(400)
-      .json({ message: "Cancellation reason is required" });
+    return res.status(400).json({ message: "Cancellation reason is required" });
   }
 
   try {
@@ -381,4 +369,14 @@ const requestOrderCancellationByCustomer = async (req, res) => {
       .status(500)
       .json({ message: "Server error while requesting order cancellation." });
   }
+};
+
+module.exports = {
+  placeOrder,
+  updateOrderStatusBySeller,
+  getOrdersByUser,
+  getOrderById,
+  getOrdersBySeller,
+  getSellerOrderById,
+  requestOrderCancellationByCustomer, // Added new function
 };

@@ -26,6 +26,13 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getBackendBaseUrl } from "@/services/productService";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // --- TYPE DEFINITIONS (align with backend OrderDetail model) ---
 interface OrderItem {
@@ -78,7 +85,7 @@ interface OrderDetail {
   deliveredDate?: string; // Added
   cancelledDate?: string; // Added
   cancellationReason?: string; // Added
-  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null; // Added
+  cancelledBy?: "seller" | "customer" | "admin" | "system" | null; // Added
 }
 
 // --- HELPER UI COMPONENTS (Modified to use OrderDetail type and handle optional fields) ---
@@ -297,8 +304,10 @@ export default function OrderDetailsPage({
   const { token } = useAuth();
 
   // State for customer cancellation dialog
-  const [showCustomerCancelDialog, setShowCustomerCancelDialog] = useState(false);
-  const [customerCancellationReason, setCustomerCancellationReason] = useState("");
+  const [showCustomerCancelDialog, setShowCustomerCancelDialog] =
+    useState(false);
+  const [customerCancellationReason, setCustomerCancellationReason] =
+    useState("");
 
   const fetchOrderDetails = async () => {
     if (!token) {
@@ -357,19 +366,25 @@ export default function OrderDetailsPage({
     }
     try {
       const response = await fetch(
-        `${getBackendBaseUrl()}/api/orders/${orderDetails.id}/cancel-by-customer`,
+        `${getBackendBaseUrl()}/api/orders/${
+          orderDetails.id
+        }/cancel-by-customer`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ cancellationReason: customerCancellationReason }),
+          body: JSON.stringify({
+            cancellationReason: customerCancellationReason,
+          }),
         }
       );
       const responseData = await response.json();
       if (!response.ok) {
-        throw new Error(responseData.message || "Failed to request cancellation.");
+        throw new Error(
+          responseData.message || "Failed to request cancellation."
+        );
       }
       toast.success("Order cancellation requested successfully.");
       fetchOrderDetails(); // Re-fetch order details
@@ -454,16 +469,6 @@ export default function OrderDetailsPage({
             <Button
               onClick={() =>
                 toast.info(
-                  `Initiating return for items from order ${order.id}... (Placeholder)`
-                )
-              }
-              className="w-full h-11 bg-gray-700 hover:bg-gray-800 text-white" // Adjusted color for distinction
-            >
-              Return Items
-            </Button>
-            <Button
-              onClick={() =>
-                toast.info(
                   `Adding items from order ${order.id} to cart... (Placeholder)`
                 )
               }
@@ -514,9 +519,10 @@ export default function OrderDetailsPage({
           )}
           {order.status === "Cancelled" && <CancelledInfoCard order={order} />}
           {order.status === "Delivered" &&
-            (order.deliveredDate || order.estimatedDelivery) && /* Ensure there's a date to show */
-            <DeliveredInfoCard order={order} />
-          }
+            (order.deliveredDate ||
+              order.estimatedDelivery) /* Ensure there's a date to show */ && (
+              <DeliveredInfoCard order={order} />
+            )}
 
           {order.status !== "Cancelled" && ( // OrderTracker might not be relevant for cancelled orders
             <OrderTracker status={order.status} orderDate={order.date} />
@@ -651,18 +657,25 @@ export default function OrderDetailsPage({
 
       {/* Customer Cancellation Dialog */}
       {orderDetails && (
-        <Dialog open={showCustomerCancelDialog} onOpenChange={setShowCustomerCancelDialog}>
+        <Dialog
+          open={showCustomerCancelDialog}
+          onOpenChange={setShowCustomerCancelDialog}
+        >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Request Order Cancellation</DialogTitle>
               <CardDescription className="pt-2">
                 Order ID: {orderDetails.id} <br />
-                Please provide a reason for your cancellation request. This action may not
-                be reversible if the order has already been processed.
+                Please provide a reason for your cancellation request. This
+                action may not be reversible if the order has already been
+                processed.
               </CardDescription>
             </DialogHeader>
             <div className="py-4 space-y-2">
-              <label htmlFor="customerCancellationReason" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="customerCancellationReason"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Reason for Cancellation <span className="text-red-500">*</span>
               </label>
               <textarea

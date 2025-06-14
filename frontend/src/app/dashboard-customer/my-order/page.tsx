@@ -56,7 +56,7 @@ interface Order {
   };
   items: OrderItem[];
   cancellationReason?: string;
-  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null;
+  cancelledBy?: "seller" | "customer" | "admin" | "system" | null;
   cancelledDate?: string;
   deliveredDate?: string;
   // shippingAddress: any; // Add if needed for display
@@ -160,7 +160,9 @@ export default function MyOrdersPage() {
 
     try {
       const response = await fetch(
-        `${getBackendBaseUrl()}/api/orders/${orderToCancel.id}/cancel-by-customer`,
+        `${getBackendBaseUrl()}/api/orders/${
+          orderToCancel.id
+        }/cancel-by-customer`,
         {
           method: "PUT",
           headers: {
@@ -317,18 +319,13 @@ export default function MyOrdersPage() {
         </h2>
         <p className="mt-2 text-gray-600">{error}</p>
         <Button
+          className="mt-6"
           onClick={() => {
             setLoading(true);
             setError(null);
             // Re-run useEffect logic:
-            const fetchOrders = async () => {
-              setLoading(true);
-              setError(null);
-              try {
-            // Re-run fetchOrders (already defined in component scope)
             fetchOrders();
           }}
-          className="mt-6"
         >
           Try Again
         </Button>
@@ -400,10 +397,7 @@ export default function MyOrdersPage() {
           </Button>
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={filteredData}
-        />
+        <DataTable columns={columns} data={filteredData} />
       )}
 
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
@@ -419,7 +413,10 @@ export default function MyOrdersPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2">
-            <label htmlFor="cancellationReason" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="cancellationReason"
+              className="block text-sm font-medium text-gray-700"
+            >
               Reason for Cancellation <span className="text-red-500">*</span>
             </label>
             <textarea
