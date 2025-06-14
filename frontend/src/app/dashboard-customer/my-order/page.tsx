@@ -55,6 +55,10 @@ interface Order {
     total: number;
   };
   items: OrderItem[];
+  cancellationReason?: string;
+  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null;
+  cancelledDate?: string;
+  deliveredDate?: string;
   // shippingAddress: any; // Add if needed for display
   // payment: any; // Add if needed for display
 }
@@ -65,10 +69,12 @@ const StatusBadge = ({ status }: { status: string }) => {
   const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full";
   const statusClasses: Record<string, string> = {
     Delivered: "bg-green-100 text-green-700",
-    Shipped: "bg-blue-100 text-blue-700",
+    Shipped: "bg-blue-100 text-blue-700", // Kept as is, per instruction
     Processing: "bg-yellow-100 text-yellow-700",
+    Packed: "bg-sky-100 text-sky-700", // New
+    "Out for Delivery": "bg-indigo-100 text-indigo-700", // New
     Cancelled: "bg-red-100 text-red-700",
-    // Add any other status values from your backend if they differ or are more numerous
+    default: "bg-gray-100 text-gray-700", // Explicit default
   };
   return (
     <span
@@ -90,65 +96,101 @@ export default function MyOrdersPage() {
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+  const [cancellationReasonInput, setCancellationReasonInput] = useState(""); // Added state for reason
   const { token } = useAuth(); // Added user
   // const [searchTerm, setSearchTerm] = useState(""); // For search functionality
 
-  useEffect(() => {
+  // Define fetchOrders outside of useEffect so it can be called by other functions
+  const fetchOrders = async () => {
     if (!token) {
-      setError("Please log in to view orders");
+      setError("Please log in to view orders"); // Should not happen if component mounts after auth check
+      setLoading(false);
       return;
     }
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(
-          `${getBackendBaseUrl()}/api/orders/my-orders`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ message: "An unknown server error occurred" }));
-          throw new Error(
-            errorData.message || `HTTP error! status: ${response.status}`
-          );
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${getBackendBaseUrl()}/api/orders/my-orders`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-        const data: Order[] = await response.json();
-        setOrders(data);
-      } catch (err: any) {
-        const errorMessage =
-          err.message || "Failed to fetch orders. Please try again.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
+      );
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "An unknown server error occurred" }));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
-    };
+      const data: Order[] = await response.json();
+      setOrders(data);
+    } catch (err: any) {
+      const errorMessage =
+        err.message || "Failed to fetch orders. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrders();
-  }, [token]); // Empty dependency array to run once on mount
+  }, [token]);
 
   const handleCancelOrderClick = (order: Order) => {
     setOrderToCancel(order);
+    setCancellationReasonInput(""); // Reset reason input
     setShowCancelDialog(true);
   };
 
-  const confirmCancelOrder = () => {
-    if (orderToCancel) {
-      // TODO: Implement API call to cancel order (e.g., POST /api/orders/:orderId/cancel)
-      toast.success(
-        `Cancellation request for order ${orderToCancel.id} submitted.`
-      );
-      // OPTIONAL: Optimistically update UI or re-fetch orders
-      // setOrders(prevOrders => prevOrders.map(o => o.id === orderToCancel.id ? {...o, status: "Cancelled"} : o));
-      // fetchOrders(); // Or re-fetch
+  const confirmCancelOrder = async () => {
+    if (!orderToCancel) {
+      toast.error("No order selected for cancellation.");
+      return;
     }
-    setShowCancelDialog(false);
-    setOrderToCancel(null);
+    if (!cancellationReasonInput.trim()) {
+      toast.error("Cancellation reason is required.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${getBackendBaseUrl()}/api/orders/${orderToCancel.id}/cancel-by-customer`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ cancellationReason: cancellationReasonInput }),
+        }
+      );
+      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to cancel order.");
+      }
+      toast.success("Order cancellation requested successfully.");
+      fetchOrders(); // Refresh orders list
+      // Or optimistic update:
+      // setOrders(prevOrders =>
+      //   prevOrders.map(o =>
+      //     o.id === orderToCancel.id
+      //       ? { ...o, status: "Cancelled", cancellationReason: cancellationReasonInput, cancelledBy: 'customer', cancelledDate: new Date().toISOString() }
+      //       : o
+      //   )
+      // );
+    } catch (err: any) {
+      toast.error(err.message || "Error requesting cancellation.");
+    } finally {
+      setShowCancelDialog(false);
+      setOrderToCancel(null);
+      setCancellationReasonInput(""); // Reset reason input
+    }
   };
 
   const columns: Column<Order>[] = [
@@ -283,34 +325,7 @@ export default function MyOrdersPage() {
               setLoading(true);
               setError(null);
               try {
-                const response = await fetch(
-                  `${getBackendBaseUrl()}/api/orders/my-orders`,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  }
-                );
-                if (!response.ok) {
-                  const errorData = await response.json().catch(() => ({
-                    message: "An unknown server error occurred",
-                  }));
-                  throw new Error(
-                    errorData.message ||
-                      `HTTP error! status: ${response.status}`
-                  );
-                }
-                const data: Order[] = await response.json();
-                setOrders(data);
-              } catch (err: any) {
-                const errorMessage =
-                  err.message || "Failed to fetch orders. Please try again.";
-                setError(errorMessage);
-                toast.error(errorMessage);
-              } finally {
-                setLoading(false);
-              }
-            };
+            // Re-run fetchOrders (already defined in component scope)
             fetchOrders();
           }}
           className="mt-6"
@@ -400,9 +415,22 @@ export default function MyOrdersPage() {
             <DialogDescription>
               Are you sure you want to request cancellation for this order? This
               action may not be reversible if the order has already been
-              processed or shipped.
+              processed or shipped. Please provide a reason for your request.
             </DialogDescription>
           </DialogHeader>
+          <div className="py-4 space-y-2">
+            <label htmlFor="cancellationReason" className="block text-sm font-medium text-gray-700">
+              Reason for Cancellation <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="cancellationReason"
+              value={cancellationReasonInput}
+              onChange={(e) => setCancellationReasonInput(e.target.value)}
+              placeholder="e.g., Placed order by mistake, item no longer needed..."
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+              rows={3}
+            />
+          </div>
           <DialogFooter>
             <Button
               variant="outline"
@@ -414,6 +442,7 @@ export default function MyOrdersPage() {
               variant="destructive"
               onClick={confirmCancelOrder}
               className="bg-red-600 hover:bg-red-700"
+              disabled={!cancellationReasonInput.trim()}
             >
               Confirm Cancellation Request
             </Button>

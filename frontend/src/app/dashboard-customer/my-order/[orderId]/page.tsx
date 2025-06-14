@@ -75,10 +75,10 @@ interface OrderDetail {
   carrier?: string;
   estimatedDelivery?: string;
   estimatedShipDate?: string;
-  // Specific status-related dates (e.g. cancelledDate, deliveredDate)
-  // should be part of the backend model if they are distinct from order.date or status update dates.
-  // For this refactor, we'll primarily use order.date and the status for conditional logic.
-  // If backend provides `cancelledDate` or `deliveredDate` etc., those can be used in info cards.
+  deliveredDate?: string; // Added
+  cancelledDate?: string; // Added
+  cancellationReason?: string; // Added
+  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null; // Added
 }
 
 // --- HELPER UI COMPONENTS (Modified to use OrderDetail type and handle optional fields) ---
@@ -86,9 +86,12 @@ interface OrderDetail {
 const StatusBadge = ({ status }: { status: string }) => {
   const statusStyles: { [key: string]: string } = {
     Delivered: "bg-green-100 text-green-800 border-green-300",
-    Shipped: "bg-blue-100 text-blue-800 border-blue-300",
+    Shipped: "bg-blue-100 text-blue-800 border-blue-300", // As per existing
     Processing: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    Packed: "bg-sky-100 text-sky-800 border-sky-300", // New
+    "Out for Delivery": "bg-indigo-100 text-indigo-800 border-indigo-300", // New
     Cancelled: "bg-red-100 text-red-800 border-red-300",
+    default: "bg-gray-100 text-gray-800 border-gray-300", // Explicit default
   };
   return (
     <Badge
@@ -233,18 +236,35 @@ const CancelledInfoCard = ({ order }: { order: OrderDetail }) => (
         <XCircle /> Order Cancelled
       </CardTitle>
       <CardDescription className="text-red-700">
-        This order was cancelled on {new Date(order.date).toLocaleDateString()}.
-        {/* Assuming order.date might be updated to cancellation date by backend, or use a specific 'cancelledAt' field */}
+        This order was cancelled on{" "}
+        {order.cancelledDate
+          ? new Date(order.cancelledDate).toLocaleDateString()
+          : new Date(order.date).toLocaleDateString()}
+        .
       </CardDescription>
     </CardHeader>
-    {order.payment?.method && (
-      <CardContent>
-        <p>
+    <CardContent className="space-y-2">
+      {order.cancellationReason && (
+        <div>
+          <p className="font-semibold">
+            Cancelled By:{" "}
+            <span className="capitalize font-normal">
+              {order.cancelledBy || "N/A"}
+            </span>
+          </p>
+          <p className="font-semibold">
+            Reason:{" "}
+            <span className="font-normal">{order.cancellationReason}</span>
+          </p>
+        </div>
+      )}
+      {order.payment?.method && (
+        <p className="text-sm text-gray-600 pt-2">
           If applicable, refunds are typically processed to the original payment
           method ({order.payment.method}) within 5-10 business days.
         </p>
-      </CardContent>
-    )}
+      )}
+    </CardContent>
   </Card>
 );
 
@@ -274,11 +294,16 @@ export default function OrderDetailsPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { token } = useAuth(); // Added user
+  const { token } = useAuth();
 
-  useEffect(() => {
+  // State for customer cancellation dialog
+  const [showCustomerCancelDialog, setShowCustomerCancelDialog] = useState(false);
+  const [customerCancellationReason, setCustomerCancellationReason] = useState("");
+
+  const fetchOrderDetails = async () => {
     if (!token) {
-      setError("Please log in to view orders");
+      setError("Authentication token not found. Please log in.");
+      setLoading(false);
       return;
     }
     if (!orderId) {
@@ -287,45 +312,74 @@ export default function OrderDetailsPage({
       toast.error("Order ID is missing.");
       return;
     }
-
-    const fetchOrderDetails = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(
-          `${getBackendBaseUrl()}/api/orders/${orderId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error(`Order with ID ${orderId} not found.`);
-          }
-          const errorData = await response.json().catch(() => ({
-            message:
-              "An unknown server error occurred while fetching order details.",
-          }));
-          throw new Error(
-            errorData.message || `HTTP error! status: ${response.status}`
-          );
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${getBackendBaseUrl()}/api/orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-        const data: OrderDetail = await response.json();
-        console.log(data);
-        setOrderDetails(data);
-      } catch (err: any) {
-        const message = err.message || "Failed to fetch order details.";
-        setError(message);
-        toast.error(message);
-      } finally {
-        setLoading(false);
+      );
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Order with ID ${orderId} not found.`);
+        }
+        const errorData = await response.json().catch(() => ({
+          message:
+            "An unknown server error occurred while fetching order details.",
+        }));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
-    };
+      const data: OrderDetail = await response.json();
+      setOrderDetails(data);
+    } catch (err: any) {
+      const message = err.message || "Failed to fetch order details.";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOrderDetails();
   }, [orderId, token]);
+
+  const handleConfirmCustomerCancellation = async () => {
+    if (!orderDetails || !customerCancellationReason.trim()) {
+      toast.error("Cancellation reason cannot be empty.");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${getBackendBaseUrl()}/api/orders/${orderDetails.id}/cancel-by-customer`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ cancellationReason: customerCancellationReason }),
+        }
+      );
+      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to request cancellation.");
+      }
+      toast.success("Order cancellation requested successfully.");
+      fetchOrderDetails(); // Re-fetch order details
+    } catch (err: any) {
+      toast.error(err.message || "Error requesting cancellation.");
+    } finally {
+      setShowCustomerCancelDialog(false);
+      setCustomerCancellationReason("");
+    }
+  };
 
   const order = orderDetails;
 
@@ -384,11 +438,10 @@ export default function OrderDetailsPage({
       case "Processing":
         return (
           <Button
-            onClick={() =>
-              toast.info(
-                `Requesting cancellation for order ${order.id}... (Placeholder)`
-              )
-            }
+            onClick={() => {
+              setCustomerCancellationReason(""); // Reset reason
+              setShowCustomerCancelDialog(true);
+            }}
             className="w-full h-11 bg-red-600 hover:bg-red-700 text-white"
           >
             <XCircle className="mr-2 h-4 w-4" /> Request Cancellation
@@ -441,6 +494,7 @@ export default function OrderDetailsPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Main Content Grid */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">
@@ -459,7 +513,10 @@ export default function OrderDetailsPage({
             <ShippedInfoCard order={order} />
           )}
           {order.status === "Cancelled" && <CancelledInfoCard order={order} />}
-          {order.status === "Delivered" && <DeliveredInfoCard order={order} />}
+          {order.status === "Delivered" &&
+            (order.deliveredDate || order.estimatedDelivery) && /* Ensure there's a date to show */
+            <DeliveredInfoCard order={order} />
+          }
 
           {order.status !== "Cancelled" && ( // OrderTracker might not be relevant for cancelled orders
             <OrderTracker status={order.status} orderDate={order.date} />
@@ -591,6 +648,52 @@ export default function OrderDetailsPage({
           </div>
         </div>
       </div>
+
+      {/* Customer Cancellation Dialog */}
+      {orderDetails && (
+        <Dialog open={showCustomerCancelDialog} onOpenChange={setShowCustomerCancelDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Request Order Cancellation</DialogTitle>
+              <CardDescription className="pt-2">
+                Order ID: {orderDetails.id} <br />
+                Please provide a reason for your cancellation request. This action may not
+                be reversible if the order has already been processed.
+              </CardDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-2">
+              <label htmlFor="customerCancellationReason" className="block text-sm font-medium text-gray-700">
+                Reason for Cancellation <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="customerCancellationReason"
+                value={customerCancellationReason}
+                onChange={(e) => setCustomerCancellationReason(e.target.value)}
+                placeholder="e.g., Accidental order, changed my mind..."
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                rows={4}
+              />
+            </div>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowCustomerCancelDialog(false)}
+                className="sm:order-1"
+              >
+                Keep Order
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmCustomerCancellation}
+                disabled={!customerCancellationReason.trim()}
+                className="sm:order-2 bg-red-600 hover:bg-red-700"
+              >
+                Confirm Cancellation Request
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

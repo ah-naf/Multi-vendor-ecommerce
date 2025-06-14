@@ -94,6 +94,10 @@ interface Order {
   carrier?: string;
   estimatedDelivery?: string;
   estimatedShipDate?: string;
+  deliveredDate?: string; // Added
+  cancelledDate?: string; // Added
+  cancellationReason?: string; // Added
+  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null; // Added
 
   // Optional: If backend provides buyer user details directly
   user?: {
@@ -398,7 +402,11 @@ export default function OrderDetailsPage() {
           variant={
             order.status === "Processing"
               ? "warning"
+              : order.status === "Packed"
+              ? "info"
               : order.status === "Shipped"
+              ? "primary"
+              : order.status === "Out for Delivery"
               ? "secondary"
               : order.status === "Delivered"
               ? "success"
@@ -411,6 +419,26 @@ export default function OrderDetailsPage() {
           {order.status}
         </Badge>
       </div>
+
+      {/* Cancellation Info Display */}
+      {order.status === "Cancelled" && order.cancellationReason && (
+        <div className="mt-6 mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+          <h4 className="text-md font-semibold text-red-700">Order Cancelled</h4>
+          {order.cancelledBy && (
+            <p className="text-sm text-red-600">
+              Cancelled by: <span className="capitalize">{order.cancelledBy}</span>
+            </p>
+          )}
+          <p className="text-sm text-red-600">
+            Reason: {order.cancellationReason}
+          </p>
+          {order.cancelledDate && (
+             <p className="text-sm text-gray-500 mt-1">
+               Cancellation Date: {new Date(order.cancelledDate).toLocaleDateString()}
+             </p>
+          )}
+        </div>
+      )}
 
       {/* Timeline | Buyer Info | Payment Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -516,7 +544,7 @@ export default function OrderDetailsPage() {
           Cancel Order
         </Button>
         <Button
-          className="bg-blue-600 text-white hover:bg-blue-700" // Changed color for update
+          className="bg-indigo-600 text-white hover:bg-indigo-700" // Changed color for update
           onClick={() => {
             setUpdateFormData({
               // Pre-fill form

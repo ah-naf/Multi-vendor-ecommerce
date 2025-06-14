@@ -149,6 +149,7 @@ const updateOrderStatusBySeller = async (req, res) => {
     carrier,
     estimatedShipDate,
     estimatedDelivery,
+    cancellationReason, // Added for cancellation
   } = req.body;
 
   try {
@@ -163,6 +164,24 @@ const updateOrderStatusBySeller = async (req, res) => {
         return res.status(400).json({ message: "Invalid order status" });
       }
       order.status = status;
+
+      // If status is 'Cancelled', set cancellation details
+      if (status === "Cancelled") {
+        if (!cancellationReason) {
+          // Optional: Add validation for cancellationReason if required for seller cancellations
+          // return res.status(400).json({ message: "Cancellation reason is required when cancelling an order." });
+        }
+        order.cancellationReason = cancellationReason || "Cancelled by seller"; // Default reason if not provided
+        order.cancelledBy = 'seller';
+        order.cancelledDate = new Date();
+      } else {
+        // Potentially clear cancellation fields if status changes from 'Cancelled' to something else
+        // This depends on business logic: should a previously cancelled order that's then, say, 'Reprocessed' clear these?
+        // For now, we only set them on cancellation. If it needs to be cleared, add:
+        // order.cancellationReason = null;
+        // order.cancelledBy = null;
+        // order.cancelledDate = null;
+      }
     }
 
     if (trackingNumber) {
@@ -312,4 +331,54 @@ module.exports = {
   getOrderById,
   getOrdersBySeller,
   getSellerOrderById,
+  requestOrderCancellationByCustomer, // Added new function
+};
+
+// Request order cancellation by customer
+const requestOrderCancellationByCustomer = async (req, res) => {
+  const { orderId } = req.params;
+  const { cancellationReason } = req.body;
+  const userId = req.user.id; // Assuming authMiddleware provides req.user
+
+  if (!cancellationReason) {
+    return res
+      .status(400)
+      .json({ message: "Cancellation reason is required" });
+  }
+
+  try {
+    const order = await OrderDetail.findOne({ id: orderId });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Check if the logged-in user is the one who placed the order
+    if (order.user.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: You do not own this order." });
+    }
+
+    // Check if the order is eligible for cancellation
+    if (order.status !== "Processing") {
+      return res.status(400).json({
+        message: `Order cannot be cancelled as it is already ${order.status}.`,
+      });
+    }
+
+    // Update order details for cancellation
+    order.status = "Cancelled";
+    order.cancellationReason = cancellationReason;
+    order.cancelledBy = "customer";
+    order.cancelledDate = new Date();
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error("Error requesting order cancellation by customer:", error);
+    res
+      .status(500)
+      .json({ message: "Server error while requesting order cancellation." });
+  }
 };

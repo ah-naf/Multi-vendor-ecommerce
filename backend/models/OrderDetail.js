@@ -20,7 +20,7 @@ const PaymentSchema = new Schema(
   {
     method: { type: String, required: true },
     last4: { type: String, required: true },
-    billingAddress: { type: String, required: true },
+    billingAddress: { type: String, required:true },
     country: { type: String, required: true },
     phone: { type: String, required: false },
   },
@@ -72,6 +72,8 @@ const OrderDetailSchema = new Schema(
     },
     deliveredDate: { type: Date },
     cancelledDate: { type: Date },
+    cancellationReason: { type: String, default: null }, // Added cancellationReason
+    cancelledBy: { type: String, enum: ['seller', 'customer', 'admin', 'system', null], default: null }, // Added cancelledBy
     refundStatus: { type: String },
 
     trackingNumber: { type: String },

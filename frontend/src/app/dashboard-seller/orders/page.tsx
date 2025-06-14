@@ -47,6 +47,8 @@ interface Order {
   summary: OrderSummary;
   shippingAddress: ShippingAddress; // For buyer name
   items: OrderItem[]; // For ShipOrderDialog or future use
+  cancellationReason?: string; // Added
+  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null; // Added
   // user?: string | { name?: string; email?: string }; // Optional: if backend provides buyer details directly
 }
 
@@ -145,17 +147,21 @@ export default function OrdersPage() {
         cell: (r) => (
           <Badge
             variant={
-              r.status === "Processing" // "Pending" for seller view
+              r.status === "Processing"
                 ? "warning"
+                : r.status === "Packed"
+                ? "info" // New: Packed status
                 : r.status === "Shipped"
-                ? "secondary"
+                ? "primary" // Changed from secondary to primary
+                : r.status === "Out for Delivery"
+                ? "secondary" // New: Out for Delivery status
+                : r.status === "Delivered"
+                ? "success"
                 : r.status === "Cancelled"
                 ? "destructive"
-                : r.status === "Delivered"
-                ? "success" // Added a success variant for Delivered
-                : "default" // Fallback for other statuses
+                : "default"
             }
-            className="capitalize" // To make "Processing" look like "Processing" not "processing"
+            className="capitalize"
           >
             {r.status}
           </Badge>

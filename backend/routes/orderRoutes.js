@@ -6,7 +6,8 @@ const {
   getOrderById,
   getOrdersBySeller,
   getSellerOrderById,
-  updateOrderStatusBySeller // Ensure this is imported
+  updateOrderStatusBySeller, // Ensure this is imported
+  requestOrderCancellationByCustomer // Import new controller function
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware'); // Path to your auth middleware
 
@@ -44,5 +45,10 @@ router.get('/seller-orders/:id', protect, getSellerOrderById);
 // @access  Private
 // This needs to be last among GET routes with similar path structure
 router.get('/:id', protect, getOrderById);
+
+// @route   PUT /api/orders/:orderId/cancel-by-customer
+// @desc    Request order cancellation by customer
+// @access  Private
+router.put('/:orderId/cancel-by-customer', protect, requestOrderCancellationByCustomer);
 
 module.exports = router;
