@@ -35,6 +35,11 @@ const OrderItemSchema = new Schema(
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
     image: { type: String, default: "" },
+    sellerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    }
   },
   { _id: false }
 );

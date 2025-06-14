@@ -311,7 +311,7 @@ const getProductById = async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id }).populate(
       "seller",
-      "firstName lastName email phone"
+      "firstName lastName email phone _id"
     );
     if (!product) {
       return res.status(404).json({ message: "Product not found" });

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types";
-import { User } from "@/context/AuthContext";
+import { User, useAuth } from "@/context/AuthContext"; // <-- Import useAuth
 import { getApiBaseUrl } from "@/services/productService";
 
 interface PopulatedSeller
@@ -25,6 +25,7 @@ interface PopulatedSeller
     User,
     "_id" | "password" | "addresses" | "cart" | "wishlist" | "roles"
   > {
+  _id: string; // <-- Add this line
   // Include fields we expect from backend populate: 'firstName lastName email phone'
   // Adjust if your User type in `frontend/src/types/index.ts` is different
 }
@@ -40,9 +41,13 @@ interface Props {
 export default function ProductDetails({ product }: Props) {
   const [quantity, setQuantity] = useState(1);
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
+  const { user: loggedInUser } = useAuth(); // <-- Get auth context
 
   const { general, pricing, inventory, specifications, additional, seller } =
     product;
+
+  // Determine if the current user is the seller
+  const isSellerProduct = !!(product.seller && loggedInUser && product.seller._id === loggedInUser._id);
 
   const currentPrice =
     pricing.salePrice && pricing.salePrice < pricing.price
@@ -215,6 +220,7 @@ export default function ProductDetails({ product }: Props) {
                   productTitle={general.title}
                   productImage={imageUrl}
                   selectedQuantity={quantity}
+                  isOwnProduct={isSellerProduct} // <-- Pass the new prop
                 />
 
                 {/* Trust Indicators */}

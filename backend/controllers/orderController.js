@@ -73,18 +73,23 @@ const placeOrder = async (req, res) => {
           .status(404)
           .json({ message: `Product with ID ${item.productId} not found` });
       }
+      // Ensure product.seller is available and is the seller's ObjectId
+      if (!product.seller) {
+        return res
+          .status(500)
+          .json({ message: `Product with ID ${item.productId} is missing seller information.` });
+      }
       orderItems.push({
-        // id: product._id.toString(), // OrderItemSchema has 'id' as number, but product._id is string. Let's use product._id as string for now, or adjust schema.
-        // For now, let's assume OrderItemSchema's 'id' is meant to be productId.
-        id: item.productId, // Using the productId from the cart item
+        id: item.productId,
         name: product.general.title,
-        category: product.general.category || "", // Assuming attributes might come from cart item
-        price: product.pricing.price, // Use price from DB
+        attributes: item.attributes || "", // Assuming cart item might have attributes
+        price: product.pricing.price,
         quantity: item.quantity,
         image:
           product.general.images && product.general.images.length > 0
             ? product.general.images[0]
             : "",
+        sellerId: product.seller, // <-- New field added
       });
       subtotal += product.pricing.price * item.quantity;
     }
