@@ -24,7 +24,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 
 interface Withdraw {
   id: string;
@@ -71,13 +71,12 @@ export default function PaymentsPage() {
 
   // --- TABLE COLUMNS ---
   const withdrawCols: Column<Withdraw>[] = [
-    { header: "Date", accessor: "date" },
+    { header: "Date", cell: (w: Withdraw) => w.date },
     {
       header: "Amount",
-      accessor: "amount",
       cell: (r) => `$${r.amount.toFixed(2)}`,
     },
-    { header: "Status", accessor: "status" },
+    { header: "Status", cell: (w: Withdraw) => w.status },
   ];
 
   // --- HANDLERS ---
@@ -124,7 +123,8 @@ export default function PaymentsPage() {
         <AlertTriangle className="h-4 w-4" /> {/* Optional: Add an icon */}
         <AlertTitle>Important Notice</AlertTitle>
         <AlertDescription>
-          Please note: Payment and withdrawal functionalities are currently under development and not yet available. We apologize for any inconvenience.
+          Please note: Payment and withdrawal functionalities are currently
+          under development and not yet available.
         </AlertDescription>
       </Alert>
 

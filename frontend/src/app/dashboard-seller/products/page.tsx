@@ -79,47 +79,51 @@ export default function ProductsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const router = useRouter();
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  // Updated fetchProducts to make currentSearchTerm optional
-  // It will use activeSearchTerm by default if no argument is passed.
-  const fetchProducts = async (currentSearchTerm?: string) => {
+  // Fetch all products once
+  const fetchProducts = async () => {
     setLoading(true);
     setError(null);
-    const termToFetch = currentSearchTerm !== undefined ? currentSearchTerm : activeSearchTerm;
     try {
-      const data = await getSellerProducts(termToFetch);
+      const data = await getSellerProducts(); // no searchTerm param
       setProducts(data);
-      if (data.length === 0 && termToFetch) {
-        toast.info(`No products found matching "${termToFetch}".`);
-      } else if (data.length === 0 && !termToFetch) {
-        // This case might be if there are no products at all for the seller
-        // toast.info("You currently have no products listed.");
-      }
+      setFilteredProducts(data);
     } catch (err) {
       console.error("Failed to fetch products:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "An unknown error occurred";
-      setError(`Failed to fetch products: ${errorMessage}`);
-      toast.error(`Failed to fetch products: ${errorMessage}`); // Show detailed error
-      setProducts([]);
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setError(`Failed to load products: ${msg}`);
+      toast.error(`Failed to load products: ${msg}`);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Fetch products when activeSearchTerm changes, or on initial load.
     fetchProducts();
-  }, [activeSearchTerm]);
+  }, []);
 
   const handleSearch = () => {
-    // This function is now explicitly called by the Search button
-    setActiveSearchTerm(searchTerm);
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
+      setFilteredProducts(products);
+      return;
+    }
+    const result = products.filter((p) => {
+      return (
+        p.general.title.toLowerCase().includes(term) ||
+        p.inventory.sku.toLowerCase().includes(term)
+      );
+    });
+    setFilteredProducts(result);
+    if (result.length === 0) {
+      toast.info(`No products found matching “${searchTerm}.”`);
+    }
   };
 
   const clearSearch = () => {
     setSearchTerm("");
-    setActiveSearchTerm(""); // This will trigger the useEffect to fetch all products
+    setFilteredProducts(products);
   };
 
   const handleDeleteClick = (product: Product) => {
@@ -229,8 +233,12 @@ export default function ProductsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row items-stretch gap-4 mb-6"> {/* items-stretch for equal height buttons/input */}
-        <div className="relative flex-grow"> {/* flex-grow to take available space */}
+      <div className="flex flex-col md:flex-row items-stretch gap-4 mb-6">
+        {" "}
+        {/* items-stretch for equal height buttons/input */}
+        <div className="relative flex-grow">
+          {" "}
+          {/* flex-grow to take available space */}
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <Input
             type="text"
@@ -239,21 +247,32 @@ export default function ProductsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 handleSearch();
               }
             }}
           />
         </div>
-        <Button onClick={handleSearch} className="h-12 bg-red-500 hover:bg-red-600 text-white px-6 shrink-0"> {/* shrink-0 to prevent button from shrinking */}
+        <Button
+          onClick={handleSearch}
+          className="h-12 bg-red-500 hover:bg-red-600 text-white px-6 shrink-0"
+        >
+          {" "}
+          {/* shrink-0 to prevent button from shrinking */}
           Search
         </Button>
         {searchTerm && (
-          <Button variant="outline" onClick={clearSearch} className="h-12 px-6 shrink-0">
+          <Button
+            variant="outline"
+            onClick={clearSearch}
+            className="h-12 px-6 shrink-0"
+          >
             Clear
           </Button>
         )}
-        <div className="flex gap-4 w-full md:w-auto shrink-0"> {/* shrink-0 here as well */}
+        <div className="flex gap-4 w-full md:w-auto shrink-0">
+          {" "}
+          {/* shrink-0 here as well */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -289,14 +308,12 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Reusable Data Table */}
-      {/* Reusable Data Table */}
       {loading && <p>Loading products...</p>}
       {error && <p className="text-red-500">{error}</p>}
       {!loading && !error && (
         <DataTable
           columns={productColumns}
-          data={products}
+          data={filteredProducts}
           getActions={getProductActions}
         />
       )}

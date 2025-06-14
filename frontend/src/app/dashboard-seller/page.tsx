@@ -43,11 +43,15 @@ export default function SellerDashboard() {
   const [salesMonthData, setSalesMonthData] = useState<SalesData | null>(null);
   const [salesWeekData, setSalesWeekData] = useState<SalesData | null>(null);
   // SalesPerformanceData is fetched but its backend is a placeholder, so UI will reflect that.
-  const [salesPerformance, setSalesPerformance] = useState<SalesPerformanceData | null>(null);
-  const [orderStatusCounts, setOrderStatusCounts] = useState<OrderStatusCountsData | null>(null);
+  const [salesPerformance, setSalesPerformance] =
+    useState<SalesPerformanceData | null>(null);
+  const [orderStatusCounts, setOrderStatusCounts] =
+    useState<OrderStatusCountsData | null>(null);
   // RevenueTrend is fetched but its backend is a placeholder.
   const [revenueTrend, setRevenueTrend] = useState<RevenueTrend[]>([]);
-  const [lowStockCount, setLowStockCount] = useState<LowStockCountData | null>(null);
+  const [lowStockCount, setLowStockCount] = useState<LowStockCountData | null>(
+    null
+  );
 
   const [loadingSalesToday, setLoadingSalesToday] = useState(true);
   const [loadingSalesMonth, setLoadingSalesMonth] = useState(true);
@@ -63,64 +67,80 @@ export default function SellerDashboard() {
   // Error state for sales performance (though it's a placeholder)
   const [errorSalesPerf, setErrorSalesPerf] = useState<string | null>(null);
   const [errorOrderStatus, setErrorOrderStatus] = useState<string | null>(null);
-  const [errorRevenueTrend, setErrorRevenueTrend] = useState<string | null>(null);
+  const [errorRevenueTrend, setErrorRevenueTrend] = useState<string | null>(
+    null
+  );
   const [errorLowStock, setErrorLowStock] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       // Sales Data (Today)
       setLoadingSalesToday(true);
-      fetchSalesDataForPeriod('today')
+      fetchSalesDataForPeriod("today")
         .then(setSalesTodayData)
-        .catch(err => setErrorSalesToday(err.message || "Failed to load today's sales"))
+        .catch((err) =>
+          setErrorSalesToday(err.message || "Failed to load today's sales")
+        )
         .finally(() => setLoadingSalesToday(false));
 
       // Sales Data (Month)
       setLoadingSalesMonth(true);
-      fetchSalesDataForPeriod('month')
+      fetchSalesDataForPeriod("month")
         .then(setSalesMonthData)
-        .catch(err => setErrorSalesMonth(err.message || "Failed to load month's sales"))
+        .catch((err) =>
+          setErrorSalesMonth(err.message || "Failed to load month's sales")
+        )
         .finally(() => setLoadingSalesMonth(false));
 
       // Sales Data (Week)
       setLoadingSalesWeek(true);
-      fetchSalesDataForPeriod('week')
+      fetchSalesDataForPeriod("week")
         .then(setSalesWeekData)
-        .catch(err => setErrorSalesWeek(err.message || "Failed to load week's sales"))
+        .catch((err) =>
+          setErrorSalesWeek(err.message || "Failed to load week's sales")
+        )
         .finally(() => setLoadingSalesWeek(false));
 
       // Sales Performance (Placeholder)
       setLoadingSalesPerf(true);
       fetchSalesPerformance()
         .then(setSalesPerformance)
-        .catch(err => setErrorSalesPerf(err.message || "Failed to load sales performance"))
+        .catch((err) =>
+          setErrorSalesPerf(err.message || "Failed to load sales performance")
+        )
         .finally(() => setLoadingSalesPerf(false));
 
       // Order Status Counts
       setLoadingOrderStatus(true);
       fetchOrderStatusCounts()
         .then(setOrderStatusCounts)
-        .catch(err => setErrorOrderStatus(err.message || "Failed to load order statuses"))
+        .catch((err) =>
+          setErrorOrderStatus(err.message || "Failed to load order statuses")
+        )
         .finally(() => setLoadingOrderStatus(false));
 
       // Revenue Trend (Placeholder)
       setLoadingRevenueTrend(true);
       fetchRevenueTrend()
         .then(setRevenueTrend)
-        .catch(err => setErrorRevenueTrend(err.message || "Failed to load revenue trend"))
+        .catch((err) =>
+          setErrorRevenueTrend(err.message || "Failed to load revenue trend")
+        )
         .finally(() => setLoadingRevenueTrend(false));
 
       // Low Stock Count
       setLoadingLowStock(true);
       fetchLowStockCount(5) // Default threshold 5
         .then(setLowStockCount)
-        .catch(err => setErrorLowStock(err.message || "Failed to load low stock count"))
+        .catch((err) =>
+          setErrorLowStock(err.message || "Failed to load low stock count")
+        )
         .finally(() => setLoadingLowStock(false));
     };
     fetchData();
   }, []);
 
-  const userName = user?.firstName || user?.email?.split('@')[0] || "Seller";
+  const userName = user?.firstName || user?.email?.split("@")[0] || "Seller";
 
   return (
     <>
@@ -131,10 +151,14 @@ export default function SellerDashboard() {
         <p className="text-gray-500">
           {loadingSalesToday && "Loading today's sales..."}
           {errorSalesToday && `Error: ${errorSalesToday}`}
-          {!loadingSalesToday && !errorSalesToday && salesTodayData &&
-            `You've made $${salesTodayData.totalSales.toLocaleString()} today.`
-          }
-           {!loadingSalesToday && !errorSalesToday && !salesTodayData && "Could not load today's sales."}
+          {!loadingSalesToday &&
+            !errorSalesToday &&
+            salesTodayData &&
+            `You've made $${salesTodayData.totalSales.toLocaleString()} today.`}
+          {!loadingSalesToday &&
+            !errorSalesToday &&
+            !salesTodayData &&
+            "Could not load today's sales."}
         </p>
       </div>
 
@@ -148,14 +172,22 @@ export default function SellerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingSalesToday ? <LoadingCardContent /> : errorSalesToday ? <p className="text-xs text-red-500">{errorSalesToday}</p> : (
+            {loadingSalesToday ? (
+              <LoadingCardContent />
+            ) : errorSalesToday ? (
+              <p className="text-xs text-red-500">{errorSalesToday}</p>
+            ) : (
               <>
                 <p className="text-3xl font-bold text-gray-800">
-                  ${salesTodayData?.totalSales.toLocaleString() ?? 'N/A'}
+                  ${salesTodayData?.totalSales.toLocaleString() ?? "N/A"}
                 </p>
                 <p className="text-xs text-gray-500">
                   {/* Performance data is placeholder */}
-                  {salesPerformance?.percentageChange !== undefined ? `${salesPerformance.percentageChange >= 0 ? '+' : ''}${salesPerformance.percentageChange}% from last period` : "Performance N/A"}
+                  {salesPerformance?.percentageChange !== undefined
+                    ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
+                        salesPerformance.percentageChange
+                      }% from last period`
+                    : "Performance N/A"}
                 </p>
               </>
             )}
@@ -170,14 +202,22 @@ export default function SellerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingSalesMonth ? <LoadingCardContent /> : errorSalesMonth ? <p className="text-xs text-red-500">{errorSalesMonth}</p> : (
+            {loadingSalesMonth ? (
+              <LoadingCardContent />
+            ) : errorSalesMonth ? (
+              <p className="text-xs text-red-500">{errorSalesMonth}</p>
+            ) : (
               <>
                 <p className="text-3xl font-bold text-gray-800">
-                  ${salesMonthData?.totalSales.toLocaleString() ?? 'N/A'}
+                  ${salesMonthData?.totalSales.toLocaleString() ?? "N/A"}
                 </p>
-                 <p className="text-xs text-gray-500">
-                    {/* Performance data is placeholder */}
-                   {salesPerformance?.percentageChange !== undefined ? `${salesPerformance.percentageChange >= 0 ? '+' : ''}${salesPerformance.percentageChange}% from last period` : "Performance N/A"}
+                <p className="text-xs text-gray-500">
+                  {/* Performance data is placeholder */}
+                  {salesPerformance?.percentageChange !== undefined
+                    ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
+                        salesPerformance.percentageChange
+                      }% from last period`
+                    : "Performance N/A"}
                 </p>
               </>
             )}
@@ -192,14 +232,22 @@ export default function SellerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingSalesWeek ? <LoadingCardContent /> : errorSalesWeek ? <p className="text-xs text-red-500">{errorSalesWeek}</p> : (
+            {loadingSalesWeek ? (
+              <LoadingCardContent />
+            ) : errorSalesWeek ? (
+              <p className="text-xs text-red-500">{errorSalesWeek}</p>
+            ) : (
               <>
                 <p className="text-3xl font-bold text-gray-800">
-                  ${salesWeekData?.totalSales.toLocaleString() ?? 'N/A'}
+                  ${salesWeekData?.totalSales.toLocaleString() ?? "N/A"}
                 </p>
                 <p className="text-xs text-gray-500">
                   {/* Performance data is placeholder */}
-                  {salesPerformance?.percentageChange !== undefined ? `${salesPerformance.percentageChange >= 0 ? '+' : ''}${salesPerformance.percentageChange}% from last period` : "Performance N/A"}
+                  {salesPerformance?.percentageChange !== undefined
+                    ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
+                        salesPerformance.percentageChange
+                      }% from last period`
+                    : "Performance N/A"}
                 </p>
               </>
             )}
@@ -214,10 +262,25 @@ export default function SellerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <LoadingCardContent />
-             {/* Or show N/A as this specific period isn't fetched by default */}
-            {/* <p className="text-3xl font-bold text-gray-800">N/A</p> */}
-            {/* <p className="text-xs text-gray-500">Performance N/A</p> */}
+            {loadingSalesWeek ? (
+              <LoadingCardContent />
+            ) : errorSalesWeek ? (
+              <p className="text-xs text-red-500">{errorSalesWeek}</p>
+            ) : (
+              <>
+                <p className="text-3xl font-bold text-gray-800">
+                  ${salesWeekData?.totalSales.toLocaleString() ?? "N/A"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {/* Performance data is placeholder */}
+                  {salesPerformance?.percentageChange !== undefined
+                    ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
+                        salesPerformance.percentageChange
+                      }% from last period`
+                    : "Performance N/A"}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -227,9 +290,26 @@ export default function SellerDashboard() {
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Orders Status
         </h3>
-        {loadingOrderStatus ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"><Card><LoadingCardContent/></Card><Card><LoadingCardContent/></Card><Card><LoadingCardContent/></Card><Card><LoadingCardContent/></Card></div> :
-         errorOrderStatus ? <p className="text-red-500">{errorOrderStatus}</p> :
-         !orderStatusCounts ? <p>No order status data available.</p> : (
+        {loadingOrderStatus ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <LoadingCardContent />
+            </Card>
+            <Card>
+              <LoadingCardContent />
+            </Card>
+            <Card>
+              <LoadingCardContent />
+            </Card>
+            <Card>
+              <LoadingCardContent />
+            </Card>
+          </div>
+        ) : errorOrderStatus ? (
+          <p className="text-red-500">{errorOrderStatus}</p>
+        ) : !orderStatusCounts ? (
+          <p>No order status data available.</p>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardContent className="flex items-center p-4">
@@ -285,9 +365,19 @@ export default function SellerDashboard() {
           <CardTitle>Revenue Trend (Monthly)</CardTitle>
         </CardHeader>
         <CardContent className="h-[350px] w-full">
-          {loadingRevenueTrend ? <div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin text-gray-400" /></div> :
-           errorRevenueTrend ? <p className="text-red-500 text-center py-10">{errorRevenueTrend}</p> :
-           revenueTrend.length === 0 ? <p className="text-gray-500 text-center py-10">No revenue data available.</p> : (
+          {loadingRevenueTrend ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+            </div>
+          ) : errorRevenueTrend ? (
+            <p className="text-red-500 text-center py-10">
+              {errorRevenueTrend}
+            </p>
+          ) : revenueTrend.length === 0 ? (
+            <p className="text-gray-500 text-center py-10">
+              No revenue data available.
+            </p>
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={revenueTrend}
@@ -316,13 +406,23 @@ export default function SellerDashboard() {
       </Card>
 
       {/* Low Stock Alert */}
-      {loadingLowStock ? <div className="flex items-center p-4"><Loader2 className="h-5 w-5 mr-3 flex-shrink-0 animate-spin" /> <p>Loading low stock info...</p></div> :
-       errorLowStock ? <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"><p>{errorLowStock}</p></div> :
-       lowStockCount && lowStockCount.lowStockProductCount > 0 ? (
+      {loadingLowStock ? (
+        <div className="flex items-center p-4">
+          <Loader2 className="h-5 w-5 mr-3 flex-shrink-0 animate-spin" />{" "}
+          <p>Loading low stock info...</p>
+        </div>
+      ) : errorLowStock ? (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+          <p>{errorLowStock}</p>
+        </div>
+      ) : lowStockCount && lowStockCount.lowStockProductCount > 0 ? (
         <div className="bg-yellow-100 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded-md flex flex-col sm:flex-row items-start sm:items-center justify-between">
           <div className="flex items-center mb-2 sm:mb-0">
             <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
-            <p>You have {lowStockCount.lowStockProductCount} products running low (threshold: {lowStockCount.threshold}). Restock now.</p>
+            <p>
+              You have {lowStockCount.lowStockProductCount} products running low
+              (threshold: {lowStockCount.threshold}). Restock now.
+            </p>
           </div>
           <Button
             variant="outline"
@@ -334,8 +434,12 @@ export default function SellerDashboard() {
         </div>
       ) : (
         <div className="bg-green-100 border-l-4 border-green-400 text-green-700 p-4 rounded-md flex items-center">
-           <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" /> {/* Or a different icon like CheckCircle */}
-          <p>No products are currently below the low stock threshold ({lowStockCount?.threshold ?? 5}).</p>
+          <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />{" "}
+          {/* Or a different icon like CheckCircle */}
+          <p>
+            No products are currently below the low stock threshold (
+            {lowStockCount?.threshold ?? 5}).
+          </p>
         </div>
       )}
     </>
