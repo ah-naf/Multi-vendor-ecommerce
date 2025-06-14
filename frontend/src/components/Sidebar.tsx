@@ -14,6 +14,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import React from "react";
+import { useAuth } from "@/context/AuthContext";
 
 // Reusable NavLink component for sidebar items
 const NavLink = ({ href = "/", icon: Icon, children }) => {
@@ -39,56 +40,61 @@ const NavLink = ({ href = "/", icon: Icon, children }) => {
 };
 
 // Main Sidebar Component
-export const Sidebar = ({ isCustomer = false }) => (
-  <aside className="hidden md:flex md:w-20 lg:w-64 bg-white border-r border-gray-200 p-4 flex-col justify-between flex-shrink-0">
-    <div>
-      <div
-        className="mb-8 px-2 lg:px-4 h-8 cursor-pointer"
-        onClick={() => (window.location.href = "/")}
-      >
-        <h1 className="text-2xl font-bold text-gray-800 lg:inline-block md:hidden hidden">
-          Logo
-        </h1>
-        <h1 className="text-2xl font-bold text-gray-800 md:inline-block lg:hidden text-center">
-          L
-        </h1>
-      </div>
-      <div>
-        {!isCustomer && (
-          <NavLink href="/dashboard-seller" icon={Home}>
-            Seller Overview
-          </NavLink>
-        )}
-        <NavLink href="/dashboard-customer" icon={Home}>
-          Customer Overview
-        </NavLink>
-        {!isCustomer && (
-          <>
-            <NavLink href="/dashboard-seller/products" icon={Box}>
-              Products
-            </NavLink>
-            <NavLink href="/dashboard-seller/orders" icon={ShoppingBag}>
-              Orders
-            </NavLink>
-            <NavLink href="/dashboard-seller/payments" icon={CreditCard}>
-              Payments
-            </NavLink>
-          </>
-        )}
+export const Sidebar = () => {
+  const { user } = useAuth();
+  const isSeller = user?.roles.includes("seller");
 
-        <NavLink href="/dashboard-customer/my-order" icon={Truck}>
-          My Order
-        </NavLink>
-        <NavLink href="/dashboard-customer/wishlist" icon={Heart}>
-          Wishlist
-        </NavLink>
-        <NavLink href="/dashboard-customer/cart" icon={ShoppingCart}>
-          Cart
-        </NavLink>
-        <NavLink href="/dashboard-customer/profile" icon={User}>
-          Profile
-        </NavLink>
+  return (
+    <aside className="hidden md:flex md:w-20 lg:w-64 bg-white border-r border-gray-200 p-4 flex-col justify-between flex-shrink-0">
+      <div>
+        <div
+          className="mb-8 px-2 lg:px-4 h-8 cursor-pointer"
+          onClick={() => (window.location.href = "/")}
+        >
+          <h1 className="text-2xl font-bold text-gray-800 lg:inline-block md:hidden hidden">
+            Logo
+          </h1>
+          <h1 className="text-2xl font-bold text-gray-800 md:inline-block lg:hidden text-center">
+            L
+          </h1>
+        </div>
+        <div>
+          {isSeller && (
+            <NavLink href="/dashboard-seller" icon={Home}>
+              Seller Overview
+            </NavLink>
+          )}
+          <NavLink href="/dashboard-customer" icon={Home}>
+            Customer Overview
+          </NavLink>
+          {isSeller && (
+            <>
+              <NavLink href="/dashboard-seller/products" icon={Box}>
+                Products
+              </NavLink>
+              <NavLink href="/dashboard-seller/orders" icon={ShoppingBag}>
+                Orders
+              </NavLink>
+              <NavLink href="/dashboard-seller/payments" icon={CreditCard}>
+                Payments
+              </NavLink>
+            </>
+          )}
+
+          <NavLink href="/dashboard-customer/my-order" icon={Truck}>
+            My Order
+          </NavLink>
+          <NavLink href="/dashboard-customer/wishlist" icon={Heart}>
+            Wishlist
+          </NavLink>
+          <NavLink href="/dashboard-customer/cart" icon={ShoppingCart}>
+            Cart
+          </NavLink>
+          <NavLink href="/dashboard-customer/profile" icon={User}>
+            Profile
+          </NavLink>
+        </div>
       </div>
-    </div>
-  </aside>
-);
+    </aside>
+  );
+};

@@ -47,7 +47,11 @@ export default function ProductDetails({ product }: Props) {
     product;
 
   // Determine if the current user is the seller
-  const isSellerProduct = !!(product.seller && loggedInUser && product.seller._id === loggedInUser._id);
+  const isSellerProduct = !!(
+    product.seller &&
+    loggedInUser &&
+    product.seller._id === loggedInUser._id
+  );
 
   const currentPrice =
     pricing.salePrice && pricing.salePrice < pricing.price
@@ -62,8 +66,7 @@ export default function ProductDetails({ product }: Props) {
       removeFromWishlist(product.id);
     } else {
       addToWishlist({
-        id: product.id,
-        _id: product._id,
+        productId: product.id,
         name: general.title,
         price: currentPrice,
         image: imageUrl,
@@ -182,8 +185,7 @@ export default function ProductDetails({ product }: Props) {
                           removeFromWishlist(product.id);
                         } else {
                           addToWishlist({
-                            id: product.id,
-                            _id: product._id,
+                            productId: product.id,
                             name: product.general.title,
                             price: currentPrice,
                             image: imageUrl,

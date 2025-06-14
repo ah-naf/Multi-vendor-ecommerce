@@ -57,6 +57,7 @@ export default function CheckoutPage() {
     if (user) {
       setFullName(`${user.firstName} ${user.lastName}`);
       setEmail(user.email || "");
+      setPhoneNumber(user.phone || "");
       // Add other pre-fills if available, e.g., phone from user profile
     }
   }, [user]);
@@ -158,9 +159,8 @@ export default function CheckoutPage() {
         items: orderPayloadItems,
         shippingAddressDetails: {
           name: fullName,
-          address: addressForm.addressLine2
-            ? `${addressForm.addressLine1}, ${addressForm.addressLine2}`
-            : addressForm.addressLine1,
+          addressLine1: addressForm.addressLine1,
+          addressLine2: addressForm.addressLine2,
           city: addressForm.city,
           state: addressForm.state,
           zipCode: addressForm.zipCode,

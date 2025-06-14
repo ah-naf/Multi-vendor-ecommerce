@@ -54,17 +54,19 @@ export function AddToCart({
     }
 
     // Check current quantity in cart for this item
-    const itemInCart = cartItems.find(item => item.id === productId);
+    const itemInCart = cartItems.find((item) => item.productId === productId);
     const currentQuantityInCart = itemInCart ? itemInCart.quantity : 0;
 
     if (currentQuantityInCart + selectedQuantity > maxQty) {
-      toast.error(`Cannot add ${selectedQuantity} item(s). You already have ${currentQuantityInCart} in cart, and only ${maxQty} are in stock.`);
+      toast.error(
+        `Cannot add ${selectedQuantity} item(s). You already have ${currentQuantityInCart} in cart, and only ${maxQty} are in stock.`
+      );
       return;
     }
 
     addToCart(
       {
-        id: productId,
+        productId: productId,
         name: productTitle,
         price: currentPrice,
         image: productImage,

@@ -19,7 +19,6 @@ const placeOrder = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     let finalShippingAddress;
 
     if (shippingAddressId) {
@@ -75,14 +74,14 @@ const placeOrder = async (req, res) => {
       }
       // Ensure product.seller is available and is the seller's ObjectId
       if (!product.seller) {
-        return res
-          .status(500)
-          .json({ message: `Product with ID ${item.productId} is missing seller information.` });
+        return res.status(500).json({
+          message: `Product with ID ${item.productId} is missing seller information.`,
+        });
       }
       orderItems.push({
         id: item.productId,
         name: product.general.title,
-        attributes: item.attributes || "", // Assuming cart item might have attributes
+        attributes: product.general.category || "", // Assuming cart item might have attributes
         price: product.pricing.price,
         quantity: item.quantity,
         image:
@@ -198,7 +197,9 @@ const getOrdersByUser = async (req, res) => {
     if (!orders) {
       // This case might not be strictly necessary if find returns [] for no matches
       // but good for explicit clarity if an actual DB error occurred resulting in null
-      return res.status(404).json({ message: "No orders found for this user." });
+      return res
+        .status(404)
+        .json({ message: "No orders found for this user." });
     }
     res.json(orders);
   } catch (error) {
@@ -233,26 +234,32 @@ const getOrdersBySeller = async (req, res) => {
 
   try {
     // Find all products belonging to the seller
-    const sellerProducts = await Product.find({ user: sellerId }); // Assuming Product model has a 'user' field for seller ID
+    const sellerProducts = await Product.find({ seller: sellerId }); // Assuming Product model has a 'user' field for seller ID
     if (!sellerProducts || sellerProducts.length === 0) {
-      return res.status(404).json({ message: "No products found for this seller." });
+      return res
+        .status(404)
+        .json({ message: "No products found for this seller." });
     }
 
-    const sellerProductIds = sellerProducts.map(product => product.id); // Assuming product.id is the UUID
+    const sellerProductIds = sellerProducts.map((product) => product.id); // Assuming product.id is the UUID
 
     // Find orders that contain at least one item from the seller's products
     const orders = await OrderDetail.find({
-      "items.id": { $in: sellerProductIds } // Check if any item.id in the items array is in sellerProductIds
+      "items.id": { $in: sellerProductIds }, // Check if any item.id in the items array is in sellerProductIds
     }).sort({ date: -1 });
 
     if (!orders || orders.length === 0) {
-      return res.status(404).json({ message: "No orders found containing items from this seller." });
+      return res.status(404).json({
+        message: "No orders found containing items from this seller.",
+      });
     }
 
     res.json(orders);
   } catch (error) {
     console.error("Error fetching orders by seller:", error);
-    res.status(500).json({ message: "Server error while fetching seller orders." });
+    res
+      .status(500)
+      .json({ message: "Server error while fetching seller orders." });
   }
 };
 
@@ -269,24 +276,40 @@ const getSellerOrderById = async (req, res) => {
     }
 
     // Verify that at least one item in the order belongs to the seller
-    const sellerProducts = await Product.find({ user: sellerId });
+    const sellerProducts = await Product.find({ seller: sellerId });
     if (!sellerProducts || sellerProducts.length === 0) {
       // This case means the seller has no products, so no order can belong to them.
-      return res.status(404).json({ message: "Seller has no products, order cannot be verified." });
+      return res
+        .status(404)
+        .json({ message: "Seller has no products, order cannot be verified." });
     }
-    const sellerProductIds = sellerProducts.map(product => product.id);
+    const sellerProductIds = sellerProducts.map((product) => product.id);
 
-    const isSellersOrder = order.items.some(item => sellerProductIds.includes(item.id));
+    const isSellersOrder = order.items.some((item) =>
+      sellerProductIds.includes(item.id)
+    );
 
     if (!isSellersOrder) {
-      return res.status(404).json({ message: "Order not found or does not contain any items from this seller." });
+      return res.status(404).json({
+        message:
+          "Order not found or does not contain any items from this seller.",
+      });
     }
 
     res.json(order);
   } catch (error) {
     console.error("Error fetching seller order by ID:", error);
-    res.status(500).json({ message: "Server error while fetching seller order." });
+    res
+      .status(500)
+      .json({ message: "Server error while fetching seller order." });
   }
 };
 
-module.exports = { placeOrder, updateOrderStatusBySeller, getOrdersByUser, getOrderById, getOrdersBySeller, getSellerOrderById };
+module.exports = {
+  placeOrder,
+  updateOrderStatusBySeller,
+  getOrdersByUser,
+  getOrderById,
+  getOrdersBySeller,
+  getSellerOrderById,
+};

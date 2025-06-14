@@ -30,10 +30,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input"; // For update dialog
 import { Label } from "@/components/ui/label"; // For update dialog
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // For status dropdown
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // For status dropdown
 // import ordersData from "@/data/orders.json"; // Mock data removed
 import Timeline from "@/components/orders/Timeline"; // Assuming this component can adapt or will be reviewed
 import { toast } from "sonner";
+import { getBackendBaseUrl } from "@/services/productService";
+import { useAuth } from "@/context/AuthContext";
 
 // --- TYPE DEFINITIONS (align with backend OrderDetail model) ---
 interface OrderItem {
@@ -56,7 +64,8 @@ interface ShippingAddress {
   phone: string;
 }
 
-interface PaymentDetails { // Simplified based on what's shown in mock, but should align with backend
+interface PaymentDetails {
+  // Simplified based on what's shown in mock, but should align with backend
   method: string;
   last4?: string;
   billingAddress?: string; // May not be directly on payment object from backend
@@ -103,7 +112,6 @@ interface UpdateFormData {
   estimatedDelivery: string;
 }
 
-
 export default function OrderDetailsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -124,6 +132,7 @@ export default function OrderDetailsPage() {
     estimatedShipDate: "",
     estimatedDelivery: "",
   });
+  const { token } = useAuth();
 
   const fetchOrderDetails = async () => {
     if (!orderId) {
@@ -134,13 +143,24 @@ export default function OrderDetailsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/orders/seller-orders/${orderId}`);
+      const response = await fetch(
+        `${getBackendBaseUrl()}/api/orders/seller-orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(`Order with ID ${orderId} not found.`);
         }
-        const errorData = await response.json().catch(() => ({ message: "Failed to fetch order details." }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to fetch order details." }));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
       const data: Order = await response.json();
       setOrder(data);
@@ -149,8 +169,12 @@ export default function OrderDetailsPage() {
         status: data.status || "",
         trackingNumber: data.trackingNumber || "",
         carrier: data.carrier || "",
-        estimatedShipDate: data.estimatedShipDate ? new Date(data.estimatedShipDate).toISOString().split('T')[0] : "",
-        estimatedDelivery: data.estimatedDelivery ? new Date(data.estimatedDelivery).toISOString().split('T')[0] : "",
+        estimatedShipDate: data.estimatedShipDate
+          ? new Date(data.estimatedShipDate).toISOString().split("T")[0]
+          : "",
+        estimatedDelivery: data.estimatedDelivery
+          ? new Date(data.estimatedDelivery).toISOString().split("T")[0]
+          : "",
       });
     } catch (err: any) {
       setError(err.message);
@@ -162,19 +186,26 @@ export default function OrderDetailsPage() {
 
   useEffect(() => {
     fetchOrderDetails();
-  }, [orderId]);
-
+  }, [orderId, token]);
 
   const handleUpdateOrderSubmit = async () => {
     if (!order) return;
     try {
-      const response = await fetch(`/api/orders/seller-orders/${order.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateFormData),
-      });
+      const response = await fetch(
+        `${getBackendBaseUrl()}/api/orders/seller-orders/${order.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updateFormData),
+        }
+      );
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Failed to update order." }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to update order." }));
         throw new Error(errorData.message || "Failed to update order status.");
       }
       toast.success("Order updated successfully!");
@@ -188,13 +219,21 @@ export default function OrderDetailsPage() {
   const handleConfirmCancel = async () => {
     if (!order) return;
     try {
-      const response = await fetch(`/api/orders/seller-orders/${order.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Cancelled", cancellationReason }), // Include reason if backend supports it
-      });
+      const response = await fetch(
+        `${getBackendBaseUrl()}/api/orders/seller-orders/${order.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "Cancelled", cancellationReason }), // Include reason if backend supports it
+        }
+      );
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Failed to cancel order." }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to cancel order." }));
         throw new Error(errorData.message || "Failed to cancel order.");
       }
       toast.success("Order cancelled successfully!");
@@ -206,14 +245,15 @@ export default function OrderDetailsPage() {
     }
   };
 
-  const handleUpdateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleUpdateFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setUpdateFormData({ ...updateFormData, [e.target.name]: e.target.value });
   };
 
   const handleStatusChange = (value: string) => {
     setUpdateFormData({ ...updateFormData, status: value });
   };
-
 
   if (loading) {
     return (
@@ -227,9 +267,14 @@ export default function OrderDetailsPage() {
     return (
       <div className="text-center py-10">
         <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
-        <h2 className="mt-4 text-xl font-semibold text-red-700">Error Fetching Order</h2>
+        <h2 className="mt-4 text-xl font-semibold text-red-700">
+          Error Fetching Order
+        </h2>
         <p className="mt-2 text-gray-600">{error}</p>
-        <Button onClick={() => router.push("/dashboard-seller/orders")} className="mt-4">
+        <Button
+          onClick={() => router.push("/dashboard-seller/orders")}
+          className="mt-4"
+        >
           Back to Orders
         </Button>
       </div>
@@ -242,8 +287,13 @@ export default function OrderDetailsPage() {
       <div className="text-center py-10">
         <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
         <h2 className="mt-4 text-xl font-semibold">Order Not Found</h2>
-        <p className="mt-2 text-gray-500">The requested order could not be found.</p>
-        <Button onClick={() => router.push("/dashboard-seller/orders")} className="mt-4">
+        <p className="mt-2 text-gray-500">
+          The requested order could not be found.
+        </p>
+        <Button
+          onClick={() => router.push("/dashboard-seller/orders")}
+          className="mt-4"
+        >
           Back to Orders
         </Button>
       </div>
@@ -251,7 +301,8 @@ export default function OrderDetailsPage() {
   }
 
   // Assuming only one item is primarily displayed in summary, or loop if needed
-  const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+  const firstItem =
+    order.items && order.items.length > 0 ? order.items[0] : null;
 
   return (
     <div>
@@ -266,11 +317,25 @@ export default function OrderDetailsPage() {
           <h1 className="text-2xl font-bold">Order Details</h1>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" size="lg" onClick={() => toast.info("Print invoice functionality placeholder.")}>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() =>
+              toast.info("Print invoice functionality placeholder.")
+            }
+          >
             <Printer className="mr-2 h-4 w-4" />
             Print Invoice
           </Button>
-          <Button size="lg" className="bg-blue-600 font-semibold text-white hover:bg-blue-700" onClick={() => toast.info(`Contacting buyer at ${order.shippingAddress.phone} (placeholder).`)}>
+          <Button
+            size="lg"
+            className="bg-blue-600 font-semibold text-white hover:bg-blue-700"
+            onClick={() =>
+              toast.info(
+                `Contacting buyer at ${order.shippingAddress.phone} (placeholder).`
+              )
+            }
+          >
             <Phone className="mr-2 h-4 w-4" />
             Contact Buyer
           </Button>
@@ -282,16 +347,23 @@ export default function OrderDetailsPage() {
         <div className="flex items-center">
           {firstItem && (
             <img
-              src={firstItem.image || "/placeholder-image.svg"}
+              src={`${getBackendBaseUrl()}${firstItem.image}`}
               alt={firstItem.name}
-              className="h-20 w-20 object-cover rounded mr-6"
+              className="h-36 w-36 md:h-28 md:w-28 object-cover rounded mr-6"
             />
           )}
-          {!firstItem && <div className="h-20 w-20 bg-gray-200 rounded mr-6 flex items-center justify-center"><Package /></div>}
+          {!firstItem && (
+            <div className="h-20 w-20 bg-gray-200 rounded mr-6 flex items-center justify-center">
+              <Package />
+            </div>
+          )}
           <div>
-            <h3 className="text-lg font-semibold mb-2">{firstItem ? firstItem.name : "N/A"}</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 text-sm text-gray-600">
-              <div>
+            <h3 className="text-lg font-semibold">
+              {firstItem ? firstItem.name : "N/A"}
+            </h3>
+            <span className="text-sm">{firstItem?.attributes}</span>
+            <div className="grid mt-2 grid-cols-2 md:grid-cols-5 gap-4 md:gap-x-8 text-sm text-gray-600">
+              <div className="col-span-2">
                 <div className="font-medium text-gray-700">Order ID</div>
                 <div>{order.id}</div>
               </div>
@@ -299,7 +371,9 @@ export default function OrderDetailsPage() {
                 <div className="font-medium text-gray-700">Date</div>
                 <div>
                   {new Date(order.date).toLocaleDateString("en-US", {
-                    month: "short", day: "numeric", year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
                   })}
                 </div>
               </div>
@@ -322,10 +396,15 @@ export default function OrderDetailsPage() {
         </div>
         <Badge
           variant={
-            order.status === "Processing" ? "warning" :
-            order.status === "Shipped" ? "secondary" :
-            order.status === "Delivered" ? "success" :
-            order.status === "Cancelled" ? "destructive" : "default"
+            order.status === "Processing"
+              ? "warning"
+              : order.status === "Shipped"
+              ? "secondary"
+              : order.status === "Delivered"
+              ? "success"
+              : order.status === "Cancelled"
+              ? "destructive"
+              : "default"
           }
           className="mt-4 md:mt-0 capitalize"
         >
@@ -356,7 +435,11 @@ export default function OrderDetailsPage() {
               <p className="font-medium">Email</p>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-gray-400" />
-                <span>{order.user?.email || order.shippingAddress.phone || "Not available"}</span>
+                <span>
+                  {order.user?.email ||
+                    order.shippingAddress.phone ||
+                    "Not available"}
+                </span>
               </div>
             </div>
             <div>
@@ -365,8 +448,12 @@ export default function OrderDetailsPage() {
                 <MapPin className="h-4 w-4 text-gray-400" />
                 <span>
                   {order.shippingAddress.addressLine1}
-                  {order.shippingAddress.addressLine2 ? `, ${order.shippingAddress.addressLine2}` : ''}, <br />
-                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}, <br />
+                  {order.shippingAddress.addressLine2
+                    ? `, ${order.shippingAddress.addressLine2}`
+                    : ""}
+                  , <br />
+                  {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
+                  {order.shippingAddress.zipCode}, <br />
                   {order.shippingAddress.country}
                 </span>
               </div>
@@ -376,8 +463,11 @@ export default function OrderDetailsPage() {
               <div className="flex items-center space-x-2">
                 <CreditCard className="h-4 w-4 text-gray-400" />
                 <span>
-                  {order.payment.method} {order.payment.last4 ? `•••• ${order.payment.last4}` : ''}
-                  <span className="ml-2 text-green-600 text-xs font-semibold">Paid</span>
+                  {order.payment.method}{" "}
+                  {order.payment.last4 ? `•••• ${order.payment.last4}` : ""}
+                  <span className="ml-2 text-green-600 text-xs font-semibold">
+                    Paid
+                  </span>
                 </span>
               </div>
             </div>
@@ -387,14 +477,29 @@ export default function OrderDetailsPage() {
         <div className="bg-white border rounded-lg p-6">
           <h4 className="text-lg font-semibold mb-4">Payment Summary</h4>
           <div className="space-y-2 text-sm text-gray-700">
-            <div className="flex justify-between"><span>Subtotal</span><span>${order.summary.subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span>${order.summary.shipping.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Tax</span><span>${order.summary.tax.toFixed(2)}</span></div>
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>${order.summary.subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Shipping</span>
+              <span>${order.summary.shipping.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Tax</span>
+              <span>${order.summary.tax.toFixed(2)}</span>
+            </div>
             {order.summary.discount && order.summary.discount > 0 && (
-              <div className="flex justify-between text-red-500"><span>Discount</span><span>-${order.summary.discount.toFixed(2)}</span></div>
+              <div className="flex justify-between text-red-500">
+                <span>Discount</span>
+                <span>-${order.summary.discount.toFixed(2)}</span>
+              </div>
             )}
             <hr className="my-2" />
-            <div className="flex justify-between font-semibold text-lg"><span>Total</span><span>${order.summary.total.toFixed(2)}</span></div>
+            <div className="flex justify-between font-semibold text-lg">
+              <span>Total</span>
+              <span>${order.summary.total.toFixed(2)}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -404,19 +509,26 @@ export default function OrderDetailsPage() {
         <Button
           variant="outline"
           onClick={() => setShowCancelDialog(true)}
-          disabled={["Shipped", "Delivered", "Cancelled"].includes(order.status)}
+          disabled={["Shipped", "Delivered", "Cancelled"].includes(
+            order.status
+          )}
         >
           Cancel Order
         </Button>
         <Button
           className="bg-blue-600 text-white hover:bg-blue-700" // Changed color for update
           onClick={() => {
-            setUpdateFormData({ // Pre-fill form
-                status: order.status,
-                trackingNumber: order.trackingNumber || "",
-                carrier: order.carrier || "",
-                estimatedShipDate: order.estimatedShipDate ? new Date(order.estimatedShipDate).toISOString().split('T')[0] : "",
-                estimatedDelivery: order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString().split('T')[0] : "",
+            setUpdateFormData({
+              // Pre-fill form
+              status: order.status,
+              trackingNumber: order.trackingNumber || "",
+              carrier: order.carrier || "",
+              estimatedShipDate: order.estimatedShipDate
+                ? new Date(order.estimatedShipDate).toISOString().split("T")[0]
+                : "",
+              estimatedDelivery: order.estimatedDelivery
+                ? new Date(order.estimatedDelivery).toISOString().split("T")[0]
+                : "",
             });
             setShowUpdateDialog(true);
           }}
@@ -430,31 +542,75 @@ export default function OrderDetailsPage() {
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center space-x-2"> <AlertTriangle className="h-6 w-6 text-red-500" /> <DialogTitle>Cancel Order #{order.id}?</DialogTitle> </div>
-            <DialogDescription className="mt-1"> Are you sure you want to cancel this order? This action cannot be undone and the buyer will be notified. </DialogDescription>
+            <div className="flex items-center space-x-2">
+              {" "}
+              <AlertTriangle className="h-6 w-6 text-red-500" />{" "}
+              <DialogTitle>Cancel Order #{order.id}?</DialogTitle>{" "}
+            </div>
+            <DialogDescription className="mt-1">
+              {" "}
+              Are you sure you want to cancel this order? This action cannot be
+              undone and the buyer will be notified.{" "}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="cancellationReason" className="block text-sm font-medium text-gray-700"> Reason for cancellation <span className="text-red-500">*</span> </Label>
-              <Textarea id="cancellationReason" placeholder="e.g., Item out of stock, Buyer requested cancellation" value={cancellationReason} onChange={(e) => setCancellationReason(e.target.value)} rows={3} className="mt-1" />
+              <Label
+                htmlFor="cancellationReason"
+                className="block text-sm font-medium text-gray-700"
+              >
+                {" "}
+                Reason for cancellation <span className="text-red-500">
+                  *
+                </span>{" "}
+              </Label>
+              <Textarea
+                id="cancellationReason"
+                placeholder="e.g., Item out of stock, Buyer requested cancellation"
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                rows={3}
+                className="mt-1"
+              />
             </div>
           </div>
           <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)}> Keep Order </Button>
-            <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleConfirmCancel} disabled={!cancellationReason.trim()}> Confirm Cancellation </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+            >
+              {" "}
+              Keep Order{" "}
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleConfirmCancel}
+              disabled={!cancellationReason.trim()}
+            >
+              {" "}
+              Confirm Cancellation{" "}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Update Order Dialog (Simplified) */}
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>Update Order #{order.id}</DialogTitle></DialogHeader>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Update Order #{order.id}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="status">Order Status</Label>
-              <Select name="status" value={updateFormData.status} onValueChange={handleStatusChange}>
-                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+              <Select
+                name="status"
+                value={updateFormData.status}
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Processing">Processing</SelectItem>
                   <SelectItem value="Shipped">Shipped</SelectItem>
@@ -463,17 +619,57 @@ export default function OrderDetailsPage() {
                 </SelectContent>
               </Select>
             </div>
-            {updateFormData.status === "Shipped" || updateFormData.status === "Delivered" ? ( // Show only if status is Shipped or Delivered
-            <>
-            <div><Label htmlFor="trackingNumber">Tracking Number</Label><Input id="trackingNumber" name="trackingNumber" value={updateFormData.trackingNumber} onChange={handleUpdateFormChange} /></div>
-            <div><Label htmlFor="carrier">Carrier</Label><Input id="carrier" name="carrier" value={updateFormData.carrier} onChange={handleUpdateFormChange} /></div>
-            <div><Label htmlFor="estimatedShipDate">Est. Ship Date</Label><Input id="estimatedShipDate" name="estimatedShipDate" type="date" value={updateFormData.estimatedShipDate} onChange={handleUpdateFormChange} /></div>
-            <div><Label htmlFor="estimatedDelivery">Est. Delivery Date</Label><Input id="estimatedDelivery" name="estimatedDelivery" type="date" value={updateFormData.estimatedDelivery} onChange={handleUpdateFormChange} /></div>
-            </>
-            ) : null }
+            {updateFormData.status === "Shipped" ||
+            updateFormData.status === "Delivered" ? ( // Show only if status is Shipped or Delivered
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="trackingNumber">Tracking Number</Label>
+                  <Input
+                    id="trackingNumber"
+                    name="trackingNumber"
+                    value={updateFormData.trackingNumber}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="carrier">Carrier</Label>
+                  <Input
+                    id="carrier"
+                    name="carrier"
+                    value={updateFormData.carrier}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="estimatedShipDate">Est. Ship Date</Label>
+                  <Input
+                    id="estimatedShipDate"
+                    name="estimatedShipDate"
+                    type="date"
+                    value={updateFormData.estimatedShipDate}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="estimatedDelivery">Est. Delivery Date</Label>
+                  <Input
+                    id="estimatedDelivery"
+                    name="estimatedDelivery"
+                    type="date"
+                    value={updateFormData.estimatedDelivery}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+              </>
+            ) : null}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>Close</Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowUpdateDialog(false)}
+            >
+              Close
+            </Button>
             <Button onClick={handleUpdateOrderSubmit}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>

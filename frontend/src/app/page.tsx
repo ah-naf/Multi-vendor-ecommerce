@@ -17,6 +17,7 @@ import { useCart } from "@/context/CartContext";
 // --- MAIN HOMEPAGE COMPONENT ---
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuth();
+  console.log(user);
   const router = useRouter();
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
@@ -154,6 +155,12 @@ export default function HomePage() {
             {products.map((product) => {
               const isProductWishlisted = isWishlisted(product.id);
 
+              const isSellerProduct = !!(
+                product.seller &&
+                user &&
+                product.seller === user._id
+              );
+
               const handleWishlistToggle = () => {
                 if (isProductWishlisted) {
                   removeFromWishlist(product.id);
@@ -253,8 +260,16 @@ export default function HomePage() {
                       <Button
                         className="flex-grow bg-red-500 text-white hover:bg-red-500/90"
                         onClick={() => handleMoveToCart(product)}
+                        disabled={isSellerProduct}
                       >
-                        <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+                        {isSellerProduct ? (
+                          "Own Product"
+                        ) : (
+                          <>
+                            <ShoppingCart className="mr-2 h-5 w-5" /> Add to
+                            Cart
+                          </>
+                        )}
                       </Button>
                     </div>
                   </CardContent>
