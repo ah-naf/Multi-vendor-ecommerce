@@ -43,7 +43,6 @@ export const Header = () => {
 
   return (
     <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between flex-shrink-0">
-      {/* Mobile Menu Trigger (for a different context, e.g., seller dashboard) */}
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="md:hidden mr-2">
@@ -92,12 +91,9 @@ export const Header = () => {
         </SheetContent>
       </Sheet>
 
-      {/* This empty div helps to push the right-side icons to the end on mobile */}
       <div className="flex-1 md:hidden" />
 
-      {/* Right side icons */}
       <div className="flex items-center space-x-2 ml-auto md:space-x-4">
-        {/* Language Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -121,7 +117,6 @@ export const Header = () => {
 
         <Link href="/dashboard-customer/wishlist" passHref>
           {" "}
-          {/* Updated wishlist link */}
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-6 w-6 text-gray-600" />
             {totalWishlistItems > 0 && (
@@ -133,7 +128,6 @@ export const Header = () => {
         </Link>
         <Link href="/dashboard-customer/cart" passHref>
           {" "}
-          {/* Updated cart link */}
           <Button variant="ghost" size="icon" className="relative">
             <ShoppingCart className="h-6 w-6 text-gray-600" />
             {totalCartItems > 0 && (

@@ -21,8 +21,24 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-// --- Dynamic Spec Field ---
-export const DynamicSpecField = ({ spec, onUpdate, onRemove }) => {
+export interface Spec {
+  id: string;
+  label: string;
+  type: string;
+  value: string;
+}
+
+export interface DynamicSpecFieldProps {
+  spec: Spec;
+  onUpdate: (id: string, key: keyof Spec, newValue: string) => void;
+  onRemove: (id: string) => void;
+}
+
+export const DynamicSpecField = ({
+  spec,
+  onUpdate,
+  onRemove,
+}: DynamicSpecFieldProps) => {
   const renderField = () => {
     switch (spec.type) {
       case "textarea":
@@ -65,8 +81,16 @@ export const DynamicSpecField = ({ spec, onUpdate, onRemove }) => {
   );
 };
 
-// --- Add Spec Dialog ---
-export const AddSpecDialog = ({ onAdd }) => {
+interface AddSpecDialogProps {
+  onAdd: (newSpec: {
+    id: string;
+    label: string;
+    type: string;
+    value: string;
+  }) => void;
+}
+
+export const AddSpecDialog = ({ onAdd }: AddSpecDialogProps) => {
   const [label, setLabel] = useState("");
   const [type, setType] = useState("text");
 

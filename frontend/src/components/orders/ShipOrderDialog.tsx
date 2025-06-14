@@ -17,7 +17,6 @@ export interface Order {
 
 interface ShipOrderDialogProps {
   order: Order;
-  /** control externally */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -30,7 +29,6 @@ export function ShipOrderDialog({
   const [localOpen, setLocalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
 
-  // sync local with controlled (if they switch quickly)
   useEffect(() => {
     if (isControlled) setLocalOpen(controlledOpen!);
   }, [controlledOpen]);
@@ -43,7 +41,6 @@ export function ShipOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* trigger must be a child when uncontrolled */}
       {!isControlled && (
         <DialogTrigger asChild>
           <Button variant="destructive" size="sm">
@@ -69,7 +66,6 @@ export function ShipOrderDialog({
           </Button>
           <Button
             onClick={() => {
-              // your ship logic here
               setOpen(false);
             }}
           >

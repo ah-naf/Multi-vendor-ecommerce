@@ -19,7 +19,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   }, [user, loading, router]);
 
   if (!user) {
-    return null; // Or a redirect might have already been initiated
+    return null;
   }
 
   return <>{children}</>;

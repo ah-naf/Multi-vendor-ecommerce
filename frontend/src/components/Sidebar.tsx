@@ -6,17 +6,22 @@ import {
   Box,
   ShoppingBag,
   CreditCard,
-  Settings,
   Truck,
   Heart,
   User,
   ShoppingCart,
+  LucideProps,
 } from "lucide-react";
-import React from "react";
+import React, { ComponentType, FC, ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
 
-// Reusable NavLink component for sidebar items
-const NavLink = ({ href = "/", icon: Icon, children }) => {
+interface NavLinkProps {
+  href: string;
+  icon: ComponentType<LucideProps>;
+  children: ReactNode;
+}
+
+const NavLink: FC<NavLinkProps> = ({ href = "/", icon: Icon, children }) => {
   const pathname = usePathname();
   const splittedPath = pathname.split("/");
   const splittedHref = href.split("/");

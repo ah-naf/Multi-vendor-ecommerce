@@ -10,8 +10,8 @@ interface AddToCartProps {
   productTitle: string;
   currentPrice: number;
   productImage: string;
-  maxQty: number; // Max quantity available from inventory
-  selectedQuantity: number; // Quantity selected by the user on the product page
+  maxQty: number;
+  selectedQuantity: number;
   isOwnProduct?: boolean;
 }
 
@@ -53,7 +53,6 @@ export function AddToCart({
       return;
     }
 
-    // Check current quantity in cart for this item
     const itemInCart = cartItems.find((item) => item.productId === productId);
     const currentQuantityInCart = itemInCart ? itemInCart.quantity : 0;
 
@@ -70,7 +69,6 @@ export function AddToCart({
         name: productTitle,
         price: currentPrice,
         image: productImage,
-        // quantity is handled by addToCart logic (it adds selectedQuantity)
       },
       selectedQuantity
     );
@@ -81,7 +79,7 @@ export function AddToCart({
     <Button
       onClick={handleAddToCart}
       className="bg-red-500 hover:bg-red-500/90 text-white px-8 py-3 h-12 w-full rounded-xl text-base font-semibold flex items-center justify-center gap-2 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-70"
-      disabled={maxQty === 0 || isOwnProduct} // Disable if out of stock or is own product
+      disabled={maxQty === 0 || isOwnProduct}
     >
       {maxQty === 0 ? "Out of Stock" : "Add to Cart"}
     </Button>

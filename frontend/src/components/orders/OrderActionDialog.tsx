@@ -76,7 +76,6 @@ export function OrderActionDialog({ order }: { order: Order }) {
           <Button
             variant="destructive"
             onClick={() => {
-              // cancel logic
               setOpen(false);
             }}
           >
@@ -84,7 +83,6 @@ export function OrderActionDialog({ order }: { order: Order }) {
           </Button>
           <Button
             onClick={() => {
-              // direct-ship logic
               setOpen(false);
             }}
           >

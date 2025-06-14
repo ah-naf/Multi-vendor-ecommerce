@@ -46,7 +46,7 @@ export interface DataTableProps<T> {
 export function DataTable<T extends { id: string }>({
   columns,
   data,
-  getActions, // Updated prop name
+  getActions,
 }: DataTableProps<T>) {
   const hasActions = !!getActions;
 
@@ -82,7 +82,6 @@ export function DataTable<T extends { id: string }>({
               ))}
               {hasActions && (
                 <TableCell>
-                  {/* CHANGED: Call getActions(row) to get actions for this specific row */}
                   {getActions(row).map((action, index) => (
                     <Button
                       key={index}
@@ -105,7 +104,6 @@ export function DataTable<T extends { id: string }>({
   );
 
   const MobileCard = ({ item }: { item: T }) => {
-    // Get the actions for this specific card
     const itemActions = hasActions ? getActions(item) : [];
 
     return (
