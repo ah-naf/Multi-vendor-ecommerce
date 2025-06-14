@@ -42,8 +42,8 @@ interface ActiveOrderResponse {
   activeOrder: ActiveOrder | null;
 }
 
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 const DASHBOARD_API_URL = `${API_BASE_URL}/customer/dashboard`;
 
 // Helper function to get token from localStorage
@@ -56,8 +56,12 @@ const getAuthToken = (): string | null => {
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: response.statusText })); // Provide fallback if .json() fails
-    throw new Error(errorData.message || `API request failed with status ${response.status}`);
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: response.statusText })); // Provide fallback if .json() fails
+    throw new Error(
+      errorData.message || `API request failed with status ${response.status}`
+    );
   }
   return response.json();
 };
@@ -69,24 +73,25 @@ export const fetchTotalOrders = async (): Promise<TotalOrdersResponse> => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
+      Authorization: `Bearer ${token}`,
     },
   });
   return handleResponse(response);
 };
 
 // Fetch Wishlist Items Count
-export const fetchWishlistItemsCount = async (): Promise<WishlistItemsCountResponse> => {
-  const token = getAuthToken();
-  const response = await fetch(`${DASHBOARD_API_URL}/wishlist-items-count`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-  return handleResponse(response);
-};
+export const fetchWishlistItemsCount =
+  async (): Promise<WishlistItemsCountResponse> => {
+    const token = getAuthToken();
+    const response = await fetch(`${DASHBOARD_API_URL}/wishlist-items-count`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  };
 
 // Fetch Total Spent
 export const fetchTotalSpent = async (): Promise<TotalSpentResponse> => {
@@ -95,22 +100,27 @@ export const fetchTotalSpent = async (): Promise<TotalSpentResponse> => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
+      Authorization: `Bearer ${token}`,
     },
   });
   return handleResponse(response);
 };
 
 // Fetch Recent Orders
-export const fetchRecentOrders = async (limit: number = 3): Promise<RecentOrdersResponse> => {
+export const fetchRecentOrders = async (
+  limit: number = 3
+): Promise<RecentOrdersResponse> => {
   const token = getAuthToken();
-  const response = await fetch(`${DASHBOARD_API_URL}/recent-orders?limit=${limit}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
+  const response = await fetch(
+    `${DASHBOARD_API_URL}/recent-orders?limit=${limit}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return handleResponse(response);
 };
 
@@ -121,7 +131,7 @@ export const fetchActiveOrder = async (): Promise<ActiveOrderResponse> => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
+      Authorization: `Bearer ${token}`,
     },
   });
   return handleResponse(response);

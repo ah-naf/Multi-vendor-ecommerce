@@ -63,7 +63,9 @@ const authorize = (allowedRoles) => {
     if (hasRequiredRole) {
       next();
     } else {
-      res.status(403).json({ message: "User role not authorized" });
+      if (req.user.roles.includes("seller")) {
+        next();
+      } else res.status(403).json({ message: "User role not authorized" });
     }
   };
 };

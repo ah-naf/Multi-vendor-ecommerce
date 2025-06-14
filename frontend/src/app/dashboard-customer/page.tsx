@@ -239,7 +239,7 @@ export default function CustomerDashboardOverview() {
               <div className="text-center mt-6">
                 <p className="text-sm text-gray-300">Estimated Delivery</p>
                 <p className="text-2xl font-bold">
-                  {activeOrder.estimatedDelivery}
+                  {new Date(activeOrder.estimatedDelivery).toUTCString()}
                 </p>
               </div>
             )}
