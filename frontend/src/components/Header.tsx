@@ -90,7 +90,12 @@ export const Header = () => {
           </nav>
         </SheetContent>
       </Sheet>
-
+      <Link
+        href={"/"}
+        className="font-bold bg-red-500 p-1 px-3 text-white rounded-full"
+      >
+        L
+      </Link>
       <div className="flex-1 md:hidden" />
 
       <div className="flex items-center space-x-2 ml-auto md:space-x-4">

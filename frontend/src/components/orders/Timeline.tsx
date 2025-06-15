@@ -121,7 +121,7 @@ const Timeline: React.FC<TimelineProps> = ({
     },
   ];
 
-  let timelineEvents: TimelineEvent[] = [];
+  const timelineEvents: TimelineEvent[] = [];
 
   if (normalizedStatus === "cancelled" && cancelledDate) {
     definedSteps.forEach((step) => {

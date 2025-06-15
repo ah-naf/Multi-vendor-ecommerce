@@ -47,7 +47,8 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
   return response.text().then((text) => {
     try {
       return text ? JSON.parse(text) : {};
-    } catch (e) {
+    } catch (e: any) {
+      console.log(e);
       return { message: text || "Success" };
     }
   });

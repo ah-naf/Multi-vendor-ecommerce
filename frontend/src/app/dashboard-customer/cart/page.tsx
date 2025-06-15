@@ -79,10 +79,6 @@ export default function CartPage() {
     setItemToRemove(null);
   };
 
-  const handleClearCart = () => {
-    setShowClearCartDialog(true);
-  };
-
   const confirmClearCart = () => {
     clearCart();
     toast.info("Cart cleared.");

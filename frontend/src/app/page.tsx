@@ -9,10 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Heart } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Product, ApiError } from "@/types";
+import { Product } from "@/types";
 import { useWishlist } from "@/context/WishlistContext";
 import { getApiBaseUrl } from "@/services/productService";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { useCart } from "@/context/CartContext";
 
 export default function HomePage() {
@@ -60,7 +60,7 @@ export default function HomePage() {
     }
   }, [user]);
 
-  const { addToCart, cartItems, isLoading: isCartLoading } = useCart();
+  const { addToCart, cartItems } = useCart();
 
   const handleMoveToCart = async (product: Product) => {
     const itemForCart = {

@@ -1,12 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { AddToCart } from "@/components/AddToCart";
 import { toast } from "sonner";
 import {
-  Star,
   Heart,
   Share2,
   Shield,
@@ -16,7 +15,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
-import { Product, ProductWithPopulatedSeller } from "@/types";
+import { ProductWithPopulatedSeller } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 interface Props {
@@ -30,6 +29,7 @@ export default function ProductDetails({ product }: Props) {
 
   const { general, pricing, inventory, specifications, additional, seller } =
     product;
+  
 
   const isSellerProduct = !!(
     product.seller &&
@@ -44,20 +44,6 @@ export default function ProductDetails({ product }: Props) {
   const imageUrl = general.images?.[0]
     ? `http://localhost:5000${general.images[0]}`
     : "https://placehold.co/600x600/333333/ffffff?text=No+Image";
-
-  const handleWishlistToggle = () => {
-    if (isWishlisted(product.id)) {
-      removeFromWishlist(product.id);
-    } else {
-      addToWishlist({
-        productId: product.id,
-        name: general.title,
-        price: currentPrice,
-        image: imageUrl,
-        category: general.category,
-      });
-    }
-  };
 
   return (
     <>

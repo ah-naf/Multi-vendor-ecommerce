@@ -51,7 +51,6 @@ export default function SellerDashboard() {
   const [loadingSalesToday, setLoadingSalesToday] = useState(true);
   const [loadingSalesMonth, setLoadingSalesMonth] = useState(true);
   const [loadingSalesWeek, setLoadingSalesWeek] = useState(true);
-  const [loadingSalesPerf, setLoadingSalesPerf] = useState(true);
   const [loadingOrderStatus, setLoadingOrderStatus] = useState(true);
   const [loadingRevenueTrend, setLoadingRevenueTrend] = useState(true);
   const [loadingLowStock, setLoadingLowStock] = useState(true);
@@ -59,7 +58,6 @@ export default function SellerDashboard() {
   const [errorSalesToday, setErrorSalesToday] = useState<string | null>(null);
   const [errorSalesMonth, setErrorSalesMonth] = useState<string | null>(null);
   const [errorSalesWeek, setErrorSalesWeek] = useState<string | null>(null);
-  const [errorSalesPerf, setErrorSalesPerf] = useState<string | null>(null);
   const [errorOrderStatus, setErrorOrderStatus] = useState<string | null>(null);
   const [errorRevenueTrend, setErrorRevenueTrend] = useState<string | null>(
     null
@@ -92,13 +90,9 @@ export default function SellerDashboard() {
         )
         .finally(() => setLoadingSalesWeek(false));
 
-      setLoadingSalesPerf(true);
       fetchSalesPerformance()
         .then(setSalesPerformance)
-        .catch((err) =>
-          setErrorSalesPerf(err.message || "Failed to load sales performance")
-        )
-        .finally(() => setLoadingSalesPerf(false));
+        .catch((err) => console.log(err));
 
       setLoadingOrderStatus(true);
       fetchOrderStatusCounts()

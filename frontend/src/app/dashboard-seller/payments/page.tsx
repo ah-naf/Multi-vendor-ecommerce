@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DataTable, Column } from "@/components/DataTable";
 import {
   Dialog,
@@ -27,8 +26,6 @@ import { AlertTriangle, Trash2 } from "lucide-react";
 import { PaymentMethod, Withdraw } from "@/types";
 
 export default function PaymentsPage() {
-  const router = useRouter();
-
   const [withdrawHistory, setWithdrawHistory] = useState<Withdraw[]>([
     { id: "wd_001", date: "2025-06-01", amount: 500, status: "Completed" },
     { id: "wd_002", date: "2025-05-24", amount: 300, status: "Completed" },
