@@ -1,24 +1,21 @@
-// models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const { Schema } = mongoose;
 
-// Address sub‐schema
 const AddressSchema = new Schema(
   {
     type: { type: String, required: true },
     addressLine1: { type: String, required: true },
     addressLine2: { type: String, required: false },
     city: { type: String, required: true },
-    state: { type: String, required: true }, // state/province
-    zipCode: { type: String, required: true }, // zip/postal code
+    state: { type: String, required: true },
+    zipCode: { type: String, required: true },
     country: { type: String, required: true },
     isDefault: { type: Boolean, default: false },
   },
   { _id: true }
 );
 
-// Cart item sub‐schema
 const CartItemSchema = new Schema(
   {
     productId: { type: String, required: true },
@@ -32,7 +29,6 @@ const CartItemSchema = new Schema(
   { _id: true }
 );
 
-// Wishlist item sub‐schema
 const WishlistItemSchema = new Schema(
   {
     productId: { type: String, required: true },
@@ -65,7 +61,6 @@ const UserSchema = new Schema(
   }
 );
 
-// Pre-save hook to hash password
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
@@ -79,7 +74,6 @@ UserSchema.pre("save", async function (next) {
   }
 });
 
-// Method to compare password
 UserSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

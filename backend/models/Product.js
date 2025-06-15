@@ -1,8 +1,6 @@
-// models/Product.js
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-// Sub‐schema for each custom spec
 const CustomSpecSchema = new Schema(
   {
     id: { type: String, required: true },

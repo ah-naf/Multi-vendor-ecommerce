@@ -1,5 +1,5 @@
-const User = require('../models/User');
-const Product = require('../models/Product');
+const User = require("../models/User");
+const Product = require("../models/Product");
 
 // @desc Add item to cart
 // @route POST /api/cart/add
@@ -12,7 +12,7 @@ const addToCart = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const existingItemIndex = user.cart.findIndex(
@@ -20,10 +20,8 @@ const addToCart = async (req, res) => {
     );
 
     if (existingItemIndex > -1) {
-      // Item already exists, update quantity
       user.cart[existingItemIndex].quantity += quantity;
     } else {
-      // Add new item to cart
       const newItem = {
         productId,
         name,
@@ -38,8 +36,8 @@ const addToCart = async (req, res) => {
     await user.save();
     res.status(200).json(user.cart);
   } catch (error) {
-    console.error('Error adding to cart:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error adding to cart:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -51,14 +49,16 @@ const clearUserCart = async (req, res) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
     user.cart = [];
     await user.save({ validateBeforeSave: false });
-    res.status(200).json({ message: 'Cart cleared successfully', cart: user.cart });
+    res
+      .status(200)
+      .json({ message: "Cart cleared successfully", cart: user.cart });
   } catch (error) {
-    console.error('Error clearing cart:', error);
-    res.status(500).json({ message: 'Server error while clearing cart' });
+    console.error("Error clearing cart:", error);
+    res.status(500).json({ message: "Server error while clearing cart" });
   }
 };
 
@@ -73,7 +73,7 @@ const removeFromCart = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     user.cart = user.cart.filter((item) => item.productId !== productId);
@@ -81,8 +81,8 @@ const removeFromCart = async (req, res) => {
     await user.save();
     res.status(200).json(user.cart);
   } catch (error) {
-    console.error('Error removing from cart:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error removing from cart:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -98,10 +98,12 @@ const updateCartItemQuantity = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const itemIndex = user.cart.findIndex((item) => item.productId === productId);
+    const itemIndex = user.cart.findIndex(
+      (item) => item.productId === productId
+    );
 
     if (itemIndex > -1) {
       if (quantity <= 0) {
@@ -114,11 +116,11 @@ const updateCartItemQuantity = async (req, res) => {
       await user.save();
       res.status(200).json(user.cart);
     } else {
-      res.status(404).json({ message: 'Item not found in cart' });
+      res.status(404).json({ message: "Item not found in cart" });
     }
   } catch (error) {
-    console.error('Error updating cart item quantity:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error updating cart item quantity:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -132,13 +134,13 @@ const getCartItems = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.status(200).json(user.cart);
   } catch (error) {
-    console.error('Error getting cart items:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error getting cart items:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -147,5 +149,5 @@ module.exports = {
   removeFromCart,
   updateCartItemQuantity,
   getCartItems,
-  clearUserCart, // Added
+  clearUserCart,
 };

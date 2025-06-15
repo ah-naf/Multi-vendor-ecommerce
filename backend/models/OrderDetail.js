@@ -1,4 +1,3 @@
-// models/OrderDetail.js
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
@@ -20,7 +19,7 @@ const PaymentSchema = new Schema(
   {
     method: { type: String, required: true },
     last4: { type: String, required: true },
-    billingAddress: { type: String, required:true },
+    billingAddress: { type: String, required: true },
     country: { type: String, required: true },
     phone: { type: String, required: false },
   },
@@ -37,9 +36,9 @@ const OrderItemSchema = new Schema(
     image: { type: String, default: "" },
     sellerId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    }
+      ref: "User",
+      required: true,
+    },
   },
   { _id: false }
 );
@@ -72,8 +71,12 @@ const OrderDetailSchema = new Schema(
     },
     deliveredDate: { type: Date },
     cancelledDate: { type: Date },
-    cancellationReason: { type: String, default: null }, // Added cancellationReason
-    cancelledBy: { type: String, enum: ['seller', 'customer', 'admin', 'system', null], default: null }, // Added cancelledBy
+    cancellationReason: { type: String, default: null },
+    cancelledBy: {
+      type: String,
+      enum: ["seller", "customer", "admin", "system", null],
+      default: null,
+    },
     refundStatus: { type: String },
 
     trackingNumber: { type: String },
@@ -86,7 +89,6 @@ const OrderDetailSchema = new Schema(
     items: { type: [OrderItemSchema], required: true },
     summary: { type: SummarySchema, required: true },
     user: {
-      // It's good practice to link the order to a user
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,

@@ -5,7 +5,7 @@ const User = require("../models/User.js");
 // @access  Private
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming protect middleware populates req.user
+    const userId = req.user.id;
     const { firstName, lastName, phone, bio } = req.body;
 
     const user = await User.findById(userId);
@@ -15,7 +15,6 @@ const updateUserProfile = async (req, res) => {
       throw new Error("User not found");
     }
 
-    // Update fields if provided
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.phone = phone || user.phone;
@@ -34,11 +33,9 @@ const updateUserProfile = async (req, res) => {
       isAdmin: updatedUser.isAdmin,
     });
   } catch (error) {
-    res.status(res.statusCode || 500); // Use existing status code if set (e.g., 404)
+    res.status(res.statusCode || 500);
     res.json({
       message: error.message,
-      // Optionally, include stack trace in development
-      // stack: process.env.NODE_ENV === 'production' ? null : error.stack,
     });
   }
 };
@@ -48,7 +45,7 @@ const updateUserProfile = async (req, res) => {
 // @access  Private
 const getUserAddresses = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("addresses"); // Only select addresses
+    const user = await User.findById(req.user.id).select("addresses");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -76,7 +73,6 @@ const addAddress = async (req, res) => {
       isDefault,
     } = req.body;
 
-    // Validate required fields
     if (!type || !addressLine1 || !city || !state || !zipCode || !country) {
       res.status(400);
       throw new Error(
@@ -90,7 +86,6 @@ const addAddress = async (req, res) => {
       throw new Error("User not found");
     }
 
-    // If this address is set as default, make all other addresses non-default
     if (isDefault) {
       user.addresses.forEach((addr) => {
         addr.isDefault = false;
@@ -100,7 +95,7 @@ const addAddress = async (req, res) => {
     const newAddress = {
       type,
       addressLine1,
-      addressLine2: addressLine2 || "", // Optional field
+      addressLine2: addressLine2 || "",
       city,
       state,
       zipCode,
@@ -111,7 +106,6 @@ const addAddress = async (req, res) => {
     user.addresses.push(newAddress);
     await user.save();
 
-    // Return the newly added address
     res.status(201).json(user.addresses[user.addresses.length - 1]);
   } catch (error) {
     res
@@ -150,7 +144,6 @@ const updateAddress = async (req, res) => {
       throw new Error("Address not found");
     }
 
-    // If this address is being set as default, make all other addresses non-default
     if (isDefault) {
       user.addresses.forEach((addr) => {
         if (!addr._id.equals(addressToUpdate._id)) {
@@ -159,7 +152,6 @@ const updateAddress = async (req, res) => {
       });
     }
 
-    // Update fields if provided, otherwise keep existing values
     addressToUpdate.type = type || addressToUpdate.type;
     addressToUpdate.addressLine1 = addressLine1 || addressToUpdate.addressLine1;
     addressToUpdate.addressLine2 =
@@ -169,13 +161,12 @@ const updateAddress = async (req, res) => {
     addressToUpdate.zipCode = zipCode || addressToUpdate.zipCode;
     addressToUpdate.country = country || addressToUpdate.country;
 
-    // Explicitly set isDefault, even if it's to false
     if (typeof isDefault === "boolean") {
       addressToUpdate.isDefault = isDefault;
     }
 
     await user.save();
-    res.json(user.addresses); // Return all addresses or just the updated one
+    res.json(user.addresses);
   } catch (error) {
     res
       .status(res.statusCode >= 400 ? res.statusCode : 500)
@@ -210,10 +201,7 @@ const deleteAddress = async (req, res) => {
     const deletedAddress = user.addresses[addressIndex];
     user.addresses.splice(addressIndex, 1);
 
-    // Optional: if the deleted address was default, set another one as default
     if (deletedAddress.isDefault && user.addresses.length > 0) {
-      // For simplicity, setting the first one as default if the deleted one was default
-      // More complex logic could be implemented here if needed
       user.addresses[0].isDefault = true;
     }
 
@@ -272,5 +260,5 @@ module.exports = {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
-  getUserAddresses, // Added
+  getUserAddresses,
 };

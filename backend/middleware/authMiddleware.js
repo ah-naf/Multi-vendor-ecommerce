@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// In a real app, use an environment variable!
 const JWT_SECRET = "yourjwtsecretkey";
 
 const protect = async (req, res, next) => {
@@ -21,10 +20,8 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Get user from the token
     req.user = await User.findById(decoded.userId).select("-password");
 
     if (!req.user) {

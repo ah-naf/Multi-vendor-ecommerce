@@ -1,10 +1,10 @@
 const OrderDetail = require("../models/OrderDetail");
 const User = require("../models/User");
-const Product = require("../models/Product"); // Assuming Product model exists and is relevant for price/details
-const { v4: uuidv4 } = require("uuid"); // For generating unique order IDs
+const Product = require("../models/Product");
+const { v4: uuidv4 } = require("uuid");
 
 const placeOrder = async (req, res) => {
-  const { items, shippingAddressId, shippingAddressDetails } = req.body; // items: [{ productId, quantity }], shippingAddressId: ID of saved address, shippingAddressDetails: object for new address
+  const { items, shippingAddressId, shippingAddressDetails } = req.body;
   const userId = req.user.id;
 
   if (!items || items.length === 0) {
@@ -26,20 +26,18 @@ const placeOrder = async (req, res) => {
       if (!savedAddr) {
         return res.status(404).json({ message: "Saved address not found" });
       }
-      // Construct finalShippingAddress from savedAddr.
-      // This is a simplified version; User.AddressSchema might not have all fields for OrderDetail.ShippingAddressSchema
+
       finalShippingAddress = {
-        name: `${user.firstName} ${user.lastName}`, // Assuming user has firstName and lastName
+        name: `${user.firstName} ${user.lastName}`,
         addressLine1: savedAddr.addressLine1,
         addressLine2: savedAddr.addressLine2,
-        city: savedAddr.city || "N/A", // Assuming city, state, zip might be missing from User.AddressSchema
+        city: savedAddr.city || "N/A",
         state: savedAddr.state || "N/A",
         zipCode: savedAddr.zip || "N/A",
-        country: savedAddr.country || "N/A", // Map country if it exists
-        phone: savedAddr.phone, // Map phone if it exists, otherwise undefined
+        country: savedAddr.country || "N/A",
+        phone: savedAddr.phone,
       };
     } else if (shippingAddressDetails) {
-      // Assume shippingAddressDetails comes with name, address, city, state, zip
       if (
         !shippingAddressDetails.name ||
         !shippingAddressDetails.addressLine1 ||
@@ -56,7 +54,6 @@ const placeOrder = async (req, res) => {
       }
       finalShippingAddress = shippingAddressDetails;
     } else {
-      // This case should ideally be caught by the initial check, but as a fallback:
       return res
         .status(400)
         .json({ message: "Shipping address information is missing." });
@@ -72,7 +69,6 @@ const placeOrder = async (req, res) => {
           .status(404)
           .json({ message: `Product with ID ${item.productId} not found` });
       }
-      // Ensure product.seller is available and is the seller's ObjectId
       if (!product.seller) {
         return res.status(500).json({
           message: `Product with ID ${item.productId} is missing seller information.`,
@@ -81,21 +77,20 @@ const placeOrder = async (req, res) => {
       orderItems.push({
         id: item.productId,
         name: product.general.title,
-        attributes: product.general.category || "", // Assuming cart item might have attributes
+        attributes: product.general.category || "",
         price: product.pricing.price,
         quantity: item.quantity,
         image:
           product.general.images && product.general.images.length > 0
             ? product.general.images[0]
             : "",
-        sellerId: product.seller, // <-- New field added
+        sellerId: product.seller,
       });
       subtotal += product.pricing.price * item.quantity;
     }
 
-    // Define shipping and tax (can be made more dynamic later)
-    const shippingCost = 69.99; // Example fixed shipping
-    const taxRate = 0.02; // Example tax rate (2%)
+    const shippingCost = 69.99;
+    const taxRate = 0.02;
     const taxAmount = subtotal * taxRate;
     const totalAmount = subtotal + shippingCost + taxAmount;
 
@@ -107,9 +102,7 @@ const placeOrder = async (req, res) => {
       payment: {
         method: "COD",
         last4: "N/A",
-        // Create a full string for the billing address
         billingAddress: `${finalShippingAddress.addressLine1}, ${finalShippingAddress.city}, ${finalShippingAddress.state} ${finalShippingAddress.zipCode}`,
-        // Add the required country field
         country: finalShippingAddress.country,
         phone: finalShippingAddress.phone,
       },
@@ -125,13 +118,9 @@ const placeOrder = async (req, res) => {
 
     const savedOrder = await newOrder.save();
 
-    // Clear user's cart
-    // Assuming user.cart is an array of objects like [{ productId, quantity, ... }]
-    // If user.cart is just an array of productIds, adjust accordingly.
-    // For this implementation, we assume the user model has a 'cart' field that is an array.
     if (user.cart && Array.isArray(user.cart)) {
       user.cart = [];
-      await user.save({ validateBeforeSave: false }); // Added validateBeforeSave: false to avoid potential validation issues if other cart fields are required
+      await user.save({ validateBeforeSave: false });
     }
 
     res.status(201).json(savedOrder);
@@ -149,7 +138,7 @@ const updateOrderStatusBySeller = async (req, res) => {
     carrier,
     estimatedShipDate,
     estimatedDelivery,
-    cancellationReason, // Added for cancellation
+    cancellationReason,
   } = req.body;
 
   try {
@@ -165,22 +154,10 @@ const updateOrderStatusBySeller = async (req, res) => {
       }
       order.status = status;
 
-      // If status is 'Cancelled', set cancellation details
       if (status === "Cancelled") {
-        if (!cancellationReason) {
-          // Optional: Add validation for cancellationReason if required for seller cancellations
-          // return res.status(400).json({ message: "Cancellation reason is required when cancelling an order." });
-        }
-        order.cancellationReason = cancellationReason || "Cancelled by seller"; // Default reason if not provided
+        order.cancellationReason = cancellationReason || "Cancelled by seller"; //
         order.cancelledBy = "seller";
         order.cancelledDate = new Date();
-      } else {
-        // Potentially clear cancellation fields if status changes from 'Cancelled' to something else
-        // This depends on business logic: should a previously cancelled order that's then, say, 'Reprocessed' clear these?
-        // For now, we only set them on cancellation. If it needs to be cleared, add:
-        // order.cancellationReason = null;
-        // order.cancelledBy = null;
-        // order.cancelledDate = null;
       }
     }
 
@@ -207,15 +184,12 @@ const updateOrderStatusBySeller = async (req, res) => {
   }
 };
 
-// Get all orders for the logged-in user
 const getOrdersByUser = async (req, res) => {
   const userId = req.user.id;
 
   try {
     const orders = await OrderDetail.find({ user: userId }).sort({ date: -1 });
     if (!orders) {
-      // This case might not be strictly necessary if find returns [] for no matches
-      // but good for explicit clarity if an actual DB error occurred resulting in null
       return res
         .status(404)
         .json({ message: "No orders found for this user." });
@@ -227,15 +201,11 @@ const getOrdersByUser = async (req, res) => {
   }
 };
 
-// Get a specific order by its ID for the logged-in user (or any user if no user check)
 const getOrderById = async (req, res) => {
   const { id: orderId } = req.params; // Ensure this 'id' is the UUID string field, not _id
-  // const userId = req.user.id; // Optional: Uncomment if orders should only be fetched by the user who placed them
 
   try {
     const order = await OrderDetail.findOne({ id: orderId });
-    // Optional: Add user check: await OrderDetail.findOne({ id: orderId, user: userId });
-    // If adding user check, adjust error message for "not found or not authorized"
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -247,24 +217,21 @@ const getOrderById = async (req, res) => {
   }
 };
 
-// Get orders relevant to a seller
 const getOrdersBySeller = async (req, res) => {
   const sellerId = req.user.id;
 
   try {
-    // Find all products belonging to the seller
-    const sellerProducts = await Product.find({ seller: sellerId }); // Assuming Product model has a 'user' field for seller ID
+    const sellerProducts = await Product.find({ seller: sellerId });
     if (!sellerProducts || sellerProducts.length === 0) {
       return res
         .status(404)
         .json({ message: "No products found for this seller." });
     }
 
-    const sellerProductIds = sellerProducts.map((product) => product.id); // Assuming product.id is the UUID
+    const sellerProductIds = sellerProducts.map((product) => product.id);
 
-    // Find orders that contain at least one item from the seller's products
     const orders = await OrderDetail.find({
-      "items.id": { $in: sellerProductIds }, // Check if any item.id in the items array is in sellerProductIds
+      "items.id": { $in: sellerProductIds },
     }).sort({ date: -1 });
 
     if (!orders || orders.length === 0) {
@@ -282,7 +249,6 @@ const getOrdersBySeller = async (req, res) => {
   }
 };
 
-// Get a specific order by ID for a seller, ensuring the order contains one of their products
 const getSellerOrderById = async (req, res) => {
   const { id: orderId } = req.params;
   const sellerId = req.user.id;
@@ -294,10 +260,8 @@ const getSellerOrderById = async (req, res) => {
       return res.status(404).json({ message: "Order not found." });
     }
 
-    // Verify that at least one item in the order belongs to the seller
     const sellerProducts = await Product.find({ seller: sellerId });
     if (!sellerProducts || sellerProducts.length === 0) {
-      // This case means the seller has no products, so no order can belong to them.
       return res
         .status(404)
         .json({ message: "Seller has no products, order cannot be verified." });
@@ -324,11 +288,10 @@ const getSellerOrderById = async (req, res) => {
   }
 };
 
-// Request order cancellation by customer
 const requestOrderCancellationByCustomer = async (req, res) => {
   const { orderId } = req.params;
   const { cancellationReason } = req.body;
-  const userId = req.user.id; // Assuming authMiddleware provides req.user
+  const userId = req.user.id;
 
   if (!cancellationReason) {
     return res.status(400).json({ message: "Cancellation reason is required" });
@@ -341,21 +304,18 @@ const requestOrderCancellationByCustomer = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Check if the logged-in user is the one who placed the order
     if (order.user.toString() !== userId) {
       return res
         .status(403)
         .json({ message: "Forbidden: You do not own this order." });
     }
 
-    // Check if the order is eligible for cancellation
     if (order.status !== "Processing") {
       return res.status(400).json({
         message: `Order cannot be cancelled as it is already ${order.status}.`,
       });
     }
 
-    // Update order details for cancellation
     order.status = "Cancelled";
     order.cancellationReason = cancellationReason;
     order.cancelledBy = "customer";
@@ -378,5 +338,5 @@ module.exports = {
   getOrderById,
   getOrdersBySeller,
   getSellerOrderById,
-  requestOrderCancellationByCustomer, // Added new function
+  requestOrderCancellationByCustomer,
 };
