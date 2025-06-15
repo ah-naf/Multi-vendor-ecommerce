@@ -183,7 +183,7 @@ export default function HomePage() {
                         src={
                           product.general.images?.[0]
                             ? `${
-                                process.env.NEXT_PUBLIC_API_BASE_URL ||
+                                process.env.NEXT_PUBLIC_BACKEND_BASE_URL ||
                                 "http://localhost:5000"
                               }${product.general.images[0]}`
                             : "/placeholder-image.svg"

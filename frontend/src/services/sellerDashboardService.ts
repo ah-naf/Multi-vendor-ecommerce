@@ -30,8 +30,7 @@ export interface LowStockCountData {
   threshold: number;
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const DASHBOARD_API_URL = `${API_BASE_URL}/seller/dashboard`;
 
 const getAuthToken = (): string | null => {

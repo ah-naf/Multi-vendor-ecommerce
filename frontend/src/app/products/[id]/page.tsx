@@ -4,21 +4,18 @@ import ProductDetails from "./_productDetails";
 import { getApiBaseUrl } from "@/services/productService";
 import { ProductWithPopulatedSeller } from "@/types";
 
-export async function generateMetadata({
-  params,
-}: {
+type Props = {
   params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
+};
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
   const res = await fetch(`${getApiBaseUrl()}/customer/products/${id}`, {
     cache: "no-store",
   });
-
   if (!res.ok) {
     return { title: "Product not found", description: "No product data." };
   }
-
   const data: ProductWithPopulatedSeller = await res.json();
   return {
     title: data.general.title,
@@ -26,11 +23,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function ProductPage({ params }: Props) {
   const { id } = await params;
   const res = await fetch(`${getApiBaseUrl()}/customer/products/${id}`, {
     cache: "no-store",

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Card,
@@ -152,12 +152,8 @@ const DeliveredInfoCard = ({ order }: { order: OrderDetail }) => (
   </Card>
 );
 
-export default function OrderDetailsPage({
-  params,
-}: {
-  params: { orderId: string };
-}) {
-  const { orderId } = params;
+export default function OrderDetailsPage() {
+  const { orderId } = useParams();
   const [orderDetails, setOrderDetails] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

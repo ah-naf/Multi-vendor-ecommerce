@@ -1,9 +1,10 @@
 export const getApiBaseUrl = () => {
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  return process.env.NEXT_PUBLIC_API_BASE_URL;
 };
 
 export const getBackendBaseUrl = () => {
-  return process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  console.log(process.env.NEXT_PUBLIC_BACKEND_BASE_URL);
+  return process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 };
 
 const getAuthToken = (): string | null => {
