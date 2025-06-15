@@ -8,28 +8,22 @@ import React, {
   ReactNode,
 } from "react";
 import axios, { AxiosError } from "axios";
-import {
-  LoginCredentials,
-  RegistrationData,
-  ApiError,
-} from "../../types"; // Adjust path as necessary
+import { LoginCredentials, RegistrationData } from "@/types";
 
-// Configure Axios defaults
 axios.defaults.baseURL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 axios.defaults.withCredentials = true;
 
-// Interfaces
 export interface User {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string; // Optional as per previous User model
+  phone?: string;
   roles: string[];
-  avatar?: string; // Optional
-  initials?: string; // Optional
-  name?: string; // Optional, often derived
+  avatar?: string;
+  initials?: string;
+  name?: string;
 }
 
 export interface AuthContextType {
@@ -41,13 +35,10 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (userData: RegistrationData) => Promise<void>;
   logout: () => Promise<void>;
-  // fetchUser is internal, no need to expose if loadUserOnMount handles it
 }
 
-// Create AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// AuthProvider Component
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -59,7 +50,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to fetch user profile using a token
   const fetchUserProfile = async (jwt: string) => {
     try {
       const { data } = await axios.get("/api/users/profile", {
@@ -72,7 +62,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       let errorMessage = "An unknown error occurred";
       if (axios.isAxiosError(err)) {
         errorMessage =
-          err.response?.data?.message || err.message || "Failed to fetch profile";
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to fetch profile";
         if (err.response?.status === 401) {
           localStorage.removeItem("jwtToken");
           delete axios.defaults.headers.common["Authorization"];
@@ -80,14 +72,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(null);
           setIsAuthenticated(false);
           setError(null);
-          setIsLoading(false); // Ensure loading is stopped
-          return; // Exit if 401 caused logout
+          setIsLoading(false);
+          return;
         }
       } else if (err && typeof err === "object" && "message" in err) {
         errorMessage = (err as { message: string }).message;
       }
       setError(errorMessage);
-      // Clear auth state for other auth-related errors too
       localStorage.removeItem("jwtToken");
       delete axios.defaults.headers.common["Authorization"];
       setToken(null);
@@ -104,7 +95,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setToken(saved);
         await fetchUserProfile(saved);
       }
-      // whether we had a token or not, the check is done
       setIsLoading(false);
     };
     initAuth();
@@ -141,10 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Assuming registration does not auto-login.
-      // If it does, this logic needs to mirror login success (set token, user, etc.)
       await axios.post("/api/auth/register", userData);
-      // Potentially: toast.success("Registration successful! Please login.");
     } catch (err: unknown) {
       let message = "An unexpected error occurred during registration.";
       if (axios.isAxiosError(err)) {
@@ -164,9 +151,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      await axios.post("/api/auth/logout"); // Backend logout
+      await axios.post("/api/auth/logout");
     } catch (err: unknown) {
-      // Log error but proceed with client-side logout anyway
       console.error("Logout API call failed:", err);
       let message =
         "An unexpected error occurred during server logout, logged out locally.";
@@ -205,7 +191,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-// useAuth Hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

@@ -10,16 +10,12 @@ import {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-// Helper function to get token from localStorage
 const getAuthToken = (): string | null => {
   if (typeof window !== "undefined") {
-    // Ensure localStorage is available
     return localStorage.getItem("jwtToken");
   }
   return null;
 };
-
-// Cart API Functions
 
 export const fetchCartApi = async (): Promise<CartItem[]> => {
   const token = getAuthToken();
@@ -27,7 +23,7 @@ export const fetchCartApi = async (): Promise<CartItem[]> => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }), // Conditionally add Auth header
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
   });
   if (!response.ok) {
@@ -54,7 +50,7 @@ export const addToCartApi = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to add item to cart");
   }
-  return response.json(); // Assuming backend returns the updated cart
+  return response.json();
 };
 export const removeFromCartApi = async (
   productId: string
@@ -71,7 +67,7 @@ export const removeFromCartApi = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to remove item from cart");
   }
-  return response.json(); // Assuming backend returns the updated cart
+  return response.json();
 };
 
 export const updateCartQuantityApi = async (
@@ -91,35 +87,32 @@ export const updateCartQuantityApi = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to update cart item quantity");
   }
-  return response.json(); // Assuming backend returns the updated cart
+  return response.json();
 };
 
-export const clearCartApi = async (token: string | null): Promise<CartItem[]> => {
+export const clearCartApi = async (
+  token: string | null
+): Promise<CartItem[]> => {
   if (!token) {
-    // Or handle this more gracefully depending on how other service functions expect tokens
     throw new Error("Authentication token not provided for clearCartApi.");
   }
-  // Note: API_BASE_URL is already defined in this file.
-  // The prompt used /api/cart/clear, which implies it's not using API_BASE_URL directly here.
-  // For consistency with other functions in this file, I will use API_BASE_URL.
-  // If the intent was truly /api/cart/clear (e.g. Next.js proxy), this needs clarification.
-  // Assuming consistency for now.
+
   const response = await fetch(`${API_BASE_URL}/cart/clear`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
   });
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Failed to clear cart and could not parse error response' }));
-    throw new Error(errorData.message || 'Failed to clear cart');
+    const errorData = await response.json().catch(() => ({
+      message: "Failed to clear cart and could not parse error response",
+    }));
+    throw new Error(errorData.message || "Failed to clear cart");
   }
   const data = await response.json();
-  return data.cart; // Assuming backend returns { message: '...', cart: [] }
+  return data.cart;
 };
-
-// Wishlist API Functions
 
 export const fetchWishlistApi = async (): Promise<WishlistItem[]> => {
   const token = getAuthToken();
@@ -154,12 +147,10 @@ export const addToWishlistApi = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to add item to wishlist");
   }
-  return response.json(); // Assuming backend returns the updated wishlist
+  return response.json();
 };
 
-// User Profile API Functions
-
-const USER_API_URL = `${API_BASE_URL}/users`; // Specific base for user routes
+const USER_API_URL = `${API_BASE_URL}/users`;
 
 export const fetchUserProfile = async (): Promise<UserProfile> => {
   const token = getAuthToken();
@@ -196,12 +187,9 @@ export const updateUserProfile = async (
   return response.json();
 };
 
-// Address API Functions
-
 export const addAddress = async (
   addressData: AddressData
 ): Promise<Address> => {
-  // Backend returns the new address
   const token = getAuthToken();
   const response = await fetch(`${USER_API_URL}/addresses`, {
     method: "POST",
@@ -215,14 +203,13 @@ export const addAddress = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to add address");
   }
-  return response.json(); // Assuming backend returns the newly added address object
+  return response.json();
 };
 
 export const updateAddress = async (
   addressId: string,
   addressData: Partial<AddressData>
 ): Promise<Address[]> => {
-  // Backend returns updated addresses array
   const token = getAuthToken();
   const response = await fetch(`${USER_API_URL}/addresses/${addressId}`, {
     method: "PUT",
@@ -236,7 +223,7 @@ export const updateAddress = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to update address");
   }
-  return response.json(); // Assuming backend returns the full updated list of addresses
+  return response.json();
 };
 
 export const clearWishlistApi = async (): Promise<void> => {
@@ -252,8 +239,6 @@ export const clearWishlistApi = async (): Promise<void> => {
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to clear wishlist");
   }
-  // No specific content expected on successful clear, so no need to return response.json()
-  // If the backend does return the (now empty) wishlist, you could return response.json()
 };
 
 export const removeFromWishlistApi = async (
@@ -271,7 +256,7 @@ export const removeFromWishlistApi = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to remove item from wishlist");
   }
-  return response.json(); // Assuming backend returns the updated wishlist
+  return response.json();
 };
 
 export const deleteAddress = async (
@@ -289,13 +274,12 @@ export const deleteAddress = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to delete address");
   }
-  return response.json(); // Assuming backend returns a message and the updated list of addresses
+  return response.json();
 };
 
 export const setDefaultAddress = async (
   addressId: string
 ): Promise<Address[]> => {
-  // Backend returns updated addresses array
   const token = getAuthToken();
   const response = await fetch(
     `${USER_API_URL}/addresses/${addressId}/default`,
@@ -311,5 +295,5 @@ export const setDefaultAddress = async (
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to set default address");
   }
-  return response.json(); // Assuming backend returns the full updated list of addresses
+  return response.json();
 };

@@ -9,9 +9,9 @@ import React, {
   useCallback,
 } from "react";
 import { toast } from "sonner";
-import { CartItem, ApiError } from "@/types";
+import { CartItem } from "@/types";
 import { useAuth } from "./AuthContext";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {
   fetchCartApi,
   addToCartApi,
@@ -45,13 +45,12 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { user, token } = useAuth();
 
-  // Fetch cart from backend when user is authenticated
   const loadCart = useCallback(async () => {
     if (user && token) {
       setIsLoading(true);
       try {
         const backendCartItems = await fetchCartApi();
-        setCartItems([...backendCartItems]); // Ensure new array reference
+        setCartItems([...backendCartItems]);
       } catch (error: unknown) {
         let errorMessage = "An unknown error occurred.";
         if (axios.isAxiosError(error)) {
@@ -66,13 +65,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }
         console.error("Failed to fetch cart:", error);
         toast.error(errorMessage);
-        // Potentially clear local cart if backend sync fails or user has no cart
         setCartItems([]);
       } finally {
         setIsLoading(false);
       }
     } else {
-      // User is not authenticated, clear cart
       setCartItems([]);
     }
   }, [user, token]);
@@ -91,20 +88,17 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
     setIsLoading(true);
     try {
-      // Construct the item to send to the API
-      // The backend `addToCart` expects productId, quantity, name, price, image, attributes
-      // `newItemData` should provide productId, name, price, image, attributes
       const itemToSend: Omit<CartItem, "addedAt"> = {
         productId: newItemData.productId,
         name: newItemData.name,
         price: newItemData.price,
         image: newItemData.image,
         attributes: newItemData.attributes,
-        quantity: quantityToAdd, // API will handle if it's new or update
+        quantity: quantityToAdd,
       };
 
       const updatedCart = await addToCartApi(itemToSend);
-      setCartItems([...updatedCart]); // Ensure new array reference
+      setCartItems([...updatedCart]);
       toast.success("Item added to cart!");
     } catch (error: unknown) {
       let errorMessage = "An unknown error occurred.";
@@ -126,11 +120,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const removeFromCart = async (productId: string) => {
-    if (!user) return; // Should not happen if items are in cart
+    if (!user) return;
     setIsLoading(true);
     try {
       const updatedCart = await removeFromCartApi(productId);
-      setCartItems([...updatedCart]); // Ensure new array reference
+      setCartItems([...updatedCart]);
       toast.info("Item removed from cart.");
     } catch (error: unknown) {
       let errorMessage = "An unknown error occurred.";
@@ -154,13 +148,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const updateQuantity = async (productId: string, quantity: number) => {
     if (!user) return;
     if (quantity <= 0) {
-      await removeFromCart(productId); // Backend will also handle this, but good for immediate UI
+      await removeFromCart(productId);
       return;
     }
     setIsLoading(true);
     try {
       const updatedCart = await updateCartQuantityApi(productId, quantity);
-      setCartItems([...updatedCart]); // Ensure new array reference
+      setCartItems([...updatedCart]);
     } catch (error: unknown) {
       let errorMessage = "An unknown error occurred.";
       if (axios.isAxiosError(error)) {
@@ -181,14 +175,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const clearCart = async () => {
-    if (!user || !token) { // Check for user and ensure token is present
+    if (!user || !token) {
       toast.error("Please log in to modify your cart.");
       return;
     }
     setIsLoading(true);
     try {
-      await clearCartApi(token); // Call the new API endpoint, passing the token
-      setCartItems([]); // Set frontend cart to empty
+      await clearCartApi(token);
+      setCartItems([]);
       toast.info("Cart cleared successfully.");
     } catch (error: unknown) {
       let errorMessage = "An unknown error occurred.";

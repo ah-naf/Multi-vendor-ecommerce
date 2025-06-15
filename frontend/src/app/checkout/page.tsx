@@ -28,7 +28,6 @@ export default function CheckoutPage() {
   const [addressLoading, setAddressLoading] = useState<boolean>(true);
   const [addressError, setAddressError] = useState<string | null>(null);
 
-  // Form states for manual address entry
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -52,7 +51,6 @@ export default function CheckoutPage() {
   const { token, user } = useAuth();
   const router = useRouter();
 
-  // Pre-fill form fields if user is logged in
   useEffect(() => {
     if (user) {
       setFullName(`${user.firstName} ${user.lastName}`);
@@ -61,7 +59,6 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
-  // Fetch Addresses Logic
   useEffect(() => {
     const fetchAddresses = async () => {
       if (!token) {
@@ -90,7 +87,7 @@ export default function CheckoutPage() {
           setAddressForm(defaultAddress);
           setSelectedAddressId(defaultAddress._id);
         } else if (data.length > 0) {
-          setAddressForm(data[0]); // Select the first address if no default
+          setAddressForm(data[0]);
           setSelectedAddressId(data[0]._id);
         }
         setAddressError(null);
@@ -98,7 +95,7 @@ export default function CheckoutPage() {
         setAddressError(
           error.message || "An error occurred while fetching addresses."
         );
-        setSavedAddresses([]); // Clear addresses on error
+        setSavedAddresses([]);
       } finally {
         setAddressLoading(false);
       }
@@ -108,8 +105,8 @@ export default function CheckoutPage() {
   }, [token]);
 
   const subtotal = getCartTotal();
-  const shipping = 69.99; // Static as per requirement
-  const tax = 2.0; // Static as per requirement
+  const shipping = 69.99;
+  const tax = 2.0;
   const total = subtotal + shipping + tax;
 
   const handlePlaceOrder = async () => {
@@ -142,7 +139,7 @@ export default function CheckoutPage() {
     const orderPayloadItems = cartItems.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
-      attributes: item.attributes, // Ensure attributes are passed if they exist on CartItem type
+      attributes: item.attributes,
     }));
 
     let payload;
@@ -152,7 +149,6 @@ export default function CheckoutPage() {
         shippingAddressId: selectedAddressId,
       };
     } else {
-      // Using new address from form
       payload = {
         items: orderPayloadItems,
         shippingAddressDetails: {
@@ -210,7 +206,6 @@ export default function CheckoutPage() {
             Review your order and complete your purchase
           </div>
 
-          {/* Progress Steps */}
           <div className="flex items-center space-x-4 mb-8">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
@@ -233,21 +228,18 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Forms */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Shipping Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Shipping Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 ">
-                {/* Saved Addresses */}
                 <div>
                   <Label className="text-sm font-medium mb-4 block">
                     Saved Addresses
                   </Label>
                   <RadioGroup
-                    value={selectedAddressId || ""} // Ensure value is not null
+                    value={selectedAddressId || ""}
                     onValueChange={(id) => {
                       setSelectedAddressId(id);
                     }}
@@ -275,14 +267,12 @@ export default function CheckoutPage() {
                           className="flex items-center space-x-3 p-4 border rounded-lg hover:border-gray-400 cursor-pointer"
                         >
                           <RadioGroupItem value={addr._id} id={addr._id} />
-                          {/* Icon can be conditional based on addr.type */}
                           {addr.type.toLowerCase() === "home" && (
                             <Home className="w-5 h-5 text-gray-500" />
                           )}
                           {addr.type.toLowerCase() === "work" && (
                             <Briefcase className="w-5 h-5 text-gray-500" />
                           )}
-                          {/* Add more icons or a default one if needed */}
                           <div
                             className="flex-1"
                             onClick={() => {
@@ -311,7 +301,6 @@ export default function CheckoutPage() {
                   </RadioGroup>
                 </div>
 
-                {/* Form Fields for new address (can be conditionally shown) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name *</Label>
@@ -431,7 +420,6 @@ export default function CheckoutPage() {
                   />
                 </div>
 
-                {/* Optionally, add a checkbox to toggle manual address entry based on selectedAddressId */}
                 <p className="text-sm text-gray-500">
                   {selectedAddressId
                     ? "Using saved address. To enter a new address, first unselect the saved address above (feature to unselect can be added)."
@@ -453,7 +441,6 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
             <Card>
               <CardHeader>
                 <CardTitle>Payment Method</CardTitle>
@@ -491,10 +478,9 @@ export default function CheckoutPage() {
                 <div className="flex items-center space-x-2 pt-4">
                   <Checkbox
                     id="cashOnDelivery"
-                    checked={true} // Always checked
-                    disabled={true} // User cannot change it
-                    aria-readonly="true" // For accessibility
-                    // onCheckedChange={setCashOnDelivery} // No longer needed as it's always true
+                    checked={true}
+                    disabled={true}
+                    aria-readonly="true"
                   />
                   <Label
                     htmlFor="cashOnDelivery"
@@ -507,13 +493,11 @@ export default function CheckoutPage() {
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-500 ml-6">
-                  {/* This assumes Checkbox takes up some space, adjust if needed */}
                   Payment will be collected upon delivery.
                 </p>
               </CardContent>
             </Card>
 
-            {/* Promo Code */}
             <Card>
               <CardHeader>
                 <CardTitle>Promo Code</CardTitle>
@@ -531,7 +515,6 @@ export default function CheckoutPage() {
             </Card>
           </div>
 
-          {/* Right Column - Order Summary */}
           <div>
             <Card>
               <CardHeader>
@@ -559,8 +542,6 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-medium">{item.name}</h4>
-                      {/* Assuming 'edition' is not part of cartItem, removing or can be adapted if available */}
-                      {/* <p className="text-xs text-gray-500">{item.edition}</p> */}
                       <p className="text-sm font-medium">
                         ${item.price.toFixed(2)}
                       </p>
@@ -604,7 +585,7 @@ export default function CheckoutPage() {
                     cartItems.length === 0 ||
                     addressLoading ||
                     (!selectedAddressId && !fullName)
-                  } // Basic disable condition
+                  }
                 >
                   {isPlacingOrder ? "Placing Order..." : "Place Order"}
                 </Button>

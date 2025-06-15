@@ -70,14 +70,12 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({
       toast.error("Please log in to add items to your wishlist.");
       return;
     }
-    // Check if item already exists locally to prevent redundant API calls if backend also checks
     if (wishlistItems.some((item) => item.productId === itemToAdd.productId)) {
       toast.info(`${itemToAdd.name} is already in your wishlist.`);
       return;
     }
     setIsLoading(true);
     try {
-      // itemToAdd directly matches what addToWishlistApi expects (productId, name, price, image, attributes)
       const updatedWishlist = await addToWishlistApi(itemToAdd);
       setWishlistItems(updatedWishlist);
       toast.success(`${itemToAdd.name} added to wishlist!`);
@@ -124,8 +122,8 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({
     }
     setIsLoading(true);
     try {
-      await clearWishlistApi(); // Call the new API service function
-      setWishlistItems([]); // Clear items from local state
+      await clearWishlistApi();
+      setWishlistItems([]);
       toast.success("Wishlist cleared successfully!");
     } catch (error: any) {
       console.error("Failed to clear wishlist:", error);
