@@ -1,4 +1,3 @@
-// File: src/app/dashboard/payments/page.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -25,25 +24,11 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { AlertTriangle, Trash2 } from "lucide-react";
-
-interface Withdraw {
-  id: string;
-  date: string;
-  amount: number;
-  status: "Completed" | "Pending" | "Failed";
-}
-
-interface PaymentMethod {
-  id: string;
-  type: "Bank Transfer" | "PayPal" | "Credit Card" | "Stripe";
-  label: string;
-  details: Record<string, string>;
-}
+import { PaymentMethod, Withdraw } from "@/types";
 
 export default function PaymentsPage() {
   const router = useRouter();
 
-  // --- STATE ---
   const [withdrawHistory, setWithdrawHistory] = useState<Withdraw[]>([
     { id: "wd_001", date: "2025-06-01", amount: 500, status: "Completed" },
     { id: "wd_002", date: "2025-05-24", amount: 300, status: "Completed" },
@@ -60,7 +45,6 @@ export default function PaymentsPage() {
   const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
   const [selectedMethod, setSelectedMethod] = useState<string>("");
 
-  // --- COMPUTED ---
   const pendingPayout = useMemo(
     () =>
       withdrawHistory
@@ -69,7 +53,6 @@ export default function PaymentsPage() {
     [withdrawHistory]
   );
 
-  // --- TABLE COLUMNS ---
   const withdrawCols: Column<Withdraw>[] = [
     { header: "Date", cell: (w: Withdraw) => w.date },
     {
@@ -79,7 +62,6 @@ export default function PaymentsPage() {
     { header: "Status", cell: (w: Withdraw) => w.status },
   ];
 
-  // --- HANDLERS ---
   function confirmAddMethod() {
     const newMethod: PaymentMethod = {
       id: Date.now().toString(),
@@ -118,9 +100,8 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Alert Notification */}
       <Alert variant="destructive" className="mb-6">
-        <AlertTriangle className="h-4 w-4" /> {/* Optional: Add an icon */}
+        <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Important Notice</AlertTitle>
         <AlertDescription>
           Please note: Payment and withdrawal functionalities are currently
@@ -151,7 +132,6 @@ export default function PaymentsPage() {
         </Card>
       </div>
 
-      {/* 2. Withdraw History */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Withdraw History</h2>
@@ -166,7 +146,6 @@ export default function PaymentsPage() {
         <DataTable<Withdraw> columns={withdrawCols} data={withdrawHistory} />
       </div>
 
-      {/* 3. Payment Methods */}
       <Card>
         <CardHeader className="flex justify-between items-center">
           <CardTitle>Payment Methods</CardTitle>
@@ -206,7 +185,6 @@ export default function PaymentsPage() {
         </CardContent>
       </Card>
 
-      {/* 4. Dialog: Add Payment Method */}
       <Dialog open={showAddMethod} onOpenChange={setShowAddMethod}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -235,7 +213,6 @@ export default function PaymentsPage() {
               </Select>
             </div>
 
-            {/* Dynamic fields */}
             {newType === "Bank Transfer" && (
               <>
                 <div className="space-y-2">
@@ -377,10 +354,8 @@ export default function PaymentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 5. Dialog: Request Payout */}
       <Dialog open={showWithdraw} onOpenChange={setShowWithdraw}>
         <DialogTrigger asChild>
-          {/* Hidden trigger; we open imperatively */}
           <span />
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">

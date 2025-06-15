@@ -15,7 +15,6 @@ import { getApiBaseUrl } from "@/services/productService";
 import axios, { AxiosError } from "axios";
 import { useCart } from "@/context/CartContext";
 
-// --- MAIN HOMEPAGE COMPONENT ---
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -26,17 +25,14 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Auth check redirection
     if (!authLoading) {
       if (!user) {
         router.push("/login");
       }
-      // If user exists, role-based redirection is handled by useAuth or another effect if needed
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    // Fetch products
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
@@ -60,15 +56,13 @@ export default function HomePage() {
     };
 
     if (user) {
-      // Only fetch products if user is logged in
       fetchProducts();
     }
-  }, [user]); // Re-fetch if user changes (e.g., logs out and logs in as different user)
+  }, [user]);
 
   const { addToCart, cartItems, isLoading: isCartLoading } = useCart();
 
   const handleMoveToCart = async (product: Product) => {
-    // Using Product type now
     const itemForCart = {
       productId: product.id,
       name: product.general.title,
@@ -77,10 +71,7 @@ export default function HomePage() {
         product.general.images && product.general.images.length > 0
           ? product.general.images[0]
           : undefined,
-      // Assuming CartItem might expect a simplified category or specific attributes.
-      // For now, let's pass general category. Adjust if CartContext's addToCart needs more/less.
       category: product.general.category,
-      // attributes: product.attributes, // If you have a structured way to pass attributes
     };
 
     const itemInCart = cartItems.find(
@@ -96,12 +87,11 @@ export default function HomePage() {
 
     try {
       await addToCart(itemForCart, 1);
-      await removeFromWishlist(product.id); // product.id is the productId
+      await removeFromWishlist(product.id);
       toast.success(`${product.general.title} moved to cart!`);
     } catch (error: unknown) {
       let errorMessage = "An unknown error occurred";
       if (axios.isAxiosError(error)) {
-        // If the error originates from an axios call in a service
         errorMessage = error.response?.data?.message || error.message;
       } else if (error instanceof Error) {
         errorMessage = error.message;
@@ -115,17 +105,12 @@ export default function HomePage() {
   };
 
   if (authLoading || (!user && !authLoading)) {
-    // Show loading if auth is loading or if user is not yet determined (and not loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div>Loading authentication...</div>
       </div>
     );
   }
-
-  // If user is null and auth is done loading, they would have been redirected.
-  // So, if we reach here and user is null, it's an unexpected state or brief moment before redirect.
-  // However, the primary loading for products screen is handled below.
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -210,12 +195,10 @@ export default function HomePage() {
                   </Link>
 
                   <CardContent className="p-4 bg-white">
-                    {/* Category */}
                     <p className="text-sm text-gray-500 mb-1">
                       {product.general.category}
                     </p>
 
-                    {/* Title */}
                     <h3
                       className="font-semibold text-lg text-gray-800 h-14 truncate"
                       title={product.general.title}
@@ -223,7 +206,6 @@ export default function HomePage() {
                       {product.general.title}
                     </h3>
 
-                    {/* Price & Negotiable Badge */}
                     <div className="flex items-center justify-between mt-2 mb-4">
                       <span className="text-xl font-bold text-gray-900">
                         ${product.pricing.price.toFixed(2)}
@@ -235,7 +217,6 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    {/* SKU & Stock */}
                     <div className="flex justify-between text-sm text-gray-600 mb-4">
                       <div>
                         <span className="font-medium">SKU:</span>{" "}
@@ -247,7 +228,6 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"

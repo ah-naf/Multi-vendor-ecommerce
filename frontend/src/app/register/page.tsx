@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 
 export default function RegisterPage() {
-  const { register, loading, error } = useAuth();
+  const { register, isLoading: loading, error } = useAuth();
   const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
@@ -33,7 +33,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("customer"); // Default role
+  const [role, setRole] = useState("customer");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,12 +44,11 @@ export default function RegisterPage() {
         email,
         phone,
         password,
-        roles: [role], // API expects roles as an array
+        roles: [role],
       });
-      toast.success("Registration successful! Please login."); // Replaced alert with toast
+      toast.success("Registration successful! Please login.");
       router.push("/login");
     } catch (err) {
-      // Error is already set in AuthContext, can add specific logging here if needed
       console.error("Registration attempt failed:", err);
     }
   };
@@ -61,10 +60,10 @@ export default function RegisterPage() {
           <CardTitle>Create Account</CardTitle>
           <CardDescription>Join as a customer or seller.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}> {/* Form starts here */}
+        <form onSubmit={handleSubmit}>
+          {" "}
           <CardContent>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* First Name */}
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
@@ -76,7 +75,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Last Name */}
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
@@ -88,7 +86,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -101,7 +98,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Phone */}
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone (Optional)</Label>
                 <Input
@@ -113,7 +109,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -126,7 +121,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Role */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="role">Account Type</Label>
                 <Select value={role} onValueChange={setRole}>
@@ -140,7 +134,9 @@ export default function RegisterPage() {
                 </Select>
               </div>
             </div>
-            {error && <p className="mt-4 text-sm text-center text-red-600">{error}</p>}
+            {error && (
+              <p className="mt-4 text-sm text-center text-red-600">{error}</p>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col mt-4 gap-2">
             <Button type="submit" className="w-full" disabled={loading}>
@@ -153,7 +149,7 @@ export default function RegisterPage() {
               </Link>
             </p>
           </CardFooter>
-        </form> {/* Form ends here, encompassing Content and Footer */}
+        </form>{" "}
       </Card>
     </div>
   );

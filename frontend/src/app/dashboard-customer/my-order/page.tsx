@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react"; // Added useEffect
-import { useRouter } from "next/navigation"; // Added useRouter
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { DataTable, Column, Action } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
   RefreshCw,
   Pencil,
   Loader2,
-  MoreHorizontal, // Added Loader2 for loading state
+  MoreHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,55 +31,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"; // DialogClose and DialogTrigger removed as not directly used by Dialog open prop
+} from "@/components/ui/dialog";
 import { getBackendBaseUrl } from "@/services/productService";
 import { useAuth } from "@/context/AuthContext";
+import { Order } from "@/types";
 
-// --- TYPE DEFINITIONS ---
-interface OrderItem {
-  id: string; // Product ID
-  name: string;
-  quantity: number;
-  price: number;
-  image?: string;
-}
-
-interface Order {
-  id: string; // Order UUID
-  date: string; // ISO String date
-  status: string; // "Processing", "Shipped", "Delivered", "Cancelled" from backend
-  summary: {
-    subtotal: number;
-    shipping: number;
-    tax: number;
-    total: number;
-  };
-  items: OrderItem[];
-  cancellationReason?: string;
-  cancelledBy?: "seller" | "customer" | "admin" | "system" | null;
-  cancelledDate?: string;
-  deliveredDate?: string;
-  // shippingAddress: any; // Add if needed for display
-  // payment: any; // Add if needed for display
-}
-
-// --- HELPER COMPONENT FOR STATUS BADGE ---
-// Updated to handle string status and provide a fallback style
 const StatusBadge = ({ status }: { status: string }) => {
   const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full";
   const statusClasses: Record<string, string> = {
     Delivered: "bg-green-100 text-green-700",
-    Shipped: "bg-blue-100 text-blue-700", // Kept as is, per instruction
+    Shipped: "bg-blue-100 text-blue-700",
     Processing: "bg-yellow-100 text-yellow-700",
-    Packed: "bg-sky-100 text-sky-700", // New
-    "Out for Delivery": "bg-indigo-100 text-indigo-700", // New
+    Packed: "bg-sky-100 text-sky-700",
+    "Out for Delivery": "bg-indigo-100 text-indigo-700",
     Cancelled: "bg-red-100 text-red-700",
-    default: "bg-gray-100 text-gray-700", // Explicit default
+    default: "bg-gray-100 text-gray-700",
   };
   return (
     <span
       className={`${baseClasses} ${
-        statusClasses[status] || "bg-gray-100 text-gray-700" // Fallback for unknown statuses
+        statusClasses[status] || "bg-gray-100 text-gray-700"
       }`}
     >
       {status}
@@ -87,7 +58,6 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-// --- MY ORDERS PAGE COMPONENT ---
 export default function MyOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -96,14 +66,13 @@ export default function MyOrdersPage() {
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
-  const [cancellationReasonInput, setCancellationReasonInput] = useState(""); // Added state for reason
-  const { token } = useAuth(); // Added user
-  const [searchTerm, setSearchTerm] = useState(""); // For search functionality
+  const [cancellationReasonInput, setCancellationReasonInput] = useState("");
+  const { token } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Define fetchOrders outside of useEffect so it can be called by other functions
   const fetchOrders = async () => {
     if (!token) {
-      setError("Please log in to view orders"); // Should not happen if component mounts after auth check
+      setError("Please log in to view orders");
       setLoading(false);
       return;
     }
@@ -144,7 +113,7 @@ export default function MyOrdersPage() {
 
   const handleCancelOrderClick = (order: Order) => {
     setOrderToCancel(order);
-    setCancellationReasonInput(""); // Reset reason input
+    setCancellationReasonInput("");
     setShowCancelDialog(true);
   };
 
@@ -177,32 +146,24 @@ export default function MyOrdersPage() {
         throw new Error(responseData.message || "Failed to cancel order.");
       }
       toast.success("Order cancellation requested successfully.");
-      fetchOrders(); // Refresh orders list
-      // Or optimistic update:
-      // setOrders(prevOrders =>
-      //   prevOrders.map(o =>
-      //     o.id === orderToCancel.id
-      //       ? { ...o, status: "Cancelled", cancellationReason: cancellationReasonInput, cancelledBy: 'customer', cancelledDate: new Date().toISOString() }
-      //       : o
-      //   )
-      // );
+      fetchOrders();
     } catch (err: any) {
       toast.error(err.message || "Error requesting cancellation.");
     } finally {
       setShowCancelDialog(false);
       setOrderToCancel(null);
-      setCancellationReasonInput(""); // Reset reason input
+      setCancellationReasonInput("");
     }
   };
 
   const columns: Column<Order>[] = [
     {
       header: "Order ID",
-      cell: (row) => <span className="font-mono text-gray-700">{row.id}</span>, // Displaying UUID directly
+      cell: (row) => <span className="font-mono text-gray-700">{row.id}</span>,
     },
     {
       header: "Date",
-      cell: (row) => new Date(row.date).toLocaleDateString(), // Format date string
+      cell: (row) => new Date(row.date).toLocaleDateString(),
     },
     {
       header: "Status",
@@ -254,7 +215,6 @@ export default function MyOrdersPage() {
       className: "bg-gray-200 text-gray-800 hover:bg-gray-300",
     });
 
-    // Ensure these status strings match exactly what the backend provides
     switch (order.status) {
       case "Processing":
         actions.push({
@@ -276,7 +236,6 @@ export default function MyOrdersPage() {
         break;
     }
 
-    // "Buy Again" action available for most statuses if items exist
     if (order.items && order.items.length > 0) {
       actions.push({
         label: "Buy Again",
@@ -289,11 +248,9 @@ export default function MyOrdersPage() {
     return actions;
   };
 
-  // Filter logic with search and status filter
   const filteredData = React.useMemo(() => {
     let processedOrders = [...orders];
 
-    // Filter by searchTerm first (Order ID)
     if (searchTerm.trim() !== "") {
       const lowercasedSearchTerm = searchTerm.toLowerCase();
       processedOrders = processedOrders.filter((order) =>
@@ -301,7 +258,6 @@ export default function MyOrdersPage() {
       );
     }
 
-    // Then filter by statusFilter
     if (statusFilter !== "all") {
       processedOrders = processedOrders.filter(
         (order) => order.status.toLowerCase() === statusFilter.toLowerCase()
@@ -311,7 +267,6 @@ export default function MyOrdersPage() {
     return processedOrders;
   }, [orders, searchTerm, statusFilter]);
 
-  // Dynamically generate status options for filter dropdown from available orders
   const statusOptionsFromOrders = Array.from(
     new Set(orders.map((order) => order.status))
   );
@@ -338,7 +293,6 @@ export default function MyOrdersPage() {
           onClick={() => {
             setLoading(true);
             setError(null);
-            // Re-run useEffect logic:
             fetchOrders();
           }}
         >
@@ -379,15 +333,13 @@ export default function MyOrdersPage() {
               <DropdownMenuRadioItem value="all">
                 All Statuses
               </DropdownMenuRadioItem>
-              {/* Dynamically populate filter options from actual data */}
               {statusOptionsFromOrders.map((status) => (
                 <DropdownMenuRadioItem key={status} value={status}>
                   {status}
                 </DropdownMenuRadioItem>
               ))}
-              {/* Provide static options as fallback or if no orders yet */}
               {["Processing", "Shipped", "Delivered", "Cancelled"]
-                .filter((s) => !statusOptionsFromOrders.includes(s)) // Only add if not already in dynamic list
+                .filter((s) => !statusOptionsFromOrders.includes(s))
                 .map((status) => (
                   <DropdownMenuRadioItem key={status} value={status}>
                     {status}
@@ -401,7 +353,6 @@ export default function MyOrdersPage() {
       {orders.length === 0 ? (
         <div className="text-center py-10">
           <Pencil className="mx-auto h-12 w-12 text-gray-400" />{" "}
-          {/* Using Pencil as an icon for "no orders" */}
           <h2 className="mt-4 text-xl font-semibold text-gray-700">
             No Orders Yet
           </h2>

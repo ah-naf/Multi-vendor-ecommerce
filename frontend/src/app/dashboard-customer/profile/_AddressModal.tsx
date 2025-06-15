@@ -1,29 +1,15 @@
 import { AddressData } from "@/types";
 import { ChangeEvent } from "react";
-import {
-  Home,
-  Briefcase,
-  PlusCircle,
-  Edit3,
-  Trash2,
-  Save,
-  X,
-} from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface AddressModalProps {
@@ -51,7 +37,6 @@ const AddressModal: React.FC<AddressModalProps> = ({
 }) => (
   <Dialog open={isOpen} onOpenChange={onOpenChange}>
     <DialogContent className="sm:max-w-[400px] p-0">
-      {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div>
           <DialogTitle className="text-lg font-semibold">
@@ -65,9 +50,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
         </div>
       </div>
 
-      {/* Form Content */}
       <div className="px-6 space-y-4">
-        {/* Type */}
         <div className="space-y-2">
           <Label htmlFor="type" className="text-sm font-medium">
             Type
@@ -85,7 +68,6 @@ const AddressModal: React.FC<AddressModalProps> = ({
           </select>
         </div>
 
-        {/* Address Line 1 */}
         <div className="space-y-2">
           <Label htmlFor="addressLine1" className="text-sm font-medium">
             Address Line 1 <span className="text-red-500">*</span>
@@ -101,7 +83,6 @@ const AddressModal: React.FC<AddressModalProps> = ({
           />
         </div>
 
-        {/* Address Line 2 */}
         <div className="space-y-2">
           <Label htmlFor="addressLine2" className="text-sm font-medium">
             Address Line 2
@@ -116,7 +97,6 @@ const AddressModal: React.FC<AddressModalProps> = ({
           />
         </div>
 
-        {/* City / State */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
             City / State <span className="text-red-500">*</span>
@@ -143,7 +123,6 @@ const AddressModal: React.FC<AddressModalProps> = ({
           </div>
         </div>
 
-        {/* Zip / Country */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
             Zip / Country <span className="text-red-500">*</span>
@@ -170,7 +149,6 @@ const AddressModal: React.FC<AddressModalProps> = ({
           </div>
         </div>
 
-        {/* Default Toggle */}
         <div className="flex items-center justify-between py-2">
           <Label htmlFor="isDefault" className="text-sm font-medium">
             Default
@@ -184,7 +162,6 @@ const AddressModal: React.FC<AddressModalProps> = ({
         </div>
       </div>
 
-      {/* Footer */}
       <div className="flex items-center justify-between p-6 pt-4 border-t">
         <Button
           type="button"

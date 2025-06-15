@@ -5,54 +5,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable, Column, Action } from "@/components/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
-// import ordersData from "@/data/orders.json"; // Mock data removed
-import { ShipOrderDialog } from "@/components/orders/ShipOrderDialog"; // Ensure path is correct
-import { Pencil, Search, Truck, Loader2, XCircle } from "lucide-react"; // Added Loader2, XCircle
+import { ShipOrderDialog } from "@/components/orders/ShipOrderDialog";
+import { Pencil, Search, Truck, Loader2, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { getBackendBaseUrl } from "@/services/productService";
+import { SellerOrder as Order } from "@/types";
 
-// Define the Order structure based on backend OrderDetail model
-interface OrderItem {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  image?: string;
-}
-
-interface ShippingAddress {
-  name: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone: string;
-}
-
-interface OrderSummary {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
-}
-
-interface Order {
-  id: string; // Order UUID
-  date: string; // ISO String date
-  status: string; // e.g., "Processing", "Shipped", "Delivered", "Cancelled"
-  summary: OrderSummary;
-  shippingAddress: ShippingAddress; // For buyer name
-  items: OrderItem[]; // For ShipOrderDialog or future use
-  cancellationReason?: string; // Added
-  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null; // Added
-  // user?: string | { name?: string; email?: string }; // Optional: if backend provides buyer details directly
-}
-
-// Define available status tabs. "Pending" for seller likely means "Processing" from backend.
 type ActiveTabStatus =
   | "All"
   | "Pending"
@@ -65,10 +25,10 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [shipOrder, setShipOrder] = useState<Order | null>(null); // For the dialog
+  const [shipOrder, setShipOrder] = useState<Order | null>(null);
   const router = useRouter();
   const { token } = useAuth();
-  const [searchTerm, setSearchTerm] = useState(""); // For future search implementation
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -110,17 +70,19 @@ export default function OrdersPage() {
   const filteredOrders = useMemo(() => {
     let processedOrders = [...orders];
 
-    // Filter by searchTerm first
     if (searchTerm.trim() !== "") {
       const lowercasedSearchTerm = searchTerm.toLowerCase();
       processedOrders = processedOrders.filter((order) => {
-        const orderIdMatch = order.id.toLowerCase().includes(lowercasedSearchTerm);
-        const buyerNameMatch = order.shippingAddress.name.toLowerCase().includes(lowercasedSearchTerm);
+        const orderIdMatch = order.id
+          .toLowerCase()
+          .includes(lowercasedSearchTerm);
+        const buyerNameMatch = order.shippingAddress.name
+          .toLowerCase()
+          .includes(lowercasedSearchTerm);
         return orderIdMatch || buyerNameMatch;
       });
     }
 
-    // Then filter by activeTab
     if (activeTab === "All") return processedOrders;
 
     const filterStatus = activeTab === "Pending" ? "Processing" : activeTab;
@@ -146,12 +108,12 @@ export default function OrdersPage() {
       },
       {
         header: "Buyer",
-        accessor: "shippingAddress.name", // Using shipping address name as buyer name
+        accessor: "shippingAddress.name",
         cell: (r) => r.shippingAddress.name,
       },
       {
         header: "Amount",
-        accessor: "summary.total", // Using summary.total for amount
+        accessor: "summary.total",
         cell: (r) => `$${r.summary.total.toFixed(2)}`,
       },
       {
@@ -163,11 +125,11 @@ export default function OrdersPage() {
               r.status === "Processing"
                 ? "warning"
                 : r.status === "Packed"
-                ? "info" // New: Packed status
+                ? "info"
                 : r.status === "Shipped"
-                ? "primary" // Changed from secondary to primary
+                ? "primary"
                 : r.status === "Out for Delivery"
-                ? "secondary" // New: Out for Delivery status
+                ? "secondary"
                 : r.status === "Delivered"
                 ? "success"
                 : r.status === "Cancelled"
@@ -190,17 +152,16 @@ export default function OrdersPage() {
     actions.push({
       label: "View Details",
       icon: <Pencil className="mr-1 h-4 w-4" />,
-      onClick: () => router.push(`/dashboard-seller/orders/${row.id}`), // Corrected path
+      onClick: () => router.push(`/dashboard-seller/orders/${row.id}`),
       variant: "outline",
     });
 
-    // Only "Processing" (aka "Pending" for seller) orders can be shipped
     if (row.status === "Processing") {
       actions.push({
         label: "Ship Order",
         icon: <Truck className="mr-1 h-4 w-4" />,
         onClick: () => setShipOrder(row),
-        variant: "default", // Changed to default to stand out
+        variant: "default",
       });
     }
     return actions;
@@ -256,10 +217,8 @@ export default function OrdersPage() {
       >
         <TabsList className="w-full h-12 grid grid-cols-3 sm:grid-cols-5">
           {" "}
-          {/* Responsive grid for tabs */}
           <TabsTrigger value="All">All</TabsTrigger>
           <TabsTrigger value="Pending">Pending</TabsTrigger>{" "}
-          {/* UI "Pending" maps to "Processing" status */}
           <TabsTrigger value="Shipped">Shipped</TabsTrigger>
           <TabsTrigger value="Delivered">Delivered</TabsTrigger>
           <TabsTrigger value="Cancelled">Cancelled</TabsTrigger>
@@ -286,13 +245,11 @@ export default function OrdersPage() {
 
       {shipOrder && (
         <ShipOrderDialog
-          order={shipOrder} // Pass the full order object of the new Order type
-          open={true} // Dialog is controlled by shipOrder state != null
+          order={shipOrder}
+          open={true}
           onOpenChange={(open) => {
             if (!open) setShipOrder(null);
           }}
-          // Optional: Add a callback for when an order is successfully shipped to refresh data
-          // onOrderShipped={() => fetchSellerOrders()}
         />
       )}
     </div>

@@ -6,9 +6,8 @@ import Link from "next/link";
 import { useWishlist } from "@/context/WishlistContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card"; // Added Card, CardContent
-import { Header } from "@/components/Header";
 import { toast } from "sonner";
-import { Heart, HeartCrack, XCircle, ShoppingCart, Trash2 } from "lucide-react"; // Added Heart, Trash2
+import { Heart, ShoppingCart, Trash2 } from "lucide-react"; // Added Heart, Trash2
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/types";
 import { getApiBaseUrl, getBackendBaseUrl } from "@/services/productService";
@@ -20,15 +19,14 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"; // Added Dialog components
+} from "@/components/ui/dialog";
 
 export default function WishlistPage() {
   const {
     wishlistItems,
     removeFromWishlist,
-    // getWishlistTotalItems, // This function might not be needed if we use detailedWishlistProducts.length
     isLoading: isWishlistLoading,
-    clearWishlist, // Assuming this will be added to context
+    clearWishlist,
   } = useWishlist();
   const { addToCart, cartItems, isLoading: isCartLoading } = useCart();
 
@@ -49,18 +47,15 @@ export default function WishlistPage() {
       const productsDetails: Product[] = [];
       try {
         for (const item of wishlistItems) {
-          // Ensure item and item.productId are valid
           if (item && item.productId) {
             const response = await fetch(
               `${getApiBaseUrl()}/customer/products/${item.productId}`
             );
             if (!response.ok) {
-              // Log specific item error and continue if you want partial loading
               console.error(
                 `Failed to fetch details for product ${item.productId}. Status: ${response.status}`
               );
-              // throw new Error(`Failed to fetch details for product ${item.productId}`);
-              continue; // Skip this item if it fails
+              continue;
             }
             const productData = await response.json();
             productsDetails.push(productData);
@@ -80,7 +75,7 @@ export default function WishlistPage() {
     if (wishlistItems && wishlistItems.length > 0) {
       fetchProductDetails();
     } else {
-      setDetailedWishlistProducts([]); // Clear products if wishlist is empty
+      setDetailedWishlistProducts([]);
     }
   }, [wishlistItems]);
 
@@ -109,7 +104,7 @@ export default function WishlistPage() {
 
     try {
       await addToCart(itemForCart, 1);
-      await removeFromWishlist(product.id); // product.id is the productId
+      await removeFromWishlist(product.id);
       toast.success(`${product.general.title} moved to cart!`);
     } catch (error: any) {
       toast.error(
@@ -130,17 +125,12 @@ export default function WishlistPage() {
   const handleClearAllWishlistItems = async () => {
     try {
       if (clearWishlist) {
-        // Check if clearWishlist from context exists
-        await clearWishlist(); // Use context function
+        await clearWishlist();
       } else {
-        // Fallback or direct modification if context function is not yet implemented
-        // This part will be updated once clearWishlist is confirmed in context
         console.warn(
           "clearWishlist function not available in context. Performing client-side clear only for now."
         );
         setDetailedWishlistProducts([]);
-        // Note: This fallback doesn't clear backend state.
-        // For a full solution, clearWishlist in context should handle this.
       }
       toast.success("Wishlist cleared successfully!");
       setShowClearConfirmDialog(false);
@@ -154,7 +144,6 @@ export default function WishlistPage() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      {/* Page Header from dashboard-customer/wishlist */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10 gap-4">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">
@@ -209,11 +198,10 @@ export default function WishlistPage() {
       {isLoading && (
         <div className="text-center py-24">
           {" "}
-          {/* Adjusted padding */}
           <div role="status" className="flex justify-center items-center">
             <svg
               aria-hidden="true"
-              className="w-12 h-12 text-gray-300 animate-spin fill-red-600" // Adjusted size and color
+              className="w-12 h-12 text-gray-300 animate-spin fill-red-600"
               viewBox="0 0 100 101"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -231,33 +219,26 @@ export default function WishlistPage() {
           </div>
           <p className="text-xl text-gray-700 mt-6">
             {" "}
-            {/* Adjusted margin */}
             Loading your cherished items...
           </p>
         </div>
       )}
 
       {!isLoading && detailedWishlistProducts.length === 0 && (
-        // Empty state from dashboard-customer/wishlist
         <div className="text-center py-24 bg-white rounded-xl border border-dashed border-gray-300">
           {" "}
-          {/* Styled background and border */}
           <Heart className="mx-auto h-16 w-16 text-gray-300" />{" "}
-          {/* Changed icon to Heart */}
           <h2 className="mt-6 text-2xl font-semibold text-gray-800">
             {" "}
-            {/* Adjusted text size */}
             Your Wishlist is Empty
           </h2>
           <p className="text-gray-500 mt-2 text-md">
             {" "}
-            {/* Adjusted text size */}
             Looks like you haven't added anything yet. Let's change that!
           </p>
           <Link href="/" passHref>
             <Button className="mt-8 h-11 px-8 bg-red-600 text-white hover:bg-red-700 transition-colors">
               {" "}
-              {/* Styled button */}
               Start Shopping
             </Button>
           </Link>
@@ -265,12 +246,9 @@ export default function WishlistPage() {
       )}
 
       {!isLoading && detailedWishlistProducts.length > 0 && (
-        // Grid layout from dashboard-customer/wishlist
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
           {" "}
-          {/* Adjusted gap */}
           {detailedWishlistProducts.map((product) => (
-            // Product card from dashboard-customer/wishlist (adapted)
             <Card
               key={product.id}
               className="group relative overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col"
@@ -278,7 +256,6 @@ export default function WishlistPage() {
               <Link href={`/products/${product.id}`} passHref className="block">
                 <div className="overflow-hidden relative w-full h-60 sm:h-56">
                   {" "}
-                  {/* Adjusted height for consistency */}
                   <Image
                     src={
                       product.general.images?.[0]
@@ -286,8 +263,8 @@ export default function WishlistPage() {
                         : "/placeholder-image.svg"
                     }
                     alt={product.general.title}
-                    layout="fill" // Changed to fill
-                    objectFit="cover" // Ensures image covers the area
+                    layout="fill"
+                    objectFit="cover"
                     className="group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
@@ -296,7 +273,7 @@ export default function WishlistPage() {
                 variant="ghost"
                 size="icon"
                 className="absolute top-3 right-3 z-10 h-9 w-9 bg-white/70 backdrop-blur-sm rounded-full text-gray-500 hover:text-red-600 hover:bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => handleDeleteItem(product.id)} // Uses new handleDeleteItem
+                onClick={() => handleDeleteItem(product.id)}
                 disabled={isWishlistLoading}
                 title="Remove from wishlist"
               >
@@ -305,7 +282,6 @@ export default function WishlistPage() {
 
               <CardContent className="p-4 flex flex-col flex-grow">
                 {" "}
-                {/* Ensure CardContent takes remaining space */}
                 <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider">
                   {product.general.category}
                 </p>
@@ -320,8 +296,6 @@ export default function WishlistPage() {
                     {product.general.title}
                   </Link>
                 </h3>
-                {/* Attributes can be added here if available and desired, e.g. product.attributes */}
-                {/* <p className="text-sm text-gray-500">{product.attributes || "Standard"}</p> */}
                 <div className="flex items-center justify-between mt-3 mb-3">
                   <p className="text-xl font-bold text-gray-900">
                     ${product.pricing.price.toFixed(2)}
@@ -332,7 +306,6 @@ export default function WishlistPage() {
                     </span>
                   )}
                 </div>
-                {/* Stock info can be useful */}
                 <p className="text-xs text-gray-500 mb-4">
                   SKU: {product.inventory.sku} | Stock:{" "}
                   {product.inventory.quantity > 0
@@ -341,10 +314,9 @@ export default function WishlistPage() {
                 </p>
                 <div className="mt-auto">
                   {" "}
-                  {/* Pushes buttons to the bottom */}
                   <Button
-                    size="sm" // Standardized size
-                    className="w-full bg-red-500 hover:bg-red-600 text-white h-10 px-4 flex items-center justify-center gap-2 transition-colors" // Standardized style
+                    size="sm"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white h-10 px-4 flex items-center justify-center gap-2 transition-colors"
                     onClick={() => handleMoveToCart(product)}
                     disabled={
                       isCartLoading ||

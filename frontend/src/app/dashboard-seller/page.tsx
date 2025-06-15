@@ -15,9 +15,9 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import {
   fetchSalesDataForPeriod,
-  fetchSalesPerformance, // This is a placeholder API
+  fetchSalesPerformance,
   fetchOrderStatusCounts,
-  fetchRevenueTrend, // This is a placeholder API
+  fetchRevenueTrend,
   fetchLowStockCount,
   SalesData,
   SalesPerformanceData,
@@ -27,26 +27,22 @@ import {
 } from "@/services/sellerDashboardService";
 import { useAuth } from "@/context/AuthContext";
 
-// Helper for loading state in cards
 const LoadingCardContent = () => (
   <div className="flex justify-center items-center h-20">
     <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
   </div>
 );
 
-// --- MAIN DASHBOARD COMPONENT ---
 export default function SellerDashboard() {
   const { user } = useAuth();
 
   const [salesTodayData, setSalesTodayData] = useState<SalesData | null>(null);
   const [salesMonthData, setSalesMonthData] = useState<SalesData | null>(null);
   const [salesWeekData, setSalesWeekData] = useState<SalesData | null>(null);
-  // SalesPerformanceData is fetched but its backend is a placeholder, so UI will reflect that.
   const [salesPerformance, setSalesPerformance] =
     useState<SalesPerformanceData | null>(null);
   const [orderStatusCounts, setOrderStatusCounts] =
     useState<OrderStatusCountsData | null>(null);
-  // RevenueTrend is fetched but its backend is a placeholder.
   const [revenueTrend, setRevenueTrend] = useState<RevenueTrend[]>([]);
   const [lowStockCount, setLowStockCount] = useState<LowStockCountData | null>(
     null
@@ -63,7 +59,6 @@ export default function SellerDashboard() {
   const [errorSalesToday, setErrorSalesToday] = useState<string | null>(null);
   const [errorSalesMonth, setErrorSalesMonth] = useState<string | null>(null);
   const [errorSalesWeek, setErrorSalesWeek] = useState<string | null>(null);
-  // Error state for sales performance (though it's a placeholder)
   const [errorSalesPerf, setErrorSalesPerf] = useState<string | null>(null);
   const [errorOrderStatus, setErrorOrderStatus] = useState<string | null>(null);
   const [errorRevenueTrend, setErrorRevenueTrend] = useState<string | null>(
@@ -73,7 +68,6 @@ export default function SellerDashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Sales Data (Today)
       setLoadingSalesToday(true);
       fetchSalesDataForPeriod("today")
         .then(setSalesTodayData)
@@ -82,7 +76,6 @@ export default function SellerDashboard() {
         )
         .finally(() => setLoadingSalesToday(false));
 
-      // Sales Data (Month)
       setLoadingSalesMonth(true);
       fetchSalesDataForPeriod("month")
         .then(setSalesMonthData)
@@ -91,7 +84,6 @@ export default function SellerDashboard() {
         )
         .finally(() => setLoadingSalesMonth(false));
 
-      // Sales Data (Week)
       setLoadingSalesWeek(true);
       fetchSalesDataForPeriod("week")
         .then(setSalesWeekData)
@@ -100,7 +92,6 @@ export default function SellerDashboard() {
         )
         .finally(() => setLoadingSalesWeek(false));
 
-      // Sales Performance (Placeholder)
       setLoadingSalesPerf(true);
       fetchSalesPerformance()
         .then(setSalesPerformance)
@@ -109,7 +100,6 @@ export default function SellerDashboard() {
         )
         .finally(() => setLoadingSalesPerf(false));
 
-      // Order Status Counts
       setLoadingOrderStatus(true);
       fetchOrderStatusCounts()
         .then(setOrderStatusCounts)
@@ -118,7 +108,6 @@ export default function SellerDashboard() {
         )
         .finally(() => setLoadingOrderStatus(false));
 
-      // Revenue Trend (Placeholder)
       setLoadingRevenueTrend(true);
       fetchRevenueTrend()
         .then(setRevenueTrend)
@@ -127,9 +116,8 @@ export default function SellerDashboard() {
         )
         .finally(() => setLoadingRevenueTrend(false));
 
-      // Low Stock Count
       setLoadingLowStock(true);
-      fetchLowStockCount(5) // Default threshold 5
+      fetchLowStockCount(5)
         .then(setLowStockCount)
         .catch((err) =>
           setErrorLowStock(err.message || "Failed to load low stock count")
@@ -161,9 +149,7 @@ export default function SellerDashboard() {
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
-        {/* Sales Today Card */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -181,7 +167,6 @@ export default function SellerDashboard() {
                   ${salesTodayData?.totalSales.toLocaleString() ?? "N/A"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {/* Performance data is placeholder */}
                   {salesPerformance?.percentageChange !== undefined
                     ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
                         salesPerformance.percentageChange
@@ -193,7 +178,6 @@ export default function SellerDashboard() {
           </CardContent>
         </Card>
 
-        {/* Sales This Month Card (using salesMonthData) */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -211,7 +195,6 @@ export default function SellerDashboard() {
                   ${salesMonthData?.totalSales.toLocaleString() ?? "N/A"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {/* Performance data is placeholder */}
                   {salesPerformance?.percentageChange !== undefined
                     ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
                         salesPerformance.percentageChange
@@ -223,7 +206,6 @@ export default function SellerDashboard() {
           </CardContent>
         </Card>
 
-        {/* Sales This Week Card */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -241,7 +223,6 @@ export default function SellerDashboard() {
                   ${salesWeekData?.totalSales.toLocaleString() ?? "N/A"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {/* Performance data is placeholder */}
                   {salesPerformance?.percentageChange !== undefined
                     ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
                         salesPerformance.percentageChange
@@ -253,7 +234,6 @@ export default function SellerDashboard() {
           </CardContent>
         </Card>
 
-        {/* Sales This Year Card (Placeholder - shows N/A or loading) */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -271,7 +251,6 @@ export default function SellerDashboard() {
                   ${salesWeekData?.totalSales.toLocaleString() ?? "N/A"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {/* Performance data is placeholder */}
                   {salesPerformance?.percentageChange !== undefined
                     ? `${salesPerformance.percentageChange >= 0 ? "+" : ""}${
                         salesPerformance.percentageChange
@@ -284,7 +263,6 @@ export default function SellerDashboard() {
         </Card>
       </div>
 
-      {/* Orders Status */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Orders Status
@@ -358,7 +336,6 @@ export default function SellerDashboard() {
         )}
       </div>
 
-      {/* Revenue Trend Chart */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Revenue Trend (Monthly)</CardTitle>
@@ -404,7 +381,6 @@ export default function SellerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Low Stock Alert */}
       {loadingLowStock ? (
         <div className="flex items-center p-4">
           <Loader2 className="h-5 w-5 mr-3 flex-shrink-0 animate-spin" />{" "}
@@ -426,7 +402,6 @@ export default function SellerDashboard() {
           <Button
             variant="outline"
             className="bg-white text-gray-800 self-end sm:self-center"
-            // onClick={() => router.push('/dashboard-seller/products?filter=lowstock')} // Example navigation
           >
             View Products
           </Button>
@@ -434,7 +409,6 @@ export default function SellerDashboard() {
       ) : (
         <div className="bg-green-100 border-l-4 border-green-400 text-green-700 p-4 rounded-md flex items-center">
           <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />{" "}
-          {/* Or a different icon like CheckCircle */}
           <p>
             No products are currently below the low stock threshold (
             {lowStockCount?.threshold ?? 5}).

@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { UpdateUserProfileData } from "@/types";
 import { ChangeEvent } from "react";
 
-// --- PERSONAL INFO & NOTIFICATIONS SECTION ---
 interface PersonalInformationSectionProps {
   profile: UpdateUserProfileData;
   email?: string;
@@ -95,7 +94,6 @@ const PersonalInformationSection: React.FC<PersonalInformationSectionProps> = ({
         </div>
       </CardContent>
       <div className="flex justify-end p-6 pt-0 gap-3">
-        {/* <Button variant="outline">Cancel</Button> */}
         <Button
           className="bg-red-500 hover:bg-red-600 text-white"
           onClick={onSave}
@@ -105,7 +103,6 @@ const PersonalInformationSection: React.FC<PersonalInformationSectionProps> = ({
         </Button>
       </div>
     </Card>
-    {/* Notification Preferences Card - remains static for now */}
     <Card>
       <CardHeader>
         <CardTitle>Notification Preferences</CardTitle>

@@ -11,7 +11,7 @@ export default function DashboardLayout({
   return (
     <PrivateRoute>
       <div className="flex h-screen w-full bg-gray-50 font-sans">
-        <Sidebar isCustomer={true} />
+        <Sidebar />
 
         <div className="flex-1 flex flex-col h-screen">
           <Header />

@@ -8,14 +8,12 @@ import {
   ArrowLeft,
   Printer,
   Phone,
-  // CheckCircle, // Replaced by more specific icons in Timeline or StatusBadge
-  // Clock, // Replaced by more specific icons in Timeline or StatusBadge
   Mail,
   MapPin,
   CreditCard,
   AlertTriangle,
-  Loader2, // Added Loader
-  Package, // For item details
+  Loader2,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,89 +23,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription, // Added DialogDescription
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input"; // For update dialog
-import { Label } from "@/components/ui/label"; // For update dialog
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // For status dropdown
-// import ordersData from "@/data/orders.json"; // Mock data removed
-import Timeline from "@/components/orders/Timeline"; // Assuming this component can adapt or will be reviewed
+} from "@/components/ui/select";
+import Timeline from "@/components/orders/Timeline";
 import { toast } from "sonner";
 import { getBackendBaseUrl } from "@/services/productService";
 import { useAuth } from "@/context/AuthContext";
+import { SellerOrder as Order } from "@/types";
 
-// --- TYPE DEFINITIONS (align with backend OrderDetail model) ---
-interface OrderItem {
-  id: string; // Product ID
-  name: string;
-  quantity: number;
-  price: number;
-  image?: string;
-  attributes?: string;
-}
-
-interface ShippingAddress {
-  name: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone: string;
-}
-
-interface PaymentDetails {
-  // Simplified based on what's shown in mock, but should align with backend
-  method: string;
-  last4?: string;
-  billingAddress?: string; // May not be directly on payment object from backend
-  // Backend might have more structured payment details if needed
-}
-
-interface OrderSummary {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
-  discount?: number; // Mock had discount, if backend provides it
-}
-
-interface Order {
-  id: string; // Order UUID
-  date: string; // ISO String date
-  status: string;
-  items: OrderItem[];
-  shippingAddress: ShippingAddress;
-  payment: PaymentDetails; // This was order.buyer.paymentMethod in mock
-  summary: OrderSummary; // This was order.paymentInfo in mock
-
-  // Optional fields from backend OrderDetail model for shipping
-  trackingNumber?: string;
-  carrier?: string;
-  estimatedDelivery?: string;
-  estimatedShipDate?: string;
-  deliveredDate?: string; // Added
-  cancelledDate?: string; // Added
-  cancellationReason?: string; // Added
-  cancelledBy?: 'seller' | 'customer' | 'admin' | 'system' | null; // Added
-
-  // Optional: If backend provides buyer user details directly
-  user?: {
-    id?: string;
-    email?: string; // Mock had order.buyer.email
-    // other user fields if necessary
-  };
-}
-
-// For the update dialog form
 interface UpdateFormData {
   status: string;
   trackingNumber: string;
@@ -119,7 +52,7 @@ interface UpdateFormData {
 export default function OrderDetailsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const orderId = params.id; // Extracted for clarity
+  const orderId = params.id;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -168,7 +101,6 @@ export default function OrderDetailsPage() {
       }
       const data: Order = await response.json();
       setOrder(data);
-      // Pre-fill update form data when order is fetched
       setUpdateFormData({
         status: data.status || "",
         trackingNumber: data.trackingNumber || "",
@@ -214,7 +146,7 @@ export default function OrderDetailsPage() {
       }
       toast.success("Order updated successfully!");
       setShowUpdateDialog(false);
-      fetchOrderDetails(); // Re-fetch to get updated details
+      fetchOrderDetails();
     } catch (err: any) {
       toast.error(err.message || "Error updating order.");
     }
@@ -242,8 +174,8 @@ export default function OrderDetailsPage() {
       }
       toast.success("Order cancelled successfully!");
       setShowCancelDialog(false);
-      setCancellationReason(""); // Reset reason
-      fetchOrderDetails(); // Re-fetch
+      setCancellationReason("");
+      fetchOrderDetails();
     } catch (err: any) {
       toast.error(err.message || "Error cancelling order.");
     }
@@ -286,7 +218,6 @@ export default function OrderDetailsPage() {
   }
 
   if (!order) {
-    // This case might be covered by error state if 404 is thrown, but as a fallback:
     return (
       <div className="text-center py-10">
         <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
@@ -304,13 +235,11 @@ export default function OrderDetailsPage() {
     );
   }
 
-  // Assuming only one item is primarily displayed in summary, or loop if needed
   const firstItem =
     order.items && order.items.length > 0 ? order.items[0] : null;
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
           <Link href="/dashboard-seller/orders">
@@ -346,7 +275,6 @@ export default function OrderDetailsPage() {
         </div>
       </div>
 
-      {/* Summary Card */}
       <div className="bg-white border rounded-lg p-6 mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
         <div className="flex items-center">
           {firstItem && (
@@ -420,34 +348,36 @@ export default function OrderDetailsPage() {
         </Badge>
       </div>
 
-      {/* Cancellation Info Display */}
       {order.status === "Cancelled" && order.cancellationReason && (
         <div className="mt-6 mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <h4 className="text-md font-semibold text-red-700">Order Cancelled</h4>
+          <h4 className="text-md font-semibold text-red-700">
+            Order Cancelled
+          </h4>
           {order.cancelledBy && (
             <p className="text-sm text-red-600">
-              Cancelled by: <span className="capitalize">{order.cancelledBy}</span>
+              Cancelled by:{" "}
+              <span className="capitalize">{order.cancelledBy}</span>
             </p>
           )}
           <p className="text-sm text-red-600">
             Reason: {order.cancellationReason}
           </p>
           {order.cancelledDate && (
-             <p className="text-sm text-gray-500 mt-1">
-               Cancellation Date: {new Date(order.cancelledDate).toLocaleDateString()}
-             </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Cancellation Date:{" "}
+              {new Date(order.cancelledDate).toLocaleDateString()}
+            </p>
           )}
         </div>
       )}
 
-      {/* Timeline | Buyer Info | Payment Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Timeline
           status={order.status}
           orderDate={order.date}
-          shippedDate={order.estimatedShipDate} // Prop name updated, using estimatedShipDate as per Order interface
-          deliveredDate={order.deliveredDate}   // Prop name updated, using deliveredDate from Order interface
-          cancelledDate={order.cancelledDate}   // Added cancelledDate
+          shippedDate={order.estimatedShipDate}
+          deliveredDate={order.deliveredDate}
+          cancelledDate={order.cancelledDate}
         />
 
         <div className="bg-white border rounded-lg p-6">
@@ -533,7 +463,6 @@ export default function OrderDetailsPage() {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="mt-6 flex justify-end flex-col sm:flex-row gap-4">
         <Button
           variant="outline"
@@ -545,10 +474,9 @@ export default function OrderDetailsPage() {
           Cancel Order
         </Button>
         <Button
-          className="bg-indigo-600 text-white hover:bg-indigo-700" // Changed color for update
+          className="bg-indigo-600 text-white hover:bg-indigo-700"
           onClick={() => {
             setUpdateFormData({
-              // Pre-fill form
               status: order.status,
               trackingNumber: order.trackingNumber || "",
               carrier: order.carrier || "",
@@ -567,7 +495,6 @@ export default function OrderDetailsPage() {
         </Button>
       </div>
 
-      {/* Cancel Dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -623,7 +550,6 @@ export default function OrderDetailsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Update Order Dialog (Simplified) */}
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
@@ -644,12 +570,11 @@ export default function OrderDetailsPage() {
                   <SelectItem value="Processing">Processing</SelectItem>
                   <SelectItem value="Shipped">Shipped</SelectItem>
                   <SelectItem value="Delivered">Delivered</SelectItem>
-                  {/* <SelectItem value="Cancelled">Cancelled</SelectItem> Should be done via Cancel Order dialog */}
                 </SelectContent>
               </Select>
             </div>
             {updateFormData.status === "Shipped" ||
-            updateFormData.status === "Delivered" ? ( // Show only if status is Shipped or Delivered
+            updateFormData.status === "Delivered" ? (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="trackingNumber">Tracking Number</Label>

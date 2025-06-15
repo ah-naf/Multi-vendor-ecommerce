@@ -1,4 +1,3 @@
-// File Path: src/app/dashboard/products/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -31,29 +30,10 @@ import {
 } from "lucide-react";
 import { Action, DataTable } from "@/components/DataTable";
 import Link from "next/link";
-// import productsData from "@/data/products.json"; // Removed static data import
 import { useRouter } from "next/navigation";
 import { deleteProduct, getSellerProducts } from "@/services/productService";
-import { toast } from "sonner"; // Import toast
-
-// Define Product type based on backend schema
-interface Product {
-  id: string; // This is the custom string ID from our schema
-  general: {
-    title: string;
-    images: string[];
-    category?: string; // Optional as it's not used in current table
-    description?: string; // Optional
-  };
-  inventory: {
-    sku: string;
-    quantity: number;
-  };
-  pricing: {
-    price: number;
-    salePrice: number;
-  };
-}
+import { toast } from "sonner";
+import { Product } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -71,22 +51,20 @@ const StatusBadge = ({ quantity }: { quantity: number }) => {
 };
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]); // Ensure Product type is used
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState(""); // For input field
-  const [activeSearchTerm, setActiveSearchTerm] = useState(""); // For triggering fetch
+  const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const router = useRouter();
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  // Fetch all products once
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getSellerProducts(); // no searchTerm param
+      const data = await getSellerProducts();
       setProducts(data);
       setFilteredProducts(data);
     } catch (err) {
@@ -136,18 +114,16 @@ export default function ProductsPage() {
     try {
       await deleteProduct(selectedProduct.id);
       toast.success("Product deleted successfully.");
-      // No need to pass activeSearchTerm, fetchProducts will use it by default.
       fetchProducts();
       setIsDeleteDialogOpen(false);
       setSelectedProduct(null);
     } catch (error) {
       console.error("Failed to delete product:", error);
       toast.error("Failed to delete product.");
-      setIsDeleteDialogOpen(false); // Optionally close dialog on error too
+      setIsDeleteDialogOpen(false);
     }
   };
 
-  // Define columns for DataTable, mapping to the new Product structure
   const productColumns = [
     {
       header: "ID",
@@ -200,7 +176,6 @@ export default function ProductsPage() {
   ];
 
   const getProductActions = (row: Product): Action<Product>[] => {
-    // Ensure row is typed as Product
     return [
       {
         label: "Edit",
@@ -213,37 +188,31 @@ export default function ProductsPage() {
         icon: <Trash2 className="mr-1 h-4 w-4" />,
         onClick: () => handleDeleteClick(row),
         variant: "destructive",
-        // className: "text-red-600",
       },
     ];
   };
 
   return (
     <>
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-bold">Products</h1>
         <Link href="/dashboard-seller/products/add" passHref>
           {" "}
-          {/* Corrected path */}
           <Button className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto">
             <PlusCircle className="mr-2 h-4 w-4" /> Add Product
           </Button>
         </Link>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col md:flex-row items-stretch gap-4 mb-6">
         {" "}
-        {/* items-stretch for equal height buttons/input */}
         <div className="relative flex-grow">
           {" "}
-          {/* flex-grow to take available space */}
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <Input
             type="text"
             placeholder="Search by name or SKU..."
-            className="pl-10 bg-white h-12 w-full" // w-full to take parent's width
+            className="pl-10 bg-white h-12 w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => {
@@ -258,7 +227,6 @@ export default function ProductsPage() {
           className="h-12 bg-red-500 hover:bg-red-600 text-white px-6 shrink-0"
         >
           {" "}
-          {/* shrink-0 to prevent button from shrinking */}
           Search
         </Button>
         {searchTerm && (
@@ -272,7 +240,6 @@ export default function ProductsPage() {
         )}
         <div className="flex gap-4 w-full md:w-auto shrink-0">
           {" "}
-          {/* shrink-0 here as well */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -318,7 +285,6 @@ export default function ProductsPage() {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -334,7 +300,6 @@ export default function ProductsPage() {
               <p className="font-semibold mt-2">
                 {selectedProduct?.general?.title}
               </p>{" "}
-              {/* Adjusted field */}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-center sm:space-x-2 gap-2 mt-4">

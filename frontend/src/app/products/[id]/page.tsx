@@ -1,30 +1,14 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Product } from "@/types";
-import { User } from "@/context/AuthContext";
 import ProductDetails from "./_productDetails";
 import { getApiBaseUrl } from "@/services/productService";
-
-interface PopulatedSeller
-  extends Omit<
-    User,
-    "_id" | "password" | "addresses" | "cart" | "wishlist" | "roles"
-  > {
-  // Include fields we expect from backend populate: 'firstName lastName email phone'
-  // Adjust if your User type in `frontend/src/types/index.ts` is different
-}
-
-interface ProductWithPopulatedSeller extends Omit<Product, "seller"> {
-  seller: PopulatedSeller | null; // Seller can be null if not populated or not found
-}
+import { ProductWithPopulatedSeller } from "@/types";
 
 export async function generateMetadata({
   params,
 }: {
-  // params now comes in as a promise of your route params
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  // await params before using its properties
   const { id } = await params;
 
   const res = await fetch(`${getApiBaseUrl()}/customer/products/${id}`, {

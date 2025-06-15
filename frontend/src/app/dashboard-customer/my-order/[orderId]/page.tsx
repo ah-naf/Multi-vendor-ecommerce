@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  Package,
   MapPin,
   CreditCard,
   RefreshCw,
@@ -24,7 +23,7 @@ import {
   CheckCircle,
   Loader2,
 } from "lucide-react";
-import Timeline from "@/components/orders/Timeline"; // Import the new Timeline component
+import Timeline from "@/components/orders/Timeline";
 import { useAuth } from "@/context/AuthContext";
 import { getBackendBaseUrl } from "@/services/productService";
 import {
@@ -34,72 +33,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-// --- TYPE DEFINITIONS (align with backend OrderDetail model) ---
-interface OrderItem {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  image?: string;
-  attributes?: string;
-}
-
-interface ShippingAddress {
-  name: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone: string;
-}
-
-interface PaymentDetails {
-  method: string;
-  last4: string;
-  billingAddress: string;
-  country: string;
-  phone: string;
-}
-
-interface OrderSummary {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
-}
-
-interface OrderDetail {
-  id: string;
-  date: string;
-  status: string;
-  items: OrderItem[];
-  shippingAddress: ShippingAddress;
-  payment: PaymentDetails;
-  summary: OrderSummary;
-  trackingNumber?: string;
-  carrier?: string;
-  estimatedDelivery?: string;
-  estimatedShipDate?: string;
-  deliveredDate?: string; // Added
-  cancelledDate?: string; // Added
-  cancellationReason?: string; // Added
-  cancelledBy?: "seller" | "customer" | "admin" | "system" | null; // Added
-}
-
-// --- HELPER UI COMPONENTS (Modified to use OrderDetail type and handle optional fields) ---
+import { OrderDetail } from "@/types";
 
 const StatusBadge = ({ status }: { status: string }) => {
   const statusStyles: { [key: string]: string } = {
     Delivered: "bg-green-100 text-green-800 border-green-300",
-    Shipped: "bg-blue-100 text-blue-800 border-blue-300", // As per existing
+    Shipped: "bg-blue-100 text-blue-800 border-blue-300",
     Processing: "bg-yellow-100 text-yellow-800 border-yellow-300",
-    Packed: "bg-sky-100 text-sky-800 border-sky-300", // New
-    "Out for Delivery": "bg-indigo-100 text-indigo-800 border-indigo-300", // New
+    Packed: "bg-sky-100 text-sky-800 border-sky-300",
+    "Out for Delivery": "bg-indigo-100 text-indigo-800 border-indigo-300",
     Cancelled: "bg-red-100 text-red-800 border-red-300",
-    default: "bg-gray-100 text-gray-800 border-gray-300", // Explicit default
+    default: "bg-gray-100 text-gray-800 border-gray-300",
   };
   return (
     <Badge
@@ -111,8 +55,6 @@ const StatusBadge = ({ status }: { status: string }) => {
     </Badge>
   );
 };
-
-// OrderTracker component definition is removed from here.
 
 const ShippedInfoCard = ({ order }: { order: OrderDetail }) => (
   <Card className="bg-blue-50 border-blue-200">
@@ -205,13 +147,11 @@ const DeliveredInfoCard = ({ order }: { order: OrderDetail }) => (
       <CardDescription className="text-green-700">
         This order was successfully delivered on{" "}
         {new Date(order.date).toLocaleDateString()}.
-        {/* Assuming order.date might be updated to delivery date by backend, or use a specific 'deliveredAt' field */}
       </CardDescription>
     </CardHeader>
   </Card>
 );
 
-// --- MAIN ORDER DETAILS PAGE ---
 export default function OrderDetailsPage({
   params,
 }: {
@@ -224,7 +164,6 @@ export default function OrderDetailsPage({
   const router = useRouter();
   const { token } = useAuth();
 
-  // State for customer cancellation dialog
   const [showCustomerCancelDialog, setShowCustomerCancelDialog] =
     useState(false);
   const [customerCancellationReason, setCustomerCancellationReason] =
@@ -308,7 +247,7 @@ export default function OrderDetailsPage({
         );
       }
       toast.success("Order cancellation requested successfully.");
-      fetchOrderDetails(); // Re-fetch order details
+      fetchOrderDetails();
     } catch (err: any) {
       toast.error(err.message || "Error requesting cancellation.");
     } finally {
@@ -375,7 +314,7 @@ export default function OrderDetailsPage({
         return (
           <Button
             onClick={() => {
-              setCustomerCancellationReason(""); // Reset reason
+              setCustomerCancellationReason("");
               setShowCustomerCancelDialog(true);
             }}
             className="w-full h-11 bg-red-600 hover:bg-red-700 text-white"
@@ -383,7 +322,7 @@ export default function OrderDetailsPage({
             <XCircle className="mr-2 h-4 w-4" /> Request Cancellation
           </Button>
         );
-      case "Shipped": // Returns usually after delivery
+      case "Shipped":
       case "Delivered":
         return (
           <>
@@ -413,14 +352,12 @@ export default function OrderDetailsPage({
           </Button>
         );
       default:
-        // For unknown statuses, or if no actions are appropriate
         return null;
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Main Content Grid */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">
@@ -440,16 +377,14 @@ export default function OrderDetailsPage({
           )}
           {order.status === "Cancelled" && <CancelledInfoCard order={order} />}
           {order.status === "Delivered" &&
-            (order.deliveredDate ||
-              order.estimatedDelivery) /* Ensure there's a date to show */ && (
+            (order.deliveredDate || order.estimatedDelivery) && (
               <DeliveredInfoCard order={order} />
             )}
 
-          {/* Replace OrderTracker with Timeline */}
           <Timeline
             status={order.status}
             orderDate={order.date}
-            shippedDate={order.estimatedShipDate} // Using estimatedShipDate as per OrderDetail interface
+            shippedDate={order.estimatedShipDate}
             deliveredDate={order.deliveredDate}
             cancelledDate={order.cancelledDate}
           />
@@ -462,7 +397,6 @@ export default function OrderDetailsPage({
               {order.items.map((item, index) => (
                 <React.Fragment key={item.id + "-" + index}>
                   {" "}
-                  {/* Using index for key if item.id is not unique within items (e.g. product id) */}
                   <div className="flex items-center gap-6 py-4">
                     <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
                       <img
@@ -529,7 +463,6 @@ export default function OrderDetailsPage({
                     : ""}
                 </p>
                 <p>Billing Address: {order.payment.billingAddress}</p>
-                {/* Additional payment details if available */}
                 <p>Country: {order.payment.country}</p>
                 <p>Phone: {order.payment.phone}</p>
               </CardContent>
@@ -581,7 +514,6 @@ export default function OrderDetailsPage({
         </div>
       </div>
 
-      {/* Customer Cancellation Dialog */}
       {orderDetails && (
         <Dialog
           open={showCustomerCancelDialog}

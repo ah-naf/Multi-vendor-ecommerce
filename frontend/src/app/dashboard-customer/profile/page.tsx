@@ -1,8 +1,6 @@
 "use client";
 
-"use client";
-
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 
 import { Separator } from "@/components/ui/separator";
@@ -44,7 +42,6 @@ const initialAddressData: AddressData = {
   isDefault: false,
 };
 
-// --- MAIN PROFILE PAGE ---
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editableProfileData, setEditableProfileData] =
@@ -53,7 +50,6 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Address Modal State
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [currentAddressData, setCurrentAddressData] =
     useState<AddressData>(initialAddressData);
@@ -95,16 +91,14 @@ export default function ProfilePage() {
     setError(null);
     try {
       const updatedProfile = await updateUserProfile(editableProfileData);
-      setProfile(updatedProfile); // Update main profile state
+      setProfile(updatedProfile);
       setEditableProfileData({
-        // Reset editable part from new full profile
         firstName: updatedProfile.firstName || "",
         lastName: updatedProfile.lastName || "",
         phone: updatedProfile.phone || "",
         bio: updatedProfile.bio || "",
       });
       toast.success("Personal information updated successfully");
-      // Consider showing a success toast/message
     } catch (err: any) {
       setError(err.message || "Failed to save personal information.");
     } finally {
@@ -112,7 +106,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Address Modal Handlers
   const handleAddressDataChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -152,7 +145,6 @@ export default function ProfilePage() {
 
     try {
       if (editingAddressId) {
-        // Update existing address
         const updatedAddresses = await updateAddress(
           editingAddressId,
           currentAddressData
@@ -164,19 +156,15 @@ export default function ProfilePage() {
           }));
         }
       } else {
-        // Add new address
         const newAddr = await addAddress(currentAddressData);
         if (profile) {
           setProfile((prev) => {
-            // Ensure we always have an array to work with
             const prevAddrs = prev?.addresses ?? [];
 
-            // If the new address is default, clear other defaults
             const resetAddrs = newAddr.isDefault
               ? prevAddrs.map((addr) => ({ ...addr, isDefault: false }))
               : prevAddrs;
 
-            // Append the new address
             return {
               ...prev!,
               addresses: [...resetAddrs, newAddr],
@@ -186,7 +174,7 @@ export default function ProfilePage() {
       }
 
       setShowAddressModal(false);
-      _fetchProfile(); // Re-fetch to ensure data consistency, especially default flags
+      _fetchProfile();
     } catch (err: any) {
       setError(
         err.message ||
@@ -194,7 +182,6 @@ export default function ProfilePage() {
             ? "Failed to update address."
             : "Failed to add address.")
       );
-      // Keep modal open on error to allow correction
     } finally {
       setIsSavingAddress(false);
     }
@@ -202,13 +189,13 @@ export default function ProfilePage() {
 
   const handleDeleteAddress = async (addressId: string) => {
     if (!confirm("Are you sure you want to delete this address?")) return;
-    setIsLoading(true); // or a specific deleting state
+    setIsLoading(true);
     setError(null);
     try {
       const result = await deleteAddress(addressId);
       if (profile)
         setProfile((prev) => ({ ...prev!, addresses: result.addresses }));
-      _fetchProfile(); // Re-fetch for consistency
+      _fetchProfile();
     } catch (err: any) {
       setError(err.message || "Failed to delete address.");
     } finally {
@@ -217,13 +204,13 @@ export default function ProfilePage() {
   };
 
   const handleSetDefaultAddress = async (addressId: string) => {
-    setIsLoading(true); // or a specific setting default state
+    setIsLoading(true);
     setError(null);
     try {
       const updatedAddresses = await setDefaultAddress(addressId);
       if (profile)
         setProfile((prev) => ({ ...prev!, addresses: updatedAddresses }));
-      _fetchProfile(); // Re-fetch for consistency
+      _fetchProfile();
     } catch (err: any) {
       setError(err.message || "Failed to set default address.");
     } finally {
@@ -232,7 +219,6 @@ export default function ProfilePage() {
   };
 
   if (isLoading && !profile) {
-    // Show loader only on initial load
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         Loading profile...
@@ -241,7 +227,6 @@ export default function ProfilePage() {
   }
 
   if (error && !profile) {
-    // Show error if initial load failed
     return (
       <div className="container mx-auto px-4 py-8 text-center text-red-500">
         Error: {error} <Button onClick={_fetchProfile}>Try Again</Button>
@@ -250,7 +235,6 @@ export default function ProfilePage() {
   }
 
   if (!profile) {
-    // Should not happen if loading/error handled, but as a fallback
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         Profile data not available.{" "}
@@ -278,7 +262,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Pass necessary props to PersonalInformationSection */}
       <PersonalInformationSection
         profile={editableProfileData}
         email={profile.email}
@@ -289,7 +272,6 @@ export default function ProfilePage() {
 
       <Separator />
 
-      {/* Pass necessary props to AddressSection */}
       <AddressSection
         addresses={profile.addresses || []}
         onAddAddressClick={handleOpenAddAddressModal}
@@ -298,7 +280,6 @@ export default function ProfilePage() {
         onSetDefaultAddress={handleSetDefaultAddress}
       />
 
-      {/* Address Modal */}
       <AddressModal
         isOpen={showAddressModal}
         onOpenChange={setShowAddressModal}

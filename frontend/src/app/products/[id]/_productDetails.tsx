@@ -16,23 +16,8 @@ import {
   Mail,
 } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
-import { Product } from "@/types";
-import { User, useAuth } from "@/context/AuthContext"; // <-- Import useAuth
-import { getApiBaseUrl } from "@/services/productService";
-
-interface PopulatedSeller
-  extends Omit<
-    User,
-    "_id" | "password" | "addresses" | "cart" | "wishlist" | "roles"
-  > {
-  _id: string; // <-- Add this line
-  // Include fields we expect from backend populate: 'firstName lastName email phone'
-  // Adjust if your User type in `frontend/src/types/index.ts` is different
-}
-
-interface ProductWithPopulatedSeller extends Omit<Product, "seller"> {
-  seller: PopulatedSeller | null; // Seller can be null if not populated or not found
-}
+import { Product, ProductWithPopulatedSeller } from "@/types";
+import { useAuth } from "@/context/AuthContext";
 
 interface Props {
   product: ProductWithPopulatedSeller;
@@ -41,12 +26,11 @@ interface Props {
 export default function ProductDetails({ product }: Props) {
   const [quantity, setQuantity] = useState(1);
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
-  const { user: loggedInUser } = useAuth(); // <-- Get auth context
+  const { user: loggedInUser } = useAuth();
 
   const { general, pricing, inventory, specifications, additional, seller } =
     product;
 
-  // Determine if the current user is the seller
   const isSellerProduct = !!(
     product.seller &&
     loggedInUser &&
@@ -80,26 +64,21 @@ export default function ProductDetails({ product }: Props) {
       <Header />
       <main className="pb-8 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Main Product Section */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-              {/* Image Section */}
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
                 <div className="relative w-96 h-96">
                   {" "}
-                  {/* Ensure container has size */}
                   <Image
                     src={imageUrl}
                     alt={general.title}
-                    layout="fill" // Use fill to respect parent dimensions
-                    objectFit="contain" // Or "cover" depending on desired behavior
+                    layout="fill"
+                    objectFit="contain"
                     className="rounded-3xl shadow-2xl"
                   />
-                  {/* You can add an overlay like "New" if applicable based on product data */}
                 </div>
               </div>
 
-              {/* Product Info */}
               <div className="p-8 lg:p-12">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-medium">
@@ -115,7 +94,6 @@ export default function ProductDetails({ product }: Props) {
                   {general.description}
                 </p>
 
-                {/* Pricing */}
                 <div className="flex items-baseline gap-4 mb-8">
                   {pricing.salePrice && pricing.salePrice < pricing.price ? (
                     <>
@@ -136,7 +114,6 @@ export default function ProductDetails({ product }: Props) {
                   )}
                 </div>
 
-                {/* Quantity & Actions */}
                 <div className="flex items-center gap-4 mb-8">
                   <div className="flex items-center gap-3">
                     <label
@@ -222,10 +199,9 @@ export default function ProductDetails({ product }: Props) {
                   productTitle={general.title}
                   productImage={imageUrl}
                   selectedQuantity={quantity}
-                  isOwnProduct={isSellerProduct} // <-- Pass the new prop
+                  isOwnProduct={isSellerProduct}
                 />
 
-                {/* Trust Indicators */}
                 <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Shield className="w-5 h-5 text-green-500" />
@@ -233,7 +209,7 @@ export default function ProductDetails({ product }: Props) {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Truck className="w-5 h-5 text-blue-500" />
-                    <span>Fast Delivery</span> {/* Adjusted text slightly */}
+                    <span>Fast Delivery</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <RotateCcw className="w-5 h-5 text-orange-500" />
@@ -244,9 +220,7 @@ export default function ProductDetails({ product }: Props) {
             </div>
           </div>
 
-          {/* Info Cards Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Specifications Card */}
             <div className="bg-white rounded-2xl shadow-sm p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -266,7 +240,7 @@ export default function ProductDetails({ product }: Props) {
                         {spec.label}
                       </dt>
                       <dd className="text-gray-900 font-semibold">
-                        {String(spec.value)} {/* Ensure value is string */}
+                        {String(spec.value)}
                       </dd>
                     </div>
                   ))
@@ -276,7 +250,6 @@ export default function ProductDetails({ product }: Props) {
               </dl>
             </div>
 
-            {/* Product Details Card */}
             <div className="bg-white rounded-2xl shadow-sm p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -325,7 +298,6 @@ export default function ProductDetails({ product }: Props) {
               </div>
             </div>
 
-            {/* Seller Info Card */}
             {seller ? (
               <div className="bg-white rounded-2xl shadow-sm p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
@@ -343,11 +315,6 @@ export default function ProductDetails({ product }: Props) {
                     <h3 className="font-bold text-gray-900 text-lg">
                       {seller.firstName} {seller.lastName}
                     </h3>
-                    {/* Placeholder for seller rating if available */}
-                    {/* <div className="flex items-center justify-center gap-1 mt-1">
-                    {renderStars(4.9)}
-                    <span className="text-sm text-gray-600 ml-1">(4.9)</span>
-                  </div> */}
                   </div>
 
                   <div className="space-y-3">

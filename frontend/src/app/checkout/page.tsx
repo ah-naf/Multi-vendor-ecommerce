@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Home, Briefcase, Plus } from "lucide-react";
+import { Home, Briefcase } from "lucide-react";
 import { Header } from "@/components/Header";
 import { useCart } from "@/context/CartContext";
 import Image from "next/image";

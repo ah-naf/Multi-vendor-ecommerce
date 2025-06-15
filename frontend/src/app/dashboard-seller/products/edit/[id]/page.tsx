@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getSellerProductById, updateProduct } from "@/services/productService";
 import { Product } from "@/types";
 import { ProductForm } from "@/components/ProductForm";
-import { toast } from "sonner"; // Import toast
+import { toast } from "sonner";
 
 const EditProductPage = () => {
   const router = useRouter();
@@ -25,7 +25,8 @@ const EditProductPage = () => {
           setProduct(data);
           setError(null);
         } catch (err) {
-          const fetchError = err instanceof Error ? err.message : "Failed to load product data.";
+          const fetchError =
+            err instanceof Error ? err.message : "Failed to load product data.";
           console.error("Failed to fetch product:", fetchError);
           setError(fetchError);
           toast.error(`Error fetching product: ${fetchError}`);
@@ -40,7 +41,7 @@ const EditProductPage = () => {
       toast.error(idError);
       setLoading(false);
     }
-  }, [id]); // Removed router from dependencies as it's not directly used for re-fetching logic here
+  }, [id]);
 
   const handleSubmit = async (formData: FormData) => {
     if (!id || typeof id !== "string") {
@@ -53,9 +54,10 @@ const EditProductPage = () => {
       const updatedProduct = await updateProduct(id, formData);
       toast.success("Product updated successfully!");
       console.log("Product updated successfully:", updatedProduct);
-      router.push("/dashboard-seller/products"); // Navigate to product list on success
+      router.push("/dashboard-seller/products");
     } catch (err) {
-      const updateError = err instanceof Error ? err.message : "An unknown error occurred.";
+      const updateError =
+        err instanceof Error ? err.message : "An unknown error occurred.";
       console.error("Failed to update product:", updateError);
       setError(updateError);
       toast.error(`Failed to update product: ${updateError}`);
@@ -92,8 +94,8 @@ const EditProductPage = () => {
         <h1 className="text-3xl font-bold mb-8 text-center">Edit Product</h1>
         <ProductForm
           onSubmit={handleSubmit}
-          initialData={product} // Pass the fetched product data
-          mode="edit" // Explicitly set mode
+          initialData={product}
+          mode="edit"
         />
       </div>
     </div>

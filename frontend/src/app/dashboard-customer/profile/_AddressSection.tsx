@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Briefcase, Edit3, Home, PlusCircle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-// --- ADDRESSES SECTION ---
 interface AddressSectionProps {
   addresses: Address[];
   onAddAddressClick: () => void;
@@ -59,7 +58,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 {addr.type !== "Home" && addr.type !== "Work" && (
                   <Briefcase className="h-6 w-6 text-gray-600 flex-shrink-0" />
                 )}{" "}
-                {/* Fallback icon */}
                 <h3 className="text-lg font-bold text-gray-800">{addr.type}</h3>
               </div>
               {addr.isDefault && (

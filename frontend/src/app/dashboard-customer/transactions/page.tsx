@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Download, CheckCircle, Clock, XCircle } from "lucide-react";
 
-// --- MOCK DATA ---
 const transactions = [
   {
     product: "Wireless Noise-Cancelling Headphones",
@@ -44,7 +43,6 @@ const transactions = [
   },
 ];
 
-// --- HELPER COMPONENT ---
 const TransactionStatusBadge = ({
   status,
 }: {
@@ -64,7 +62,6 @@ const TransactionStatusBadge = ({
   );
 };
 
-// --- MAIN TRANSACTIONS PAGE ---
 export default function TransactionsPage() {
   return (
     <div className="container mx-auto px-4 py-8">

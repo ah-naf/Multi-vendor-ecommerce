@@ -7,24 +7,12 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import axios, { AxiosError } from "axios";
-import { LoginCredentials, RegistrationData } from "@/types";
+import axios from "axios";
+import { LoginCredentials, RegistrationData, User } from "@/types";
 
 axios.defaults.baseURL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 axios.defaults.withCredentials = true;
-
-export interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  roles: string[];
-  avatar?: string;
-  initials?: string;
-  name?: string;
-}
 
 export interface AuthContextType {
   user: User | null;

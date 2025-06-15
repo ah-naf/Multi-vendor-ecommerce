@@ -26,9 +26,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await login({ email, password });
-      // Redirect logic is now handled by useEffect
     } catch (err) {
-      // Error is already set in AuthContext, can add specific logging here if needed
       console.error("Login attempt failed:", err);
     }
   };
@@ -48,7 +46,6 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           {" "}
-          {/* Form starts here */}
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -86,7 +83,6 @@ export default function LoginPage() {
             </p>
           </CardFooter>
         </form>{" "}
-        {/* Form ends here, encompassing Content and Footer */}
       </Card>
     </div>
   );
